@@ -6,3 +6,12 @@ build
 
 # Ignore Kotlin plugin data
 .kotlin
+
+# Ignore IDE project files
+.idea/
+
+# Ignore local dependency jars
+lib/
+
+# Ignore local scratch files
+app/src/main/groovy/org/example/Teste.groovy

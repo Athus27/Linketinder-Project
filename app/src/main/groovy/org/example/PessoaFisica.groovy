@@ -18,4 +18,14 @@ class PessoaFisica extends Pessoa {
                     Email: ${email}
 """.stripIndent()
     }
+
+    @Override
+    String exibirInformacoesFeed() {
+        return """
+                    Descricao: ${descricao}
+                    Competencias: ${competencias.join(', ')}
+                    CEP: ${cep}
+                    Estado: ${estado}
+""".stripIndent()
+    }
 }

@@ -9,5 +9,6 @@ abstract class Pessoa {
 
     ArrayList<String> competencias = new ArrayList<>()
 
+    abstract String exibirInformacoesFeed();
 
 }

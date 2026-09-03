@@ -3,6 +3,7 @@ package org.example
 class App {
     ArrayList<PessoaFisica> candidatos = new ArrayList<>()
     ArrayList<PessoaJuridica> empresas = new ArrayList<>()
+    ArrayList<Curtida> curtidas = new ArrayList<>()
 
     Scanner scanner = new Scanner(System.in)
 
@@ -12,6 +13,10 @@ class App {
         println("2. Exibir empresas")
         println("3. Cadastrar candidato")
         println("4. Cadastrar empresa")
+        println("5. Feed de Candidatos")
+        println("6. Feed de Empresas")
+        println("7. Candidato Curtir Empresa")
+        println("8. Empresa Curtir Candidato")
         println("0. Sair")
         print("Escolha uma opção: ")
     }
@@ -134,6 +139,48 @@ class App {
                 pais: "Brasil",
                 competencias: ["Kotlin", "Flutter", "Firebase"]
         )
+
+        Vaga vaga1 = new Vaga(
+                empresa1,
+                "Desenvolvedor Backend Java",
+                "Vaga para atuar no desenvolvimento de APIs e sistemas web.",
+                ["Java", "Groovy", "Spring Framework"]
+        )
+
+        Vaga vaga2 = new Vaga(
+                empresa2,
+                "Analista de Dados Junior",
+                "Vaga para criar relatorios, consultas SQL e automacoes de dados.",
+                ["Python", "SQL", "Power BI"]
+        )
+
+        Vaga vaga3 = new Vaga(
+                empresa3,
+                "Desenvolvedor Frontend Angular",
+                "Vaga para desenvolver interfaces web responsivas.",
+                ["Angular", "JavaScript", "HTML", "CSS"]
+        )
+
+        Vaga vaga4 = new Vaga(
+                empresa4,
+                "DevOps Junior",
+                "Vaga para apoiar infraestrutura cloud, containers e deploys.",
+                ["AWS", "Docker", "Kubernetes"]
+        )
+
+        Vaga vaga5 = new Vaga(
+                empresa5,
+                "Desenvolvedor Mobile",
+                "Vaga para desenvolvimento e manutencao de aplicativos mobile.",
+                ["Kotlin", "Flutter", "Firebase"]
+        )
+
+        empresa1.vagas.add(vaga1)
+        empresa2.vagas.add(vaga2)
+        empresa3.vagas.add(vaga3)
+        empresa4.vagas.add(vaga4)
+        empresa5.vagas.add(vaga5)
+
         this.empresas.add(empresa1)
         this.empresas.add(empresa2)
         this.empresas.add(empresa3)
@@ -156,6 +203,18 @@ class App {
             println empresa
         }
     }
+
+    void exibirVagas() {
+        int index = 1
+        empresas.each { empresa ->
+            empresa.vagas.each { vaga ->
+                println "[${index}] - ${vaga.titulo}"
+                index++
+            }
+        }
+
+    }
+
 
     boolean validadeCPF(String text) {
         def cpfFormatado = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/
@@ -280,6 +339,18 @@ class App {
         return empresa
     }
 
+    int lerInt() {
+        while (true) {
+            def texto = scanner.nextLine()
+
+            try {
+                return texto.toInteger()
+            } catch (NumberFormatException e) {
+                println("Número inválido. Digite apenas números inteiros.")
+            }
+        }
+    }
+
     int lerIdade() {
         while (true) {
             print("Digite a idade do Candidato: ")
@@ -292,6 +363,192 @@ class App {
             }
         }
     }
+
+    void feedCandidatos(ArrayList<PessoaFisica> candidatos) {
+        candidatos.each { candidato ->
+            def info = candidato.exibirInformacoesFeed()
+            if (info) {
+                println(info)
+            }
+        }
+    }
+
+    void feedEmpresas(ArrayList<PessoaJuridica> empresas) {
+        empresas.each { empresa ->
+            def info = empresa.exibirInformacoesFeed()
+            if (info) {
+                println(info)
+            }
+        }
+    }
+
+    Curtida candidatoCurtirVaga(PessoaFisica candidato, Vaga vaga) {
+        Curtida curtida = curtidaEntreCandidatoEVaga(candidato, vaga)
+        if (curtida != null && curtida.candidatoCurtiu) {
+            println "Erro... candidato: ${candidato.getNome()} já curtiu vaga: ${vaga.getTitulo()}"
+            return curtida
+        }
+
+        if (curtida == null) {
+            curtida = new Curtida(candidato: candidato, vaga: vaga, empresa: vaga.empresa)
+            curtidas.add(curtida)
+        }
+
+        curtida.candidatoCurtiu = true;
+        println "candidato: ${candidato.getNome()} curtiu vaga: ${vaga.getTitulo()}"
+
+        return curtida
+    }
+
+    Curtida empresaCurtirCandidato(PessoaFisica candidato, Vaga vaga, PessoaJuridica empresa) {
+        Curtida curtida = curtidaEntreCandidatoEVaga(candidato, vaga)
+        if (curtida != null && curtida.empresaCurtiu) {
+            println "Erro... empresa: ${empresa.getNome()} já curtiu candidato: ${candidato.getNome()} para vaga: ${vaga.getTitulo()}"
+            return curtida
+        }
+
+        if (curtida == null) {
+            curtida = new Curtida(candidato: candidato, vaga: vaga, empresa: vaga.empresa)
+            curtidas.add(curtida)
+        }
+
+        curtida.empresaCurtiu = true;
+        println "empresa: ${empresa.nome} curtiu candidato: ${candidato.nome}"
+
+        return curtida
+    }
+
+    PessoaFisica selecionarCandidato() {
+
+        PessoaFisica candidatoSelecionado = null
+
+        println "Selecione o candidato"
+        candidatos.eachWithIndex { candidato, i ->
+            println "[${i + 1}] - ${candidato.getNome()}"
+        }
+        println "[0] - VOLTAR/CANCELAR"
+
+        def indice
+
+        while (candidatoSelecionado == null) {
+            def entrada = scanner.nextLine()
+
+
+            try {
+                int opcaoCandidato = entrada.toInteger()
+
+                if (opcaoCandidato == 0) {
+                    break
+                }
+
+                if (opcaoCandidato in 1..candidatos.size()) {
+                    indice = opcaoCandidato - 1
+                    candidatoSelecionado = candidatos[indice]
+                    println "Candidato selecionado: ${candidatoSelecionado.nome}"
+                } else {
+                    println "Opção inválida!!!"
+                }
+            } catch (NumberFormatException e) {
+                println "formato invalido: tente novamente"
+
+            }
+
+        }
+        return candidatoSelecionado
+
+    }
+
+    int quantidadeDeVagasDisponiveis() {
+        return vagasDisponiveis().size()
+    }
+
+    ArrayList<Vaga> vagasDisponiveis() {
+        ArrayList<Vaga> vagas = new ArrayList<>()
+        empresas.each { empresa ->
+            empresa.vagas.each { vaga ->
+                vagas.add(vaga)
+            }
+        }
+        return vagas
+    }
+
+    Vaga selecionarVaga() {
+        println "Selecione a vaga:"
+        exibirVagas()
+        println "[0] - VOLTAR/CANCELAR"
+
+        Vaga vagaSelecionada = null
+
+
+        while (vagaSelecionada == null) {
+
+            def entrada = scanner.nextLine()
+
+            try {
+                int opcaoVaga = entrada.toInteger()
+
+                if (opcaoVaga == 0) {
+                    break
+                }
+
+                ArrayList<Vaga> vagas = vagasDisponiveis()
+
+
+                if (opcaoVaga in 1..vagas.size()) {
+                    vagaSelecionada = vagas[opcaoVaga - 1]
+                    println "Vaga selecionada: ${vagaSelecionada.titulo}"
+                } else {
+                    println "Opção inválida!!!"
+                }
+            } catch (NumberFormatException e) {
+                println "formato invalido: tente novamente"
+
+            }
+        }
+
+
+        return vagaSelecionada
+    }
+
+    PessoaJuridica selecionarEmpresa() {
+        println "Selecione a empresa:"
+        empresas.eachWithIndex { empresa, i ->
+            println "[${i + 1}] - ${empresa.getNome()}"
+        }
+        println "[0] - VOLTAR/CANCELAR"
+
+        PessoaJuridica empresaSelecionada = null
+
+        while (empresaSelecionada == null) {
+            def entrada = scanner.nextLine()
+
+            try {
+                int opcaoEmpresa = entrada.toInteger()
+
+                if (opcaoEmpresa == 0) {
+                    break
+                }
+
+                if (opcaoEmpresa in 1..empresas.size()) {
+                    empresaSelecionada = empresas[opcaoEmpresa - 1]
+                    println "Empresa selecionada: ${empresaSelecionada.nome}"
+                } else {
+                    println "Opção inválida!!!"
+                }
+            } catch (NumberFormatException e) {
+                println "formato invalido: tente novamente"
+            }
+        }
+        return empresaSelecionada
+    }
+
+
+    Curtida curtidaEntreCandidatoEVaga(PessoaFisica candidato, Vaga vaga) {
+        return curtidas.find { curtida ->
+            curtida.candidato == candidato && curtida.vaga == vaga
+        }
+    }
+
 
     static void main(String[] args) {
 
@@ -321,6 +578,76 @@ class App {
                     app.empresas.add(empresa)
                     println("Empresa cadastrada com sucesso!")
                     break
+                case 5:
+                    app.feedCandidatos(app.candidatos)
+                    break
+                case 6:
+                    app.feedEmpresas(app.empresas)
+                    break
+                case 7:
+                    app.scanner.nextLine()
+
+                    PessoaFisica candidatoSelecionado = app.selecionarCandidato()
+                    if (candidatoSelecionado == null) {
+                        break
+                    }
+
+                    println candidatoSelecionado
+
+                    def vagaSelecionada = app.selecionarVaga()
+
+                    if (vagaSelecionada == null) {
+                        break
+                    }
+
+                    Curtida curtida = app.candidatoCurtirVaga(candidatoSelecionado, vagaSelecionada)
+
+                    if (curtida.deuMatch()) {
+                        println("A empresa ${vagaSelecionada.empresa.nome} e o candidato ${candidatoSelecionado.nome} deram match na vaga ${vagaSelecionada.titulo}.")
+                    }
+                    break
+                case 8:
+                    app.scanner.nextLine()
+                    PessoaJuridica empresaSelecionada = app.selecionarEmpresa()
+                    if (empresaSelecionada == null) {
+                        break
+                    }
+
+                    if (empresaSelecionada.vagas.isEmpty()) {
+                        println("A empresa selecionada não possui vagas disponíveis.")
+                        break
+                    }
+
+                    println empresaSelecionada
+
+                    empresaSelecionada.vagas.eachWithIndex { vaga, i ->
+                        println "[${i + 1}] - ${vaga.titulo}"
+                    }
+                    println "[0] - VOLTAR/CANCELAR"
+
+                    def opcaoVaga = app.lerInt()
+
+                    if (opcaoVaga == 0) {
+                        break
+                    }
+
+                    if (!(opcaoVaga in 1..empresaSelecionada.vagas.size())) {
+                        println("Opção inválida. Tente novamente.")
+                    }
+
+                    Vaga vagaSelecionada = empresaSelecionada.vagas[opcaoVaga - 1]
+
+                    PessoaFisica candidatoSelecionado = app.selecionarCandidato()
+                    if (candidatoSelecionado == null) {
+                        break
+                    }
+
+                    Curtida curtida = app.empresaCurtirCandidato(candidatoSelecionado, vagaSelecionada, empresaSelecionada)
+
+                    if (curtida.deuMatch()) {
+                        println("A empresa ${empresaSelecionada.nome} e o candidato ${candidatoSelecionado.nome} deram match na vaga ${vagaSelecionada.titulo}.")
+                    }
+                    break;
                 case 0:
                     println("Saindo do programa...")
                     return
@@ -331,4 +658,5 @@ class App {
         }
 
     }
+
 }

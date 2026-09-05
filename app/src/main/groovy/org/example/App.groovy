@@ -215,6 +215,14 @@ class App {
 
     }
 
+    void adicionarCandidato(PessoaFisica candidato) {
+        candidatos.add(candidato)
+    }
+
+    void adicionarEmpresa(PessoaJuridica empresa) {
+        empresas.add(empresa)
+    }
+
 
     boolean validadeCPF(String text) {
         def cpfFormatado = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/

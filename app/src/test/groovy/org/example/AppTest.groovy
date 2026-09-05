@@ -28,4 +28,29 @@ class AppTest extends Specification {
         feed.contains("Competências: Java, Groovy, Spring Framework")
         !feed.contains("null")
     }
+
+    def "Adiciona candidato na lista de candidatos"() {
+        given:
+        App app = new App()
+        PessoaFisica candidato = new PessoaFisica(nome: "Teste", cpf: "123.456.789-00")
+
+        when:
+        app.adicionarCandidato(candidato)
+
+        then:
+        app.candidatos.contains(candidato)
+    }
+
+    def "Adiciona empresa na lista de empresas"() {
+        given:
+        App app = new App()
+        PessoaJuridica empresa = new PessoaJuridica(nome: "Empresa Teste", CNPJ: "12.345.678/0001-90")
+
+        when:
+        app.adicionarEmpresa(empresa)
+
+        then:
+        app.empresas.contains(empresa)
+    }
+
 }

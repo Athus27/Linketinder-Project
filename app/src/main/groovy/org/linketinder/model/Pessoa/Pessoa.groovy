@@ -1,4 +1,4 @@
-package org.example
+package org.linketinder.model.Pessoa
 
 abstract class Pessoa {
     String nome

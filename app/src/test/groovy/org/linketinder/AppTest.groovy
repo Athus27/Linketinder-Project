@@ -1,5 +1,7 @@
-package org.example
+package org.linketinder
 
+import org.linketinder.model.Pessoa.PessoaFisica
+import org.linketinder.model.Pessoa.PessoaJuridica
 import spock.lang.Specification
 
 class AppTest extends Specification {

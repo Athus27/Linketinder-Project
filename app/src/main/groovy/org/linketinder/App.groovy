@@ -1,4 +1,9 @@
-package org.example
+package org.linketinder
+
+import org.linketinder.model.Curtida
+import org.linketinder.model.Pessoa.PessoaFisica
+import org.linketinder.model.Pessoa.PessoaJuridica
+import org.linketinder.model.Vaga
 
 //mudar modificadores para privado (segurança)
 

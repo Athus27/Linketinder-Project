@@ -1,4 +1,4 @@
-package org.example
+package org.linketinder.model.Pessoa
 
 class PessoaFisica extends Pessoa {
     String cpf

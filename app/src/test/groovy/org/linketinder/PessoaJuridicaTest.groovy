@@ -1,5 +1,7 @@
-package org.example
+package org.linketinder
 
+import org.linketinder.model.Pessoa.PessoaJuridica
+import org.linketinder.model.Vaga
 import spock.lang.Specification
 
 class PessoaJuridicaTest extends Specification {

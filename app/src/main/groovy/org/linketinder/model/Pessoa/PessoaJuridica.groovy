@@ -1,4 +1,6 @@
-package org.example
+package org.linketinder.model.Pessoa
+
+import org.linketinder.model.Vaga
 
 class PessoaJuridica extends Pessoa {
     String CNPJ

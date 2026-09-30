@@ -1,4 +1,7 @@
-package org.example
+package org.linketinder.model
+
+import org.linketinder.model.Pessoa.PessoaFisica
+import org.linketinder.model.Pessoa.PessoaJuridica
 
 class Curtida {
     //trocar boolean (não é necessário)

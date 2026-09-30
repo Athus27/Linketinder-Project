@@ -1,4 +1,6 @@
-package org.example
+package org.linketinder.model
+
+import org.linketinder.model.Pessoa.PessoaJuridica
 
 class Vaga {
     String titulo

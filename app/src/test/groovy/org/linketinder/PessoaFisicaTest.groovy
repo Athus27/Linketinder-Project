@@ -1,5 +1,6 @@
-package org.example
+package org.linketinder
 
+import org.linketinder.model.Pessoa.PessoaFisica
 import spock.lang.Specification
 
 /*

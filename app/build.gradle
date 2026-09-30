@@ -22,6 +22,9 @@ dependencies {
     // Use the latest Groovy version for building this library
     implementation libs.groovy.all
 
+    //PSQL
+    implementation 'org.postgresql:postgresql:42.6.0'
+
     // This dependency is used by the application.
     implementation libs.guava
 

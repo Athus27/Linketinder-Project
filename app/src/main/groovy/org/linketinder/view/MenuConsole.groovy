@@ -1,6 +1,9 @@
 package org.linketinder.view
 
+import org.linketinder.controller.CandidatoController
+
 class MenuConsole {
+    CandidatoController candidatoController = new CandidatoController()
 
     //============================================================
     //                  STRINGS DE INPUT
@@ -47,7 +50,7 @@ class MenuConsole {
     ]
 
     //============================================================
-    //                  MÉTODOS DE EXIBIÇÃO 
+    //                  MÉTODOS DE EXIBIÇÃO
     //============================================================
 
     void exibirMenu() {
@@ -160,7 +163,75 @@ class MenuConsole {
         return competencias
     }
 
+    //============================================================
+    //                  FLUXO DO PROGRAMA
+    //============================================================
+    void linketinder() {
+        while (true) {
+            exibirMenu()
+            def scanner = new Scanner(System.in)
+            String opcao = scanner.nextLine()
+
+            switch (opcao) {
+                case "1":
+                    // Exibir candidatos
+                    List<Map> candidatos = candidatoController.listarCandidatos()
+
+                    println("============= Candidatos =============")
+                    candidatos.each { candidato ->
+                        println("ID: ${candidato.id}")
+                        println("Nome: ${candidato.nome}")
+                        println("E-mail: ${candidato.email}")
+                        println("--------------------------------------")
+                    }
+                    break
+
+                    break
+                case "2":
+                    // Exibir empresas
+                    break
+                case "3":
+                    // Cadastrar candidato
+                    Map dadosCandidato = readInputCandidate()
+                    List<String> competencias = lerCompetencias()
+                    dadosCandidato.competencias = competencias
+                    // Aqui você pode criar o objeto UserCandidate com os dados lidos
+                    break
+                case "4":
+                    // Cadastrar empresa
+                    Map dadosEmpresa = readInputCompany()
+                    List<String> competenciasEmpresa = lerCompetencias()
+                    dadosEmpresa.competencias = competenciasEmpresa
+                    // Aqui você pode criar o objeto UserCompany com os dados lidos
+                    break
+                case "5":
+                    // Feed de Candidatos
+                    break
+                case "6":
+                    // Feed de Empresas
+                    break
+                case "7":
+                    // Candidato Curtir Empresa
+                    break
+                case "8":
+                    // Empresa Curtir Candidato
+                    break
+                case "0":
+                    println("Saindo do programa...")
+                    return
+                default:
+                    println("Opção inválida. Tente novamente.")
+            }
+        }
+    }
 
 
-
+    //============================================================
+    //                  METODO MAIN
+    //============================================================
+    static void main(String[] args) {
+        MenuConsole menu = new MenuConsole()
+        println("Bem-vindo ao Linketinder!")
+        menu.linketinder()
+    }
 }

@@ -1,6 +1,6 @@
 package org.linketinder
 
-import org.linketinder.model.Pessoa.PessoaFisica
+import org.linketinder.model.Pessoa.UserCandidate
 import spock.lang.Specification
 
 /*
@@ -11,9 +11,9 @@ Lembrar antes de escrever
 
  */
 
-class PessoaFisicaTest extends Specification {
-    private PessoaFisica criarPessoafisicaPadrao(){
-        return new PessoaFisica(
+class UserCandidateTest extends Specification {
+    private UserCandidate criarPessoafisicaPadrao(){
+        return new UserCandidate(
                 nome: "Athus", idade: 22,
                 email: "athus@email.com",
                 descricao: "Desenvolvedor Full stack graduando em engenharia da computação pela UFOP",
@@ -27,7 +27,7 @@ class PessoaFisicaTest extends Specification {
 
     def "ToString mostra todos os dados "() {
         given:
-        PessoaFisica pessoaFisica = criarPessoafisicaPadrao()
+        UserCandidate pessoaFisica = criarPessoafisicaPadrao()
         when:
         String texto = pessoaFisica.toString()
 
@@ -44,7 +44,7 @@ class PessoaFisicaTest extends Specification {
 
     def "Exibe Informacoes no Feed sem dados sensiveis"() {
         given: "Uma pessoa fisica com dados sensiveis"
-        PessoaFisica pessoaFisica = new PessoaFisica(
+        UserCandidate pessoaFisica = new UserCandidate(
                 nome: "Athus", idade: 22,
                 email: "athus@email.com",
                 descricao: "Desenvolvedor Full stack graduando em engenharia da computação pela UFOP",

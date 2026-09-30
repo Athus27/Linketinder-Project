@@ -1,7 +1,7 @@
 package org.linketinder
 
-import org.linketinder.model.Pessoa.PessoaFisica
-import org.linketinder.model.Pessoa.PessoaJuridica
+import org.linketinder.model.Pessoa.UserCandidate
+import org.linketinder.model.Pessoa.UserCompany
 import spock.lang.Specification
 
 class AppTest extends Specification {
@@ -34,7 +34,7 @@ class AppTest extends Specification {
     def "Adiciona candidato na lista de candidatos"() {
         given:
         App app = new App()
-        PessoaFisica candidato = new PessoaFisica(nome: "Teste", cpf: "123.456.789-00")
+        UserCandidate candidato = new UserCandidate(nome: "Teste", cpf: "123.456.789-00")
 
         when:
         app.adicionarCandidato(candidato)
@@ -46,7 +46,7 @@ class AppTest extends Specification {
     def "Adiciona empresa na lista de empresas"() {
         given:
         App app = new App()
-        PessoaJuridica empresa = new PessoaJuridica(nome: "Empresa Teste", CNPJ: "12.345.678/0001-90")
+        UserCompany empresa = new UserCompany(nome: "Empresa Teste", CNPJ: "12.345.678/0001-90")
 
         when:
         app.adicionarEmpresa(empresa)

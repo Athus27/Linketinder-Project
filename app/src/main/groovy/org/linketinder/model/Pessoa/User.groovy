@@ -1,6 +1,6 @@
 package org.linketinder.model.Pessoa
 
-abstract class Pessoa {
+abstract class User {
     String nome
     String descricao
     String email

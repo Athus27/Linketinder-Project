@@ -1,16 +1,16 @@
 package org.linketinder
 
 import org.linketinder.model.Curtida
-import org.linketinder.model.Pessoa.PessoaFisica
-import org.linketinder.model.Pessoa.PessoaJuridica
+import org.linketinder.model.Pessoa.UserCandidate
+import org.linketinder.model.Pessoa.UserCompany
 import org.linketinder.model.Vaga
 
 //mudar modificadores para privado (segurança)
 
 
 class App {
-    ArrayList<PessoaFisica> candidatos = new ArrayList<>()
-    ArrayList<PessoaJuridica> empresas = new ArrayList<>()
+    ArrayList<UserCandidate> candidatos = new ArrayList<>()
+    ArrayList<UserCompany> empresas = new ArrayList<>()
     ArrayList<Curtida> curtidas = new ArrayList<>()
 
     Scanner scanner = new Scanner(System.in)
@@ -32,7 +32,7 @@ class App {
 
     void carregarDadosIniciais() {
 
-        PessoaFisica candidato1 = new PessoaFisica(
+        UserCandidate candidato1 = new UserCandidate(
                 nome: "Fulano",
                 descricao: "Desenvolvedor backend junior com interesse em sistemas web.",
                 email: "fulano@email.com",
@@ -43,7 +43,7 @@ class App {
                 competencias: ["Java", "Groovy", "SQL"]
         )
 
-        PessoaFisica candidato2 = new PessoaFisica(
+        UserCandidate candidato2 = new UserCandidate(
                 nome: "Ciclano",
                 descricao: "Desenvolvedor frontend com foco em interfaces responsivas.",
                 email: "ciclano@email.com",
@@ -54,7 +54,7 @@ class App {
                 competencias: ["JavaScript", "Angular", "CSS"]
         )
 
-        PessoaFisica candidato3 = new PessoaFisica(
+        UserCandidate candidato3 = new UserCandidate(
                 nome: "Beltrano",
                 descricao: "Analista de dados com experiencia em relatorios e automacao.",
                 email: "beltrano@email.com",
@@ -65,7 +65,7 @@ class App {
                 competencias: ["Python", "SQL", "Power BI"]
         )
 
-        PessoaFisica candidato4 = new PessoaFisica(
+        UserCandidate candidato4 = new UserCandidate(
                 nome: "Mohammed",
                 descricao: "Profissional de infraestrutura com foco em cloud e DevOps.",
                 email: "mohammed@email.com",
@@ -76,7 +76,7 @@ class App {
                 competencias: ["AWS", "Docker", "Kubernetes"]
         )
 
-        PessoaFisica candidato5 = new PessoaFisica(
+        UserCandidate candidato5 = new UserCandidate(
                 nome: "Athus",
                 descricao: "Desenvolvedor em formacao com interesse em POO e backend.",
                 email: "athus@email.com",
@@ -93,7 +93,7 @@ class App {
         this.candidatos.add(candidato5)
 
 
-        PessoaJuridica empresa1 = new PessoaJuridica(
+        UserCompany empresa1 = new UserCompany(
                 nome: "Tech Solutions",
                 descricao: "Empresa de desenvolvimento de sistemas web e APIs.",
                 email: "contato@techsolutions.com",
@@ -104,7 +104,7 @@ class App {
                 competencias: ["Java", "Groovy", "Spring Framework"]
         )
 
-        PessoaJuridica empresa2 = new PessoaJuridica(
+        UserCompany empresa2 = new UserCompany(
                 nome: "Data Prime",
                 descricao: "Consultoria especializada em dados e automacao de processos.",
                 email: "rh@dataprime.com",
@@ -115,7 +115,7 @@ class App {
                 competencias: ["Python", "SQL", "Power BI"]
         )
 
-        PessoaJuridica empresa3 = new PessoaJuridica(
+        UserCompany empresa3 = new UserCompany(
                 nome: "WebCore Digital",
                 descricao: "Agencia focada em produtos digitais e interfaces modernas.",
                 email: "vagas@webcore.com",
@@ -126,7 +126,7 @@ class App {
                 competencias: ["Angular", "JavaScript", "HTML", "CSS"]
         )
 
-        PessoaJuridica empresa4 = new PessoaJuridica(
+        UserCompany empresa4 = new UserCompany(
                 nome: "CloudBridge",
                 descricao: "Empresa de infraestrutura cloud e suporte DevOps.",
                 email: "talentos@cloudbridge.com",
@@ -137,7 +137,7 @@ class App {
                 competencias: ["AWS", "Docker", "Kubernetes"]
         )
 
-        PessoaJuridica empresa5 = new PessoaJuridica(
+        UserCompany empresa5 = new UserCompany(
                 nome: "Mobile Labs",
                 descricao: "Software house especializada em aplicativos mobile.",
                 email: "recrutamento@mobilelabs.com",
@@ -223,11 +223,11 @@ class App {
 
     }
 
-    void adicionarCandidato(PessoaFisica candidato) {
+    void adicionarCandidato(UserCandidate candidato) {
         candidatos.add(candidato)
     }
 
-    void adicionarEmpresa(PessoaJuridica empresa) {
+    void adicionarEmpresa(UserCompany empresa) {
         empresas.add(empresa)
     }
 
@@ -287,8 +287,8 @@ class App {
         }
     }
 
-    PessoaFisica cadastrarCandidato() {
-        PessoaFisica candidato
+    UserCandidate cadastrarCandidato() {
+        UserCandidate candidato
         print("Digite o nome do Candidato: ")
         def nome = scanner.nextLine()
         print("Digite a descrição do Candidato: ")
@@ -313,7 +313,7 @@ class App {
             competencias.add(competencia)
         }
 
-        candidato = new PessoaFisica(
+        candidato = new UserCandidate(
                 nome: nome,
                 email: mail,
                 cpf: cpf,
@@ -328,8 +328,8 @@ class App {
         return candidato
     }
 
-    PessoaJuridica cadastrarEmpresa() {
-        PessoaJuridica empresa
+    UserCompany cadastrarEmpresa() {
+        UserCompany empresa
         print("Digite o nome da Empresa: ")
         def nome = scanner.nextLine()
         print("Digite a descrição da Empresa: ")
@@ -342,7 +342,7 @@ class App {
         print("Digite o cep da Empresa: ")
         def cep = lerCEP()
 
-        empresa = new PessoaJuridica(
+        empresa = new UserCompany(
                 nome: nome,
                 email: mail,
                 CNPJ: cnpj,
@@ -380,7 +380,7 @@ class App {
         }
     }
 
-    void feedCandidatos(ArrayList<PessoaFisica> candidatos) {
+    void feedCandidatos(ArrayList<UserCandidate> candidatos) {
         candidatos.each { candidato ->
             def info = candidato.exibirInformacoesFeed()
             if (info) {
@@ -389,7 +389,7 @@ class App {
         }
     }
 
-    void feedEmpresas(ArrayList<PessoaJuridica> empresas) {
+    void feedEmpresas(ArrayList<UserCompany> empresas) {
         empresas.each { empresa ->
             def info = empresa.exibirInformacoesFeed()
             if (info) {
@@ -398,7 +398,7 @@ class App {
         }
     }
 
-    Curtida candidatoCurtirVaga(PessoaFisica candidato, Vaga vaga) {
+    Curtida candidatoCurtirVaga(UserCandidate candidato, Vaga vaga) {
         Curtida curtida = curtidaEntreCandidatoEVaga(candidato, vaga)
         if (curtida != null && curtida.candidatoCurtiu) {
             println "Erro... candidato: ${candidato.getNome()} já curtiu vaga: ${vaga.getTitulo()}"
@@ -416,7 +416,7 @@ class App {
         return curtida
     }
 
-    Curtida empresaCurtirCandidato(PessoaFisica candidato, Vaga vaga, PessoaJuridica empresa) {
+    Curtida empresaCurtirCandidato(UserCandidate candidato, Vaga vaga, UserCompany empresa) {
         Curtida curtida = curtidaEntreCandidatoEVaga(candidato, vaga)
         if (curtida != null && curtida.empresaCurtiu) {
             println "Erro... empresa: ${empresa.getNome()} já curtiu candidato: ${candidato.getNome()} para vaga: ${vaga.getTitulo()}"
@@ -434,9 +434,9 @@ class App {
         return curtida
     }
 
-    PessoaFisica selecionarCandidato() {
+    UserCandidate selecionarCandidato() {
 
-        PessoaFisica candidatoSelecionado = null
+        UserCandidate candidatoSelecionado = null
 
         println "Selecione o candidato"
         candidatos.eachWithIndex { candidato, i ->
@@ -526,14 +526,14 @@ class App {
         return vagaSelecionada
     }
 
-    PessoaJuridica selecionarEmpresa() {
+    UserCompany selecionarEmpresa() {
         println "Selecione a empresa:"
         empresas.eachWithIndex { empresa, i ->
             println "[${i + 1}] - ${empresa.getNome()}"
         }
         println "[0] - VOLTAR/CANCELAR"
 
-        PessoaJuridica empresaSelecionada = null
+        UserCompany empresaSelecionada = null
 
         while (empresaSelecionada == null) {
             def entrada = scanner.nextLine()
@@ -559,7 +559,7 @@ class App {
     }
 
 
-    Curtida curtidaEntreCandidatoEVaga(PessoaFisica candidato, Vaga vaga) {
+    Curtida curtidaEntreCandidatoEVaga(UserCandidate candidato, Vaga vaga) {
         return curtidas.find { curtida ->
             curtida.candidato == candidato && curtida.vaga == vaga
         }
@@ -584,13 +584,13 @@ class App {
                     break
                 case 3:
                     app.scanner.nextLine()
-                    PessoaFisica candidato = app.cadastrarCandidato()
+                    UserCandidate candidato = app.cadastrarCandidato()
                     app.candidatos.add(candidato)
                     println("Candidato cadastrado com sucesso!")
                     break
                 case 4:
                     app.scanner.nextLine()
-                    PessoaJuridica empresa = app.cadastrarEmpresa()
+                    UserCompany empresa = app.cadastrarEmpresa()
                     app.empresas.add(empresa)
                     println("Empresa cadastrada com sucesso!")
                     break
@@ -603,7 +603,7 @@ class App {
                 case 7:
                     app.scanner.nextLine()
 
-                    PessoaFisica candidatoSelecionado = app.selecionarCandidato()
+                    UserCandidate candidatoSelecionado = app.selecionarCandidato()
                     if (candidatoSelecionado == null) {
                         break
                     }
@@ -624,7 +624,7 @@ class App {
                     break
                 case 8:
                     app.scanner.nextLine()
-                    PessoaJuridica empresaSelecionada = app.selecionarEmpresa()
+                    UserCompany empresaSelecionada = app.selecionarEmpresa()
                     if (empresaSelecionada == null) {
                         break
                     }
@@ -653,7 +653,7 @@ class App {
 
                     Vaga vagaSelecionada = empresaSelecionada.vagas[opcaoVaga - 1]
 
-                    PessoaFisica candidatoSelecionado = app.selecionarCandidato()
+                    UserCandidate candidatoSelecionado = app.selecionarCandidato()
                     if (candidatoSelecionado == null) {
                         break
                     }

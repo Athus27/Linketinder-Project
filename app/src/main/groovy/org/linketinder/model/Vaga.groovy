@@ -1,14 +1,14 @@
 package org.linketinder.model
 
-import org.linketinder.model.Pessoa.PessoaJuridica
+import org.linketinder.model.Pessoa.UserCompany
 
 class Vaga {
     String titulo
     String descricao
     ArrayList<String> competencias = new ArrayList<>()
-    PessoaJuridica empresa
+    UserCompany empresa
 
-    Vaga(PessoaJuridica empresa, String titulo, String descricao, ArrayList<String> competencias) {
+    Vaga(UserCompany empresa, String titulo, String descricao, ArrayList<String> competencias) {
         this.empresa = empresa
         this.titulo = titulo
         this.descricao = descricao

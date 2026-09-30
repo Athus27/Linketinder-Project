@@ -1,13 +1,13 @@
 package org.linketinder.model
 
-import org.linketinder.model.Pessoa.PessoaFisica
-import org.linketinder.model.Pessoa.PessoaJuridica
+import org.linketinder.model.Pessoa.UserCandidate
+import org.linketinder.model.Pessoa.UserCompany
 
 class Curtida {
     //trocar boolean (não é necessário)
     // ainda mostra os dados na hr do match
-    PessoaFisica candidato //
-    PessoaJuridica empresa //
+    UserCandidate candidato //
+    UserCompany empresa //
     Vaga vaga
     boolean candidatoCurtiu = false
     boolean empresaCurtiu = false

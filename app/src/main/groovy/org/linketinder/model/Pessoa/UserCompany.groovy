@@ -2,7 +2,7 @@ package org.linketinder.model.Pessoa
 
 import org.linketinder.model.Vaga
 
-class PessoaJuridica extends Pessoa {
+class UserCompany extends User {
     String CNPJ
     String pais
     ArrayList<Vaga> vagas = new ArrayList<>()
@@ -47,7 +47,7 @@ class PessoaJuridica extends Pessoa {
         if (this.is(o)) return true
         if (o == null || getClass() != o.class) return false
 
-        PessoaJuridica that = (PessoaJuridica) o
+        UserCompany that = (UserCompany) o
 
         if (CNPJ != that.CNPJ) return false
         if (pais != that.pais) return false

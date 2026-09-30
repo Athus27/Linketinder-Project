@@ -1,14 +1,14 @@
 package org.linketinder
 
-import org.linketinder.model.Pessoa.PessoaJuridica
+import org.linketinder.model.Pessoa.UserCompany
 import org.linketinder.model.Vaga
 import spock.lang.Specification
 
-class PessoaJuridicaTest extends Specification {
+class UserCompanyTest extends Specification {
 
-    private PessoaJuridica criaPessoaJuridicaPadrao() {
+    private UserCompany criaPessoaJuridicaPadrao() {
 
-        def empresa = new PessoaJuridica(
+        def empresa = new UserCompany(
                 nome: "Empresa X",
                 descricao: "Empresa de tecnologia",
                 email: "empresax@mail.com",
@@ -33,7 +33,7 @@ class PessoaJuridicaTest extends Specification {
 
     def "ToString mostra todos os dados"() {
         given: "Uma pessoa juridica com dados"
-        PessoaJuridica pessoaJuridica = criaPessoaJuridicaPadrao()
+        UserCompany pessoaJuridica = criaPessoaJuridicaPadrao()
 
         when: "chama o método toString"
         String texto = pessoaJuridica.toString()
@@ -55,7 +55,7 @@ class PessoaJuridicaTest extends Specification {
 
     def "Feed mostra dados gerais "() {
         given: "Uma pessoa juridica com dados sensiveis"
-        PessoaJuridica pessoaJuridica = criaPessoaJuridicaPadrao()
+        UserCompany pessoaJuridica = criaPessoaJuridicaPadrao()
 
         when: "chama o método de exibir informações"
         String feedInfo = pessoaJuridica.exibirInformacoesFeed()
@@ -72,7 +72,7 @@ class PessoaJuridicaTest extends Specification {
 
     def "Feed oculta dados sensiveis "() {
         given: "Uma pessoa juridica com dados sensiveis"
-        PessoaJuridica pessoaJuridica = criaPessoaJuridicaPadrao()
+        UserCompany pessoaJuridica = criaPessoaJuridicaPadrao()
 
         when: "chama o método de exibir informações"
         String feedInfo = pessoaJuridica.exibirInformacoesFeed()
@@ -91,8 +91,8 @@ class PessoaJuridicaTest extends Specification {
 
     def "Empresas iguais possuem o mesmo HashCode"() {
         given: "Duas empresas iguais"
-        PessoaJuridica empresa1 = criaPessoaJuridicaPadrao()
-        PessoaJuridica empresa2 = criaPessoaJuridicaPadrao()
+        UserCompany empresa1 = criaPessoaJuridicaPadrao()
+        UserCompany empresa2 = criaPessoaJuridicaPadrao()
 
         when: "compara os hashcodes das empresas"
         int hash1 = empresa1.hashCode()

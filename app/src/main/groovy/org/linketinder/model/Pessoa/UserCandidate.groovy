@@ -1,6 +1,6 @@
 package org.linketinder.model.Pessoa
 
-class PessoaFisica extends Pessoa {
+class UserCandidate extends User {
     String cpf
     int idade
 

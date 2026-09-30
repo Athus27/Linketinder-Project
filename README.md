@@ -31,6 +31,16 @@ Aplicacao em Groovy para o MVP do Linketinder, um sistema simples de contratacao
 - `Curtida.groovy`: representa a relacao de curtida entre candidato, empresa e vaga, alem de indicar quando ocorre match.
 - `IPessoa.groovy`: interface criada para praticar conceitos de POO.
 
+## Atualização: Banco de dados PostgreSQL
+foi desenhado o **DER** do linketinder, utilizando o **dbdiagram.io**, a imagem gerada pelo diagrama está em `docs/derLinketinder.png`
+- link: https://dbdiagram.io/d/Linketinder-6abbe06e5869425612cd1b34
+- Os codigos SQL para criar o banco de dados e as tabelas estão em `docs/derLinketinder.sql`
+- Para armazenar as senhas utilizei o `pgcrypto`, que é uma extensão do PostgreSQL que acrescenta funções de criptografia e hash, a principal função utilizada é a crypt():
+```sql
+crypt('Senha123', gen_salt('bf'))
+```
+> esse **gen_salt('bf')** gera um valor aleatório chamado salt e seleciona o algoritmo bcrypt, e o `crypt()` usa a senha e o salt para produzir o hash que será gravado. Tudo isso é executado dentro de `BEGIN` e `COMMIT`, que são clausulas **DTL**, ou grava tudo ou não grava nada!
+
 ## Atualizacao: Curtidas e Match
 
 Nesta versao foi implementado o sistema de curtidas do Linketinder.

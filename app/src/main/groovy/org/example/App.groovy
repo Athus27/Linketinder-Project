@@ -1,5 +1,8 @@
 package org.example
 
+//mudar modificadores para privado (segurança)
+
+
 class App {
     ArrayList<PessoaFisica> candidatos = new ArrayList<>()
     ArrayList<PessoaJuridica> empresas = new ArrayList<>()

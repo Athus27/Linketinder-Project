@@ -1,8 +1,10 @@
 package org.example
 
 class Curtida {
-    PessoaFisica candidato
-    PessoaJuridica empresa
+    //trocar boolean (não é necessário)
+    // ainda mostra os dados na hr do match
+    PessoaFisica candidato //
+    PessoaJuridica empresa //
     Vaga vaga
     boolean candidatoCurtiu = false
     boolean empresaCurtiu = false

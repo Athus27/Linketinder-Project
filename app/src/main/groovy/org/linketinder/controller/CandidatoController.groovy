@@ -1,6 +1,6 @@
 package org.linketinder.controller
 
-import org.linketinder.dao.CandidateDAO
+import org.linketinder.dao.user.CandidateDAO
 
 class CandidatoController {
     private final CandidateDAO candidateDAO
@@ -10,6 +10,10 @@ class CandidatoController {
     }
 
     List<Map> listarCandidatos() {
+        return candidateDAO.listarCandidatos().candidatos
+    }
+
+    List<Map> feedCandidatos() {
         return candidateDAO.listarCandidatos().candidatos
     }
 }

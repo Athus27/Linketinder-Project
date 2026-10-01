@@ -1,6 +1,7 @@
 package org.linketinder.view
 
 import org.linketinder.controller.CandidatoController
+import org.linketinder.model.Pessoa.UserCandidate
 
 class MenuConsole {
     CandidatoController candidatoController = new CandidatoController()
@@ -25,42 +26,94 @@ class MenuConsole {
         """
 
     String[] inputUserString = [
-            /*[0] */"Digite o nome: ",
-            /*[1] */"Digite o email: ",
-            /*[2] */"Digite o País: ",
-            /*[3] */"Digite o CEP: ",
-            /*[4] */"Digite a senha: ",
-    ]
+            /*[0] */ "Digite o nome: ",
+            /*[1] */ "Digite o email: ",
+            /*[2] */ "Digite o País: ",
+            /*[3] */ "Digite o CEP: ",
+            /*[4] */ "Digite a senha: ",]
     String[] inputCandidateString = [
-            /*[0] */"Digite o sobrenome: ",
-            /*[1] */"Digite o CPF: ",
-            /*[2] */"Digite a data de nascimento AAAA/MM/DD : ",
-            /*[3] */"Digite a descrição: ",
-            /*[4] */"Digite a formação: ",
-    ]
+            /*[0] */ "Digite o sobrenome: ",
+            /*[1] */ "Digite o CPF: ",
+            /*[2] */ "Digite a data de nascimento AAAA/MM/DD : ",
+            /*[3] */ "Digite a descrição: ",
+            /*[4] */ "Digite a formação: ",]
     String[] inputCompanyString = [
-            /*[0] */"Digite o CNPJ: ",
-    ]
+            /*[0] */ "Digite o CNPJ: ",]
 
 
     String[] inputCompetenciasString = [
-            /*[0] */"Digite uma competência (ou 'sair' para finalizar): ",
-            /*[1] */"Competências atuais: ",
-            /*[2] */"Nenhuma competência adicionada ainda.",
-    ]
+            /*[0] */ "Digite uma competência (ou 'sair' para finalizar): ",
+            /*[1] */ "Competências atuais: ",
+            /*[2] */ "Nenhuma competência adicionada ainda.",]
 
     //============================================================
-    //                  MÉTODOS DE EXIBIÇÃO
+    //                  MÉTODOS DE EXIBIÇÃO E STRINGS RELACIONADAS
     //============================================================
 
     void exibirMenu() {
         println(this.menuString)
     }
 
+    String stringCandidato(Map candidato) {
+        String candidatoString =
+                    """
+            ID: ${candidato.id}
+            Nome: ${candidato.nome}
+            Sobrenome: ${candidato.sobrenome}
+            Data de nascimento: ${candidato.dataNascimento}
+            CPF: ${candidato.cpf}
+            Descrição: ${candidato.descricao}
+            E-mail: ${candidato.email}
+            Formação: ${candidato.formacao}
+            País: ${candidato.pais}
+            CEP: ${candidato.cep}
+            Competências: ${candidato.competencias.join(', ')}
+        """.stripIndent()
+
+        return candidatoString
+    }
+
+    void exibirCandidatos(List<Map> candidatos) {
+        if (candidatos.isEmpty()) {
+            println("Nenhum candidato encontrado.")
+        } else {
+            println("============= Candidatos =============")
+            candidatos.each { candidato ->
+                String candidatoString = stringCandidato(candidato)
+                println(candidatoString)
+                println("--------------------------------------")
+            }
+        }
+    }
+
+    String stringCandidatoFeed(Map candidato) {
+        return """
+        Descrição: ${candidato.descricao}
+        Formação: ${candidato.formacao}
+        Competências: ${candidato.competencias.join(', ')}
+    """.stripIndent()
+    }
+
+    void exibirFeedCandidatos(List<Map> candidatos) {
+        if (candidatos.isEmpty()) {
+            println("Nenhum candidato encontrado.")
+            return
+        }
+
+        println("========== Feed de Candidatos ==========")
+
+        candidatos.each { candidato ->
+            println(stringCandidatoFeed(candidato))
+            println("----------------------------------------")
+        }
+    }
+
+
+
     //============================================================
     //                  MÉTODOS DE LEITURA DE INPUT
     //============================================================
-    
+
     Map readInputCandidate() {
         def scanner = new Scanner(System.in)
         println(this.inputUserString[0])
@@ -94,18 +147,16 @@ class MenuConsole {
         String senha = scanner.nextLine()
 
 
-        return [
-                nome: nome,
-                sobrenome: sobrenome,
+        return [nome          : nome,
+                sobrenome     : sobrenome,
                 dataNascimento: dataNascimento,
-                cpf: cpf,
-                descricao: descricao,
-                email: email,
-                formacao: formacao,
-                pais: pais,
-                cep: cep,
-                senha: senha
-        ]
+                cpf           : cpf,
+                descricao     : descricao,
+                email         : email,
+                formacao      : formacao,
+                pais          : pais,
+                cep           : cep,
+                senha         : senha]
 
     }
 
@@ -133,18 +184,15 @@ class MenuConsole {
         String senha = scanner.nextLine()
 
 
-        return [
-                nome: nome,
-                cnpj: cnpj,
+        return [nome     : nome,
+                cnpj     : cnpj,
                 descricao: descricao,
-                email: email,
-                pais: pais,
-                cep: cep,
-                senha: senha
-        ]
+                email    : email,
+                pais     : pais,
+                cep      : cep,
+                senha    : senha]
 
     }
-
 
 
     List<String> lerCompetencias() {
@@ -153,7 +201,7 @@ class MenuConsole {
 
         while (true) {
             println(this.inputCompetenciasString[0])
-            println(competencias?"Competências atuais: ${competencias.join(', ')}" : "Nenhuma competência adicionada ainda.")
+            println(competencias ? "Competências atuais: ${competencias.join(', ')}" : "Nenhuma competência adicionada ainda.")
             String competencia = scanner.nextLine()
             if (competencia.equalsIgnoreCase("sair")) {
                 break
@@ -176,14 +224,8 @@ class MenuConsole {
                 case "1":
                     // Exibir candidatos
                     List<Map> candidatos = candidatoController.listarCandidatos()
+                    exibirCandidatos(candidatos)
 
-                    println("============= Candidatos =============")
-                    candidatos.each { candidato ->
-                        println("ID: ${candidato.id}")
-                        println("Nome: ${candidato.nome}")
-                        println("E-mail: ${candidato.email}")
-                        println("--------------------------------------")
-                    }
                     break
 
                     break
@@ -206,6 +248,8 @@ class MenuConsole {
                     break
                 case "5":
                     // Feed de Candidatos
+                    List<Map> candidatosFeed = candidatoController.feedCandidatos()
+                    exibirFeedCandidatos(candidatosFeed)
                     break
                 case "6":
                     // Feed de Empresas

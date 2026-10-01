@@ -16,4 +16,8 @@ class CandidatoController {
     List<Map> feedCandidatos() {
         return candidateDAO.listarCandidatos().candidatos
     }
+
+    boolean cadastrarCandidato(Map candidato) {
+        return candidateDAO.adicionarCandidato(candidato)
+    }
 }

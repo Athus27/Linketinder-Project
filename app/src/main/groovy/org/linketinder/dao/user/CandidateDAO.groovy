@@ -98,4 +98,85 @@ class CandidateDAO {
         }
     }
 
+    boolean adicionarCandidato(Map candidato) {
+        java.sql.Connection connection = null
+        java.sql.PreparedStatement statement = null
+        boolean sucesso = false
+
+        try {
+            connection = ConexaoDB.getConnection()
+            connection.setAutoCommit(false)
+
+            // Inserindo dados na tabela User
+            statement = connection.prepareStatement(
+                    """
+                        INSERT INTO "User" (nome, email, "país", cep,senha)
+                        VALUES (?, ?, ?, ?,crypt(?, gen_salt('bf')))
+                        RETURNING id
+                    """
+            )
+            statement.setString(1, candidato.nome)
+            statement.setString(2, candidato.email)
+            statement.setString(3, candidato.pais)
+            statement.setString(4, candidato.cep)
+            statement.setString(5, candidato.senha)
+
+            def resultSet = statement.executeQuery()
+            if (!resultSet.next()) {
+                throw new java.sql.SQLException("banco n retornou id")
+            }
+            int userId = resultSet.getInt("id")
+
+            resultSet.close()
+            statement.close()
+
+            // Inserindo dados na tabela Candidate
+            statement = connection.prepareStatement(
+                    """
+                        INSERT INTO "Candidate" (id_candidato, sobrenome, data_nascimento, cpf, descricao, formacao)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    """
+            )
+            statement.setInt(1, userId)
+            statement.setString(2, candidato.sobrenome)
+
+            String dataNormalizada = candidato.dataNascimento.replace('/', '-')
+            statement.setDate(3, java.sql.Date.valueOf(dataNormalizada))
+
+            statement.setString(4, candidato.cpf)
+            statement.setString(5, candidato.descricao)
+            statement.setString(6, candidato.formacao)
+
+            int rowsAffected = statement.executeUpdate()
+            sucesso = rowsAffected > 0
+
+            if (sucesso) {
+                connection.commit()
+                println("Candidato adicionado com sucesso!")
+            } else {
+                connection.rollback()
+                println("Falha ao adicionar candidato. Rolando de volta.")
+            }
+
+        } catch (Exception e) {
+            println("Erro ao adicionar candidato: ${e.message}")
+            try {
+                if (connection != null) {
+                    connection.rollback()
+                    println("Rolando de volta devido a erro.")
+                }
+            } catch (Exception rollbackEx) {
+                println("Erro ao tentar rolar de volta: ${rollbackEx.message}")
+            }
+        } finally {
+            try {
+                if (statement != null) statement.close()
+                if (connection != null) connection.close()
+            } catch (Exception e) {
+                println("Erro ao fechar recursos: ${e.message}")
+            }
+        }
+        return sucesso
+    }
+
 }

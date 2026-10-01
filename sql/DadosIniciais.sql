@@ -126,7 +126,6 @@ VALUES
 
 -- VAGAS
 -- IDs gerados automaticamente.
--- Mantido id_competencias conforme seu esquema atual.
 INSERT INTO "Vaga"
 (id_empresa, titulo, descricao, local_vaga, id_competencias)
 VALUES
@@ -179,5 +178,29 @@ FROM (
          JOIN "Vaga" AS v
               ON v.id_empresa = dados.id_empresa
                   AND v.titulo = dados.titulo;
+
+/*
+----------- Atualização importante -----------
+O dbDiagram não gerou que a chave era incremental, tive que corrigir os dados ja populados
+
+    COALESCE(..,0) usa 0 se ta vazio
+
+*/
+
+
+
+SELECT setval(
+               pg_get_serial_sequence('"User"', 'id'),
+               COALESCE(MAX(id), 0) + 1,
+               false
+       )
+FROM "User";
+
+SELECT setval(
+               pg_get_serial_sequence('"Competencias"', 'id'),
+               COALESCE(MAX(id), 0) + 1,
+               false
+       )
+FROM "Competencias";
 
 COMMIT;

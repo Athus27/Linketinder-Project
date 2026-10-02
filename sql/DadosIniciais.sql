@@ -136,27 +136,27 @@ VALUES
 -- VAGAS
 -- IDs gerados automaticamente.
 INSERT INTO "Vaga"
-(id_empresa, titulo, descricao, local_vaga, id_competencias)
+(id_empresa, titulo, descricao, local_vaga)
 VALUES
     (6, 'Desenvolvedor Backend Java',
      'Vaga para atuar no desenvolvimento de APIs e sistemas web.',
-     'SP', 1),
+     'SP'),
 
     (7, 'Analista de Dados Junior',
      'Vaga para criar relatorios, consultas SQL e automacoes de dados.',
-     'RJ', 4),
+     'RJ'),
 
     (8, 'Desenvolvedor Frontend Angular',
      'Vaga para desenvolver interfaces web responsivas.',
-     'MG', 7),
+     'MG'),
 
     (9, 'DevOps Junior',
      'Vaga para apoiar infraestrutura cloud, containers e deploys.',
-     'PR', 11),
+     'PR'),
 
     (10, 'Desenvolvedor Mobile',
      'Vaga para desenvolvimento e manutencao de aplicativos mobile.',
-     'SC', 14);
+     'SC');
 
 -- COMPETÊNCIAS DAS VAGAS
 INSERT INTO "VagaCompetencia" (id_vaga, id_competencia)

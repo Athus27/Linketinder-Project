@@ -49,8 +49,7 @@ CREATE TABLE "Vaga"
     "id_empresa"      integer NOT NULL,
     "titulo"          varchar NOT NULL,
     "descricao"       varchar NOT NULL,
-    "local_vaga"      varchar NOT NULL,
-    "id_competencias" integer NOT NULL
+    "local_vaga"      varchar NOT NULL
 );
 
 CREATE TABLE "Curtida"
@@ -85,9 +84,6 @@ ALTER TABLE "Company"
 
 ALTER TABLE "Vaga"
     ADD FOREIGN KEY ("id_empresa") REFERENCES "Company" ("id_empresa") DEFERRABLE INITIALLY IMMEDIATE;
-
-ALTER TABLE "Vaga"
-    ADD FOREIGN KEY ("id_competencias") REFERENCES "Competencias" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "Curtida"
     ADD FOREIGN KEY ("id_candidato") REFERENCES "Candidate" ("id_candidato") DEFERRABLE INITIALLY IMMEDIATE;

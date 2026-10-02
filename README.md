@@ -49,6 +49,39 @@ O candidato pode selecionar uma vaga e curtir essa oportunidade. A empresa pode 
 
 As curtidas sao armazenadas em memoria durante a execucao do programa.
 
+## Atualizacao: Integracao entre PostgreSQL e backend
+
+Nesta etapa comecei a integrar o backend do Linketinder com o PostgreSQL utilizando JDBC, sem utilizar JPA ou Hibernate.
+
+Separei as responsabilidades entre `view`, `controller` e `dao`. O `MenuConsole` coleta e exibe os dados, os controllers fazem a comunicacao com os DAOs e os DAOs executam os comandos SQL.
+
+Foram implementadas as seguintes funcionalidades:
+
+- Cadastro e listagem de candidatos no banco de dados.
+- Cadastro e listagem de empresas no banco de dados.
+- Cadastro, busca e listagem de competencias.
+- Relacao N:N entre candidatos e competencias utilizando `CandidatoCompetencia`.
+- Cadastro e listagem de vagas.
+- Relacao N:N entre vagas e competencias utilizando `VagaCompetencia`.
+- Relacao 1:N entre empresa e vagas utilizando `Vaga.id_empresa`.
+- Feed anonimo de candidatos, sem exibir os dados pessoais.
+- Feed anonimo de vagas, sem exibir o nome da empresa.
+- Validacao de CPF, CNPJ, CEP e tamanho minimo da senha.
+
+No cadastro de candidato, a aplicacao cria o usuario, cria o candidato e relaciona suas competencias dentro da mesma transacao. No cadastro de empresa, cria o usuario e utiliza o ID retornado para criar a empresa.
+
+Para cadastrar uma vaga, o usuario seleciona uma empresa ja cadastrada, informa titulo, descricao e local, depois adiciona as competencias. Caso a competencia nao exista, ela e criada antes de gerar o relacionamento com a vaga.
+
+Foi utilizado `commit` para confirmar as operacoes e `rollback` para desfazer tudo quando ocorre algum erro durante o cadastro.
+
+Os arquivos relacionados ao banco estao em:
+
+- `sql/Linketinder.sql`: criacao das tabelas e relacionamentos.
+- `sql/DadosIniciais.sql`: candidatos, empresas, competencias e vagas ficticias.
+- `docs/derLinketinder.png`: imagem atualizada do diagrama.
+
+O menu atual permite listar e cadastrar candidatos e empresas, mostrar competencias, visualizar os feeds anonimos e cadastrar vagas relacionadas a uma empresa existente.
+
 ## Como Executar
 
 No terminal, dentro da pasta do projeto:
@@ -64,6 +97,8 @@ No terminal, dentro da pasta do projeto:
 - Scanner para entrada de dados pelo terminal
 - ArrayList para armazenar candidatos, empresas e competencias
 
-## Observacoes
+## Observacoes da versao inicial
 
 Os dados sao armazenados apenas em memoria. Ao encerrar o programa, os cadastros feitos pelo terminal nao sao salvos em arquivo ou banco de dados.
+
+Na versao atual, os fluxos integrados por JDBC sao persistidos no PostgreSQL. As curtidas e o match ainda pertencem ao fluxo antigo em memoria e serao integrados em uma proxima etapa.

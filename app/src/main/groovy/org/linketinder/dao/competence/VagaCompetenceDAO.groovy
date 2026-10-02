@@ -67,4 +67,21 @@ class VagaCompetenceDAO {
             if (statement != null) statement.close()
         }
     }
+
+    void removerCompetenciasDaVaga(Connection connection, int idVaga) {
+        PreparedStatement statement = null
+
+        try {
+            statement = connection.prepareStatement(
+                    """
+                        DELETE FROM "VagaCompetencia"
+                        WHERE id_vaga = ?
+                    """
+            )
+            statement.setInt(1, idVaga)
+            statement.executeUpdate()
+        } finally {
+            if (statement != null) statement.close()
+        }
+    }
 }

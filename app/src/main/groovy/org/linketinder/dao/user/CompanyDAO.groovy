@@ -126,4 +126,62 @@ class CompanyDAO {
         return [empresas: empresas]
     }
 
+    boolean atualizarEmpresa(Map empresa) {
+        Connection connection = null
+        PreparedStatement statement = null
+        boolean sucesso = false
+
+        try {
+            connection = ConexaoDB.getConnection()
+            connection.setAutoCommit(false)
+
+            statement = connection.prepareStatement(
+                    """
+                        UPDATE "User"
+                        SET nome = ?, email = ?, "país" = ?, cep = ?,
+                            senha = crypt(?, gen_salt('bf'))
+                        WHERE id = ?
+                    """
+            )
+            statement.setString(1, empresa.nome)
+            statement.setString(2, empresa.email)
+            statement.setString(3, empresa.pais)
+            statement.setString(4, empresa.cep)
+            statement.setString(5, empresa.senha)
+            statement.setInt(6, empresa.id as int)
+
+            if (statement.executeUpdate() != 1) {
+                throw new java.sql.SQLException("Empresa não encontrada")
+            }
+
+            statement.close()
+            statement = connection.prepareStatement(
+                    """
+                        UPDATE "Company"
+                        SET cnpj = ?, descricao = ?
+                        WHERE id_empresa = ?
+                    """
+            )
+            statement.setString(1, empresa.cnpj)
+            statement.setString(2, empresa.descricao)
+            statement.setInt(3, empresa.id as int)
+
+            if (statement.executeUpdate() != 1) {
+                throw new java.sql.SQLException("Dados da empresa não encontrados")
+            }
+
+            connection.commit()
+            sucesso = true
+            println("Empresa atualizada com sucesso!")
+        } catch (Exception e) {
+            println("Erro ao atualizar empresa: ${e.message}")
+            if (connection != null) connection.rollback()
+        } finally {
+            if (statement != null) statement.close()
+            if (connection != null) connection.close()
+        }
+
+        return sucesso
+    }
+
 }

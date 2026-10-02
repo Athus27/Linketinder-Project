@@ -147,4 +147,70 @@ class VagaDAO {
 
         return sucesso
     }
+
+    boolean atualizarVaga(Map vaga) {
+        Connection connection = null
+        PreparedStatement statement = null
+        boolean sucesso = false
+
+        try {
+            connection = ConexaoDB.getConnection()
+            connection.setAutoCommit(false)
+
+            statement = connection.prepareStatement(
+                    """
+                        UPDATE "Vaga"
+                        SET id_empresa = ?, titulo = ?, descricao = ?, local_vaga = ?
+                        WHERE id = ?
+                    """
+            )
+            statement.setInt(1, vaga.idEmpresa as int)
+            statement.setString(2, vaga.titulo)
+            statement.setString(3, vaga.descricao)
+            statement.setString(4, vaga.localVaga)
+            statement.setInt(5, vaga.id as int)
+
+            if (statement.executeUpdate() != 1) {
+                throw new SQLException("Vaga não encontrada")
+            }
+
+            VagaCompetenceDAO vagaCompetenceDAO = new VagaCompetenceDAO()
+            CompetenceDAO competenceDAO = new CompetenceDAO()
+
+            vagaCompetenceDAO.removerCompetenciasDaVaga(
+                    connection,
+                    vaga.id as int
+            )
+
+            List<String> competencias = vaga.competencias ?: []
+            competencias.each { String nomeCompetencia ->
+                Map competencia = competenceDAO.buscarOuCriarCompetencia(
+                        connection,
+                        nomeCompetencia
+                )
+
+                if (!vagaCompetenceDAO.adicionarCompetenciaAVaga(
+                        connection,
+                        vaga.id as int,
+                        competencia.id as int
+                )) {
+                    throw new SQLException(
+                            "Não foi possível vincular '${nomeCompetencia}' à vaga"
+                    )
+                }
+            }
+
+            connection.commit()
+            sucesso = true
+            println("Vaga atualizada com sucesso!")
+        } catch (Exception e) {
+            println("Erro ao atualizar vaga: ${e.message}")
+            if (connection != null) connection.rollback()
+        } finally {
+            if (statement != null) statement.close()
+            if (connection != null) connection.close()
+        }
+
+        return sucesso
+    }
 }

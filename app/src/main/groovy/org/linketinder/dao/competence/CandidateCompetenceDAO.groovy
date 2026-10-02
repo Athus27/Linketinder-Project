@@ -65,4 +65,21 @@ class CandidateCompetenceDAO {
             if (statement != null) statement.close()
         }
     }
+
+    void removerCompetenciasDoCandidato(Connection connection, int idCandidato) {
+        PreparedStatement statement = null
+
+        try {
+            statement = connection.prepareStatement(
+                    """
+                        DELETE FROM "CandidatoCompetencia"
+                        WHERE id_candidato = ?
+                    """
+            )
+            statement.setInt(1, idCandidato)
+            statement.executeUpdate()
+        } finally {
+            if (statement != null) statement.close()
+        }
+    }
 }

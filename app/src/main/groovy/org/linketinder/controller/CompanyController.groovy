@@ -20,4 +20,8 @@ class CompanyController {
     List<Map> feedEmpresas() {
         return companyDAO.listarEmpresas().empresas
     }
+
+    boolean atualizarEmpresa(Map empresa) {
+        return companyDAO.atualizarEmpresa(empresa)
+    }
 }

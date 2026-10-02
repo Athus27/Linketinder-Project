@@ -20,4 +20,8 @@ class CandidatoController {
     boolean cadastrarCandidato(Map candidato) {
         return candidateDAO.adicionarCandidato(candidato)
     }
+
+    boolean atualizarCandidato(Map candidato) {
+        return candidateDAO.atualizarCandidato(candidato)
+    }
 }

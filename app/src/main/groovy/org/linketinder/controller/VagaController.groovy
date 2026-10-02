@@ -16,4 +16,8 @@ class VagaController {
     boolean cadastrarVaga(Map vaga) {
         return vagaDAO.adicionarVaga(vaga)
     }
+
+    boolean atualizarVaga(Map vaga) {
+        return vagaDAO.atualizarVaga(vaga)
+    }
 }

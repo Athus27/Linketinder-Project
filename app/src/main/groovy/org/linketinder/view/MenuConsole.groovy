@@ -33,6 +33,9 @@ class MenuConsole {
             9. Empresa Curtir Candidato
 
             10. Mostrar Competencias
+            11. Editar candidato
+            12. Editar empresa
+            13. Editar vaga
             0. Sair
         ==================================
         """
@@ -262,7 +265,7 @@ class MenuConsole {
                 return senha
             }
 
-            println("CPF inválido. Use o formato 000.000.000-00")
+            println("Senha inválida. Digite pelo menos 6 caracteres.")
         }
     }
 
@@ -293,7 +296,6 @@ class MenuConsole {
         println(this.inputCandidateString[4])
         String formacao = scanner.nextLine()
 
-        println(this.inputUserString[4])
         String senha = lerSenha()
 
 
@@ -348,9 +350,9 @@ class MenuConsole {
             return null
         }
 
-        println("Selecione a empresa responsável pela vaga:")
+        println("Selecione uma empresa:")
         empresas.eachWithIndex { Map empresa, int indice ->
-            println("${indice + 1}. ${empresa.nome}")
+            println("${indice + 1}. ${empresa.nome} - ${empresa.cnpj}")
         }
         println("0. Cancelar")
 
@@ -371,6 +373,66 @@ class MenuConsole {
                 println("Opção inválida. Tente novamente.")
             } catch (NumberFormatException ignored) {
                 println("Digite apenas o número da empresa.")
+            }
+        }
+    }
+
+    Map selecionarCandidato() {
+        List<Map> candidatos = candidatoController.listarCandidatos()
+
+        if (candidatos.isEmpty()) {
+            println("Nenhum candidato cadastrado.")
+            return null
+        }
+
+        println("Selecione um candidato:")
+        candidatos.eachWithIndex { Map candidato, int indice ->
+            println("${indice + 1}. ${candidato.nome} ${candidato.sobrenome} - ${candidato.cpf}")
+        }
+        println("0. Cancelar")
+
+        while (true) {
+            String entrada = scanner.nextLine()
+
+            try {
+                int opcao = entrada.toInteger()
+
+                if (opcao == 0) return null
+                if (opcao in 1..candidatos.size()) return candidatos[opcao - 1]
+
+                println("Opção inválida. Tente novamente.")
+            } catch (NumberFormatException ignored) {
+                println("Digite apenas o número do candidato.")
+            }
+        }
+    }
+
+    Map selecionarVaga() {
+        List<Map> vagas = vagaController.listarVagas()
+
+        if (vagas.isEmpty()) {
+            println("Nenhuma vaga cadastrada.")
+            return null
+        }
+
+        println("Selecione uma vaga:")
+        vagas.eachWithIndex { Map vaga, int indice ->
+            println("${indice + 1}. ${vaga.titulo} - ${vaga.localVaga}")
+        }
+        println("0. Cancelar")
+
+        while (true) {
+            String entrada = scanner.nextLine()
+
+            try {
+                int opcao = entrada.toInteger()
+
+                if (opcao == 0) return null
+                if (opcao in 1..vagas.size()) return vagas[opcao - 1]
+
+                println("Opção inválida. Tente novamente.")
+            } catch (NumberFormatException ignored) {
+                println("Digite apenas o número da vaga.")
             }
         }
     }
@@ -433,6 +495,15 @@ class MenuConsole {
     }
     boolean cadastrarVaga(Map dadosVaga) {
         return vagaController.cadastrarVaga(dadosVaga)
+    }
+    boolean atualizarCandidato(Map dadosCandidato) {
+        return candidatoController.atualizarCandidato(dadosCandidato)
+    }
+    boolean atualizarEmpresa(Map dadosEmpresa) {
+        return companyController.atualizarEmpresa(dadosEmpresa)
+    }
+    boolean atualizarVaga(Map dadosVaga) {
+        return vagaController.atualizarVaga(dadosVaga)
     }
 
 
@@ -507,6 +578,39 @@ class MenuConsole {
                 case "10":
                     // Mostrar Competencias
                     exibirCompetencias(competenceController.listarCompetencias())
+                    break
+                case "11":
+                    // Editar candidato
+                    Map candidatoSelecionado = selecionarCandidato()
+                    if (candidatoSelecionado == null) break
+
+                    Map novosDadosCandidato = readInputCandidate()
+                    novosDadosCandidato.id = candidatoSelecionado.id
+                    novosDadosCandidato.competencias = lerCompetencias()
+                    atualizarCandidato(novosDadosCandidato)
+                    break
+                case "12":
+                    // Editar empresa
+                    Map empresaParaEditar = selecionarEmpresa()
+                    if (empresaParaEditar == null) break
+
+                    Map novosDadosEmpresa = readInputCompany()
+                    novosDadosEmpresa.id = empresaParaEditar.id
+                    atualizarEmpresa(novosDadosEmpresa)
+                    break
+                case "13":
+                    // Editar vaga
+                    Map vagaSelecionada = selecionarVaga()
+                    if (vagaSelecionada == null) break
+
+                    println("Selecione a empresa responsável pela vaga:")
+                    Map empresaDaVaga = selecionarEmpresa()
+                    if (empresaDaVaga == null) break
+
+                    Map novosDadosVaga = readInputVaga(empresaDaVaga)
+                    novosDadosVaga.id = vagaSelecionada.id
+                    novosDadosVaga.competencias = lerCompetencias()
+                    atualizarVaga(novosDadosVaga)
                     break
                 case "0":
                     println("Saindo do programa...")

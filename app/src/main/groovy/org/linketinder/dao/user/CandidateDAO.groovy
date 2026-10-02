@@ -200,4 +200,99 @@ class CandidateDAO {
         return sucesso
     }
 
+    boolean atualizarCandidato(Map candidato) {
+        java.sql.Connection connection = null
+        java.sql.PreparedStatement statement = null
+        boolean sucesso = false
+
+        try {
+            connection = ConexaoDB.getConnection()
+            connection.setAutoCommit(false)
+
+            statement = connection.prepareStatement(
+                    """
+                        UPDATE "User"
+                        SET nome = ?, email = ?, "país" = ?, cep = ?,
+                            senha = crypt(?, gen_salt('bf'))
+                        WHERE id = ?
+                    """
+            )
+            statement.setString(1, candidato.nome)
+            statement.setString(2, candidato.email)
+            statement.setString(3, candidato.pais)
+            statement.setString(4, candidato.cep)
+            statement.setString(5, candidato.senha)
+            statement.setInt(6, candidato.id as int)
+
+            if (statement.executeUpdate() != 1) {
+                throw new java.sql.SQLException("Candidato não encontrado")
+            }
+
+            statement.close()
+            statement = connection.prepareStatement(
+                    """
+                        UPDATE "Candidate"
+                        SET sobrenome = ?, data_nascimento = ?, cpf = ?,
+                            descricao = ?, formacao = ?
+                        WHERE id_candidato = ?
+                    """
+            )
+            statement.setString(1, candidato.sobrenome)
+
+            java.time.format.DateTimeFormatter formatoData =
+                    java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            java.time.LocalDate dataNascimento =
+                    java.time.LocalDate.parse(candidato.dataNascimento, formatoData)
+            statement.setDate(2, java.sql.Date.valueOf(dataNascimento))
+
+            statement.setString(3, candidato.cpf)
+            statement.setString(4, candidato.descricao)
+            statement.setString(5, candidato.formacao)
+            statement.setInt(6, candidato.id as int)
+
+            if (statement.executeUpdate() != 1) {
+                throw new java.sql.SQLException("Dados do candidato não encontrados")
+            }
+
+            CandidateCompetenceDAO candidateCompetenceDAO =
+                    new CandidateCompetenceDAO()
+            CompetenceDAO competenceDAO = new CompetenceDAO()
+
+            candidateCompetenceDAO.removerCompetenciasDoCandidato(
+                    connection,
+                    candidato.id as int
+            )
+
+            List<String> competencias = candidato.competencias ?: []
+            competencias.each { String nomeCompetencia ->
+                Map competencia = competenceDAO.buscarOuCriarCompetencia(
+                        connection,
+                        nomeCompetencia
+                )
+
+                if (!candidateCompetenceDAO.adicionarCompetenciaAoCandidato(
+                        connection,
+                        candidato.id as int,
+                        competencia.id as int
+                )) {
+                    throw new java.sql.SQLException(
+                            "Não foi possível vincular '${nomeCompetencia}' ao candidato"
+                    )
+                }
+            }
+
+            connection.commit()
+            sucesso = true
+            println("Candidato atualizado com sucesso!")
+        } catch (Exception e) {
+            println("Erro ao atualizar candidato: ${e.message}")
+            if (connection != null) connection.rollback()
+        } finally {
+            if (statement != null) statement.close()
+            if (connection != null) connection.close()
+        }
+
+        return sucesso
+    }
+
 }

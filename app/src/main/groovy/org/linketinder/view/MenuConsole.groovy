@@ -3,11 +3,13 @@ package org.linketinder.view
 import org.linketinder.controller.CandidatoController
 import org.linketinder.controller.CompanyController
 import org.linketinder.controller.CompetenceController
+import org.linketinder.controller.VagaController
 
 class MenuConsole {
     CandidatoController candidatoController = new CandidatoController()
     CompanyController companyController = new CompanyController()
     CompetenceController competenceController = new CompetenceController()
+    VagaController vagaController = new VagaController()
     Scanner scanner = new Scanner(System.in)
 
     //============================================================
@@ -24,12 +26,13 @@ class MenuConsole {
             4. Cadastrar empresa
 
             5. Feed de Candidatos
-            6. Feed de Empresas
+            6. Feed de Vagas
 
-            7. Candidato Curtir Empresa
-            8. Empresa Curtir Candidato
+            7. Cadastrar vaga
+            8. Candidato Curtir Vaga
+            9. Empresa Curtir Candidato
 
-            9. Mostrar Competencias
+            10. Mostrar Competencias
             0. Sair
         ==================================
         """
@@ -48,6 +51,11 @@ class MenuConsole {
             /*[4] */ "Digite a formação: ",]
     String[] inputCompanyString = [
             /*[0] */ "Digite o CNPJ: ",]
+
+    String[] inputVagaString = [
+            /*[0] */ "Digite o título da vaga: ",
+            /*[1] */ "Digite a descrição da vaga: ",
+            /*[2] */ "Digite o local da vaga: ",]
 
 
     String[] inputCompetenciasString = [
@@ -157,22 +165,25 @@ class MenuConsole {
         }
     }
 
-    String stringEmpresaFeed(Map empresa) {
+    String stringVagaFeed(Map vaga) {
         return """
-        Descrição: ${empresa.descricao}
+        Título: ${vaga.titulo}
+        Descrição: ${vaga.descricao}
+        Local: ${vaga.localVaga}
+        Competências: ${vaga.competencias.join(', ')}
     """.stripIndent()
     }
 
-    void exibirFeedEmpresas(List<Map> empresas) {
-        if (empresas.isEmpty()) {
-            println("Nenhuma empresa encontrada.")
+    void exibirFeedVagas(List<Map> vagas) {
+        if (vagas.isEmpty()) {
+            println("Nenhuma vaga encontrada.")
             return
         }
 
-        println("========== Feed de Empresas ==========")
+        println("========== Feed de Vagas ==========")
 
-        empresas.each { empresa ->
-            println(stringEmpresaFeed(empresa))
+        vagas.each { vaga ->
+            println(stringVagaFeed(vaga))
             println("----------------------------------------")
         }
     }
@@ -329,6 +340,59 @@ class MenuConsole {
 
     }
 
+    Map selecionarEmpresa() {
+        List<Map> empresas = companyController.listarEmpresas()
+
+        if (empresas.isEmpty()) {
+            println("Nenhuma empresa cadastrada.")
+            return null
+        }
+
+        println("Selecione a empresa responsável pela vaga:")
+        empresas.eachWithIndex { Map empresa, int indice ->
+            println("${indice + 1}. ${empresa.nome}")
+        }
+        println("0. Cancelar")
+
+        while (true) {
+            String entrada = scanner.nextLine()
+
+            try {
+                int opcao = entrada.toInteger()
+
+                if (opcao == 0) {
+                    return null
+                }
+
+                if (opcao in 1..empresas.size()) {
+                    return empresas[opcao - 1]
+                }
+
+                println("Opção inválida. Tente novamente.")
+            } catch (NumberFormatException ignored) {
+                println("Digite apenas o número da empresa.")
+            }
+        }
+    }
+
+    Map readInputVaga(Map empresaSelecionada) {
+        println(this.inputVagaString[0])
+        String titulo = scanner.nextLine()
+
+        println(this.inputVagaString[1])
+        String descricao = scanner.nextLine()
+
+        println(this.inputVagaString[2])
+        String localVaga = scanner.nextLine()
+
+        return [
+                idEmpresa: empresaSelecionada.id,
+                titulo   : titulo,
+                descricao: descricao,
+                localVaga: localVaga
+        ]
+    }
+
 
     List<String> lerCompetencias() {
         List<String> competencias = []
@@ -346,12 +410,12 @@ class MenuConsole {
                 println(
                         """
                 Competência '${competencia}' já existe no banco de dados...
-                \n adicionando a competência à lista do candidato.
+                \n adicionando a competência à lista.
 
                         """
                 )
             } else {
-                println("Adicionando competência '${competencia}'  ao bando de dados e à lista do candidato.")
+                println("Adicionando competência '${competencia}' à lista.")
 
             }
 
@@ -366,6 +430,9 @@ class MenuConsole {
     }
     boolean cadastrarEmpresa(Map dadosEmpresa) {
         return companyController.cadastrarEmpresa(dadosEmpresa)
+    }
+    boolean cadastrarVaga(Map dadosVaga) {
+        return vagaController.cadastrarVaga(dadosVaga)
     }
 
 
@@ -413,15 +480,31 @@ class MenuConsole {
                     exibirFeedCandidatos(candidatosFeed)
                     break
                 case "6":
-                    // Feed de Empresas
+                    // Feed de Vagas
+                    List<Map> vagas = vagaController.listarVagas()
+                    exibirFeedVagas(vagas)
                     break
                 case "7":
-                    // Candidato Curtir Empresa
+                    // Cadastrar vaga
+                    Map empresaSelecionada = selecionarEmpresa()
+
+                    if (empresaSelecionada == null) {
+                        break
+                    }
+
+                    Map dadosVaga = readInputVaga(empresaSelecionada)
+                    List<String> competenciasVaga = lerCompetencias()
+                    dadosVaga.competencias = competenciasVaga
+
+                    cadastrarVaga(dadosVaga)
                     break
                 case "8":
-                    // Empresa Curtir Candidato
+                    // Candidato Curtir Vaga
                     break
                 case "9":
+                    // Empresa Curtir Candidato
+                    break
+                case "10":
                     // Mostrar Competencias
                     exibirCompetencias(competenceController.listarCompetencias())
                     break

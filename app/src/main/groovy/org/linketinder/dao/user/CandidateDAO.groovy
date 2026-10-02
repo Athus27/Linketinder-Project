@@ -3,7 +3,7 @@ package org.linketinder.dao.user
 import org.linketinder.dao.ConexaoDB
 
 import org.linketinder.dao.competence.CandidateCompetenceDAO
-
+import org.linketinder.dao.competence.CompetenceDAO
 
 
 class CandidateDAO {
@@ -68,7 +68,7 @@ class CandidateDAO {
                                formacao      : resultSet.getString("formacao"),
                                pais          : resultSet.getString("pais"),
                                cep           : resultSet.getString("cep"),
-                               competencias: competencias
+                               competencias  : competencias
                 ]
             }
 
@@ -140,8 +140,11 @@ class CandidateDAO {
             statement.setInt(1, userId)
             statement.setString(2, candidato.sobrenome)
 
-            String dataNormalizada = candidato.dataNascimento.replace('/', '-')
-            statement.setDate(3, java.sql.Date.valueOf(dataNormalizada))
+            java.time.format.DateTimeFormatter formatoData =
+                    java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            java.time.LocalDate dataNascimento =
+                    java.time.LocalDate.parse(candidato.dataNascimento, formatoData)
+            statement.setDate(3, java.sql.Date.valueOf(dataNascimento))
 
             statement.setString(4, candidato.cpf)
             statement.setString(5, candidato.descricao)
@@ -151,6 +154,24 @@ class CandidateDAO {
             sucesso = rowsAffected > 0
 
             if (sucesso) {
+                CompetenceDAO competenceDAO = new CompetenceDAO()
+                CandidateCompetenceDAO candidateCompetenceDAO =
+                        new CandidateCompetenceDAO()
+
+                List<String> nomesCompetencias = candidato.competencias ?: []
+
+                nomesCompetencias.each { String nomeCompetencia ->
+                    Map competenciaSalva = competenceDAO.buscarOuCriarCompetencia(connection, nomeCompetencia)
+
+                    boolean vinculada = candidateCompetenceDAO.adicionarCompetenciaAoCandidato(connection, userId,competenciaSalva.id as int)
+
+                    if (!vinculada) {
+                        throw new java.sql.SQLException(
+                                "Não foi possível vincular '${nomeCompetencia}' ao candidato"
+                        )
+                    }
+                }
+
                 connection.commit()
                 println("Candidato adicionado com sucesso!")
             } else {

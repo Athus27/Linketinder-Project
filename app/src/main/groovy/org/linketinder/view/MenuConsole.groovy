@@ -41,7 +41,7 @@ class MenuConsole {
     String[] inputCandidateString = [
             /*[0] */ "Digite o sobrenome: ",
             /*[1] */ "Digite o CPF: ",
-            /*[2] */ "Digite a data de nascimento AAAA/MM/DD : ",
+            /*[2] */ "Digite a data de nascimento DD/MM/AAAA: ",
             /*[3] */ "Digite a descrição: ",
             /*[4] */ "Digite a formação: ",]
     String[] inputCompanyString = [
@@ -155,7 +155,7 @@ class MenuConsole {
         println(this.inputUserString[3])
         String cep = scanner.nextLine()
 
-        println(this.inputUserString[3])
+        println(this.inputCandidateString[3])
         String descricao = scanner.nextLine()
 
         println(this.inputCandidateString[4])
@@ -231,11 +231,12 @@ class MenuConsole {
                         """
                 Competência '${competencia}' já existe no banco de dados...
                 \n adicionando a competência à lista do candidato.
+
                         """
                 )
             } else {
                 println("Adicionando competência '${competencia}'  ao bando de dados e à lista do candidato.")
-                competenceController.adicionarCompetencia(competencia)
+
             }
 
             competencias << competencia

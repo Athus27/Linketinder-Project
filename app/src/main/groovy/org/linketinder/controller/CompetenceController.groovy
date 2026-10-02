@@ -24,4 +24,8 @@ class CompetenceController {
     Map getCompetenciaPorNome(String nome) {
         return competenceDAO.getCompetenciaPorNome(nome)
     }
+
+    boolean removerCompetencia(int idCompetencia) {
+        return competenceDAO.removerCompetencia(idCompetencia)
+    }
 }

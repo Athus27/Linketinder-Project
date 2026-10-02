@@ -36,6 +36,11 @@ class MenuConsole {
             11. Editar candidato
             12. Editar empresa
             13. Editar vaga
+
+            14. Remover candidato
+            15. Remover empresa
+            16. Remover competência
+            17. Remover vaga
             0. Sair
         ==================================
         """
@@ -437,6 +442,41 @@ class MenuConsole {
         }
     }
 
+    Map selecionarCompetencia() {
+        List<Map> competencias = competenceController.listarCompetencias()
+
+        if (competencias.isEmpty()) {
+            println("Nenhuma competência cadastrada.")
+            return null
+        }
+
+        println("Selecione uma competência:")
+        competencias.eachWithIndex { Map competencia, int indice ->
+            println("${indice + 1}. ${competencia.nome}")
+        }
+        println("0. Cancelar")
+
+        while (true) {
+            String entrada = scanner.nextLine()
+
+            try {
+                int opcao = entrada.toInteger()
+
+                if (opcao == 0) return null
+                if (opcao in 1..competencias.size()) return competencias[opcao - 1]
+
+                println("Opção inválida. Tente novamente.")
+            } catch (NumberFormatException ignored) {
+                println("Digite apenas o número da competência.")
+            }
+        }
+    }
+
+    boolean confirmarRemocao(String registro) {
+        println("Tem certeza que deseja remover ${registro}? Digite SIM para confirmar:")
+        return scanner.nextLine().equalsIgnoreCase("SIM")
+    }
+
     Map readInputVaga(Map empresaSelecionada) {
         println(this.inputVagaString[0])
         String titulo = scanner.nextLine()
@@ -611,6 +651,50 @@ class MenuConsole {
                     novosDadosVaga.id = vagaSelecionada.id
                     novosDadosVaga.competencias = lerCompetencias()
                     atualizarVaga(novosDadosVaga)
+                    break
+                case "14":
+                    // Remover candidato
+                    Map candidatoParaRemover = selecionarCandidato()
+                    if (candidatoParaRemover == null) break
+
+                    if (confirmarRemocao("o candidato ${candidatoParaRemover.nome} ${candidatoParaRemover.sobrenome}")) {
+                        candidatoController.removerCandidato(candidatoParaRemover.id as int)
+                    } else {
+                        println("Remoção cancelada.")
+                    }
+                    break
+                case "15":
+                    // Remover empresa
+                    Map empresaParaRemover = selecionarEmpresa()
+                    if (empresaParaRemover == null) break
+
+                    if (confirmarRemocao("a empresa ${empresaParaRemover.nome}")) {
+                        companyController.removerEmpresa(empresaParaRemover.id as int)
+                    } else {
+                        println("Remoção cancelada.")
+                    }
+                    break
+                case "16":
+                    // Remover competência
+                    Map competenciaParaRemover = selecionarCompetencia()
+                    if (competenciaParaRemover == null) break
+
+                    if (confirmarRemocao("a competência ${competenciaParaRemover.nome}")) {
+                        competenceController.removerCompetencia(competenciaParaRemover.id as int)
+                    } else {
+                        println("Remoção cancelada.")
+                    }
+                    break
+                case "17":
+                    // Remover vaga
+                    Map vagaParaRemover = selecionarVaga()
+                    if (vagaParaRemover == null) break
+
+                    if (confirmarRemocao("a vaga ${vagaParaRemover.titulo}")) {
+                        vagaController.removerVaga(vagaParaRemover.id as int)
+                    } else {
+                        println("Remoção cancelada.")
+                    }
                     break
                 case "0":
                     println("Saindo do programa...")

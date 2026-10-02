@@ -184,4 +184,46 @@ class CompanyDAO {
         return sucesso
     }
 
+    boolean removerEmpresa(int idEmpresa) {
+        Connection connection = null
+        boolean sucesso = false
+
+        try {
+            connection = ConexaoDB.getConnection()
+            connection.setAutoCommit(false)
+
+            List<String> comandos = [
+                    'DELETE FROM "Curtida" WHERE id_vaga IN (SELECT id FROM "Vaga" WHERE id_empresa = ?)',
+                    'DELETE FROM "VagaCompetencia" WHERE id_vaga IN (SELECT id FROM "Vaga" WHERE id_empresa = ?)',
+                    'DELETE FROM "Vaga" WHERE id_empresa = ?',
+                    'DELETE FROM "Company" WHERE id_empresa = ?',
+                    'DELETE FROM "User" WHERE id = ?'
+            ]
+
+            comandos.eachWithIndex { String sql, int indice ->
+                PreparedStatement statement = connection.prepareStatement(sql)
+                try {
+                    statement.setInt(1, idEmpresa)
+                    int linhasAfetadas = statement.executeUpdate()
+                    if (indice >= 3 && linhasAfetadas != 1) {
+                        throw new java.sql.SQLException("Empresa não encontrada")
+                    }
+                } finally {
+                    statement.close()
+                }
+            }
+
+            connection.commit()
+            sucesso = true
+            println("Empresa removida com sucesso!")
+        } catch (Exception e) {
+            println("Erro ao remover empresa: ${e.message}")
+            if (connection != null) connection.rollback()
+        } finally {
+            if (connection != null) connection.close()
+        }
+
+        return sucesso
+    }
+
 }

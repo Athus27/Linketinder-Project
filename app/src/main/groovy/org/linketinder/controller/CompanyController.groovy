@@ -24,4 +24,8 @@ class CompanyController {
     boolean atualizarEmpresa(Map empresa) {
         return companyDAO.atualizarEmpresa(empresa)
     }
+
+    boolean removerEmpresa(int idEmpresa) {
+        return companyDAO.removerEmpresa(idEmpresa)
+    }
 }

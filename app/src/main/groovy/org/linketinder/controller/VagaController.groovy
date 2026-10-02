@@ -20,4 +20,8 @@ class VagaController {
     boolean atualizarVaga(Map vaga) {
         return vagaDAO.atualizarVaga(vaga)
     }
+
+    boolean removerVaga(int idVaga) {
+        return vagaDAO.removerVaga(idVaga)
+    }
 }

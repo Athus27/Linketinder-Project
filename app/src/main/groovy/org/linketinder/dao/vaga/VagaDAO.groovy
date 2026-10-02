@@ -213,4 +213,44 @@ class VagaDAO {
 
         return sucesso
     }
+
+    boolean removerVaga(int idVaga) {
+        Connection connection = null
+        boolean sucesso = false
+
+        try {
+            connection = ConexaoDB.getConnection()
+            connection.setAutoCommit(false)
+
+            List<String> comandos = [
+                    'DELETE FROM "Curtida" WHERE id_vaga = ?',
+                    'DELETE FROM "VagaCompetencia" WHERE id_vaga = ?',
+                    'DELETE FROM "Vaga" WHERE id = ?'
+            ]
+
+            comandos.eachWithIndex { String sql, int indice ->
+                PreparedStatement statement = connection.prepareStatement(sql)
+                try {
+                    statement.setInt(1, idVaga)
+                    int linhasAfetadas = statement.executeUpdate()
+                    if (indice == 2 && linhasAfetadas != 1) {
+                        throw new SQLException("Vaga não encontrada")
+                    }
+                } finally {
+                    statement.close()
+                }
+            }
+
+            connection.commit()
+            sucesso = true
+            println("Vaga removida com sucesso!")
+        } catch (Exception e) {
+            println("Erro ao remover vaga: ${e.message}")
+            if (connection != null) connection.rollback()
+        } finally {
+            if (connection != null) connection.close()
+        }
+
+        return sucesso
+    }
 }

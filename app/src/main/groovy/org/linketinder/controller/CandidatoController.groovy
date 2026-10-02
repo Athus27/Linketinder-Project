@@ -24,4 +24,8 @@ class CandidatoController {
     boolean atualizarCandidato(Map candidato) {
         return candidateDAO.atualizarCandidato(candidato)
     }
+
+    boolean removerCandidato(int idCandidato) {
+        return candidateDAO.removerCandidato(idCandidato)
+    }
 }

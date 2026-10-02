@@ -295,4 +295,45 @@ class CandidateDAO {
         return sucesso
     }
 
+    boolean removerCandidato(int idCandidato) {
+        java.sql.Connection connection = null
+        boolean sucesso = false
+
+        try {
+            connection = ConexaoDB.getConnection()
+            connection.setAutoCommit(false)
+
+            List<String> comandos = [
+                    'DELETE FROM "Curtida" WHERE id_candidato = ?',
+                    'DELETE FROM "CandidatoCompetencia" WHERE id_candidato = ?',
+                    'DELETE FROM "Candidate" WHERE id_candidato = ?',
+                    'DELETE FROM "User" WHERE id = ?'
+            ]
+
+            comandos.eachWithIndex { String sql, int indice ->
+                java.sql.PreparedStatement statement = connection.prepareStatement(sql)
+                try {
+                    statement.setInt(1, idCandidato)
+                    int linhasAfetadas = statement.executeUpdate()
+                    if (indice >= 2 && linhasAfetadas != 1) {
+                        throw new java.sql.SQLException("Candidato não encontrado")
+                    }
+                } finally {
+                    statement.close()
+                }
+            }
+
+            connection.commit()
+            sucesso = true
+            println("Candidato removido com sucesso!")
+        } catch (Exception e) {
+            println("Erro ao remover candidato: ${e.message}")
+            if (connection != null) connection.rollback()
+        } finally {
+            if (connection != null) connection.close()
+        }
+
+        return sucesso
+    }
+
 }

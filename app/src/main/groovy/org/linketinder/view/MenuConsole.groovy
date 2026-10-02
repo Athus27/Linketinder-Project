@@ -1,11 +1,12 @@
 package org.linketinder.view
 
 import org.linketinder.controller.CandidatoController
+import org.linketinder.controller.CompanyController
 import org.linketinder.controller.CompetenceController
-import org.linketinder.model.Pessoa.UserCandidate
 
 class MenuConsole {
     CandidatoController candidatoController = new CandidatoController()
+    CompanyController companyController = new CompanyController()
     CompetenceController competenceController = new CompetenceController()
     Scanner scanner = new Scanner(System.in)
 
@@ -128,6 +129,54 @@ class MenuConsole {
 
     }
 
+    String stringEmpresa(Map empresa) {
+        String empresaString =
+                """
+            ID: ${empresa.id}
+            Nome: ${empresa.nome}
+            CNPJ: ${empresa.cnpj}
+            Descrição: ${empresa.descricao}
+            E-mail: ${empresa.email}
+            País: ${empresa.pais}
+            CEP: ${empresa.cep}
+        """.stripIndent()
+
+        return empresaString
+    }
+
+    void exibirEmpresas(List<Map> empresas) {
+        if (empresas.isEmpty()) {
+            println("Nenhuma empresa encontrada.")
+        } else {
+            println("============= Empresas =============")
+            empresas.each { empresa ->
+                String empresaString = stringEmpresa(empresa)
+                println(empresaString)
+                println("--------------------------------------")
+            }
+        }
+    }
+
+    String stringEmpresaFeed(Map empresa) {
+        return """
+        Descrição: ${empresa.descricao}
+    """.stripIndent()
+    }
+
+    void exibirFeedEmpresas(List<Map> empresas) {
+        if (empresas.isEmpty()) {
+            println("Nenhuma empresa encontrada.")
+            return
+        }
+
+        println("========== Feed de Empresas ==========")
+
+        empresas.each { empresa ->
+            println(stringEmpresaFeed(empresa))
+            println("----------------------------------------")
+        }
+    }
+
 
     //============================================================
     //     MÉTODOS DE LEITURA DE INPUT E VALIDAÇÃO DE ENTRADA
@@ -160,7 +209,7 @@ class MenuConsole {
 
     String lerCNPJ() {
         while (true) {
-            print("Digite o CNPJ da Empresa: ")
+            println(inputCompanyString[0])
             def cnpj = scanner.nextLine()
 
             if (validadeCNPJ(cnpj)) {
@@ -178,7 +227,7 @@ class MenuConsole {
 
     String lerCEP() {
         while (true) {
-            print("Digite o CEP: ")
+            println(inputUserString[3])
             def cep = scanner.nextLine()
 
             if (validadeCEP(cep)) {
@@ -217,7 +266,6 @@ class MenuConsole {
         println(this.inputCandidateString[2])
         String dataNascimento = scanner.nextLine()
 
-        println(this.inputCandidateString[1])
         String cpf = lerCPF()
 
         println(this.inputUserString[1])
@@ -226,7 +274,6 @@ class MenuConsole {
         println(this.inputUserString[2])
         String pais = scanner.nextLine()
 
-        println(this.inputUserString[3])
         String cep = lerCEP()
 
         println(this.inputCandidateString[3])
@@ -256,7 +303,6 @@ class MenuConsole {
         println(this.inputUserString[0])
         String nome = scanner.nextLine()
 
-        println(this.inputCompanyString[0])
         String cnpj = lerCNPJ()
 
         println(this.inputUserString[1])
@@ -265,14 +311,12 @@ class MenuConsole {
         println(this.inputUserString[2])
         String pais = scanner.nextLine()
 
-        println(this.inputUserString[3])
-        String cep = scanner.nextLine()
+        String cep = lerCEP()
 
-        println(this.inputUserString[3])
+        println(this.inputCandidateString[3])
         String descricao = scanner.nextLine()
 
-        println(this.inputUserString[4])
-        String senha = scanner.nextLine()
+        String senha = lerSenha()
 
 
         return [nome     : nome,
@@ -320,6 +364,9 @@ class MenuConsole {
     boolean cadastrarCandidato(Map dadosCandidato) {
         return candidatoController.cadastrarCandidato(dadosCandidato)
     }
+    boolean cadastrarEmpresa(Map dadosEmpresa) {
+        return companyController.cadastrarEmpresa(dadosEmpresa)
+    }
 
 
     //============================================================
@@ -342,6 +389,8 @@ class MenuConsole {
                     break
                 case "2":
                     // Exibir empresas
+                    List<Map> empresas = companyController.listarEmpresas()
+                    exibirEmpresas(empresas)
                     break
                 case "3":
                     // Cadastrar candidato
@@ -354,9 +403,8 @@ class MenuConsole {
                     break
                 case "4":
                     // Cadastrar empresa
-
                     Map dadosEmpresa = readInputCompany()
-                    // Aqui você pode criar o objeto UserCompany com os dados lidos
+                    cadastrarEmpresa(dadosEmpresa)
                     break
                 case "5":
                     // Feed de Candidatos

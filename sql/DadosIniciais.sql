@@ -68,13 +68,22 @@ VALUES
      crypt('MobileDemo123!', gen_salt('bf')));
 
 -- EMPRESAS
-INSERT INTO "Company" (id_empresa, cnpj)
+INSERT INTO "Company" (id_empresa, cnpj, descricao)
 VALUES
-    (6, '12.345.678/0001-90'),
-    (7, '23.456.789/0001-01'),
-    (8, '34.567.890/0001-12'),
-    (9, '45.678.901/0001-23'),
-    (10, '56.789.012/0001-34');
+    (6, '12.345.678/0001-90',
+     'Empresa de desenvolvimento de sistemas web e APIs.'),
+
+    (7, '23.456.789/0001-01',
+     'Consultoria especializada em dados e automacao de processos.'),
+
+    (8, '34.567.890/0001-12',
+     'Agencia focada em produtos digitais e interfaces modernas.'),
+
+    (9, '45.678.901/0001-23',
+     'Empresa de infraestrutura cloud e suporte DevOps.'),
+
+    (10, '56.789.012/0001-34',
+     'Software house especializada em aplicativos mobile.');
 
 -- COMPETÊNCIAS: catálogo compartilhado por candidatos e vagas
 INSERT INTO "Competencias" (id, competencia)

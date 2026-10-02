@@ -39,7 +39,8 @@ CREATE TABLE "Candidate"
 CREATE TABLE "Company"
 (
     "id_empresa" integer PRIMARY KEY NOT NULL,
-    "cnpj"       varchar UNIQUE      NOT NULL
+    "cnpj"       varchar UNIQUE      NOT NULL,
+    "descricao"  varchar             NOT NULL
 );
 
 CREATE TABLE "Vaga"

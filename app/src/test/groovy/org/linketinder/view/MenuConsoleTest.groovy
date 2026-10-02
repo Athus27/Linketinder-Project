@@ -2,6 +2,8 @@ package org.linketinder.view
 
 import spock.lang.Specification
 
+
+
 class MenuConsoleTest extends Specification {
     def "StringCandidato - Deve exibir todos os campos, exceto a senha"() {
         given: "um candidato com todos os campos"
@@ -66,7 +68,7 @@ class MenuConsoleTest extends Specification {
 
     def "ReadInputCandidate - Deve ler e mapear campos do candidato"() {
         given: "Entradas simuladas na ordem exata solicitada pelo Scanner"
-        String entradaSimulada = "Athus\nSilva Souza\n2004/05/27\n11122233344\nathus@email.com\nBrasil\n35930000\nDev Back-End\nEngenharia da Computacao\nsenha123\n"
+        String entradaSimulada = "Athus\nSilva Souza\n27/05/2004\n111.222.333-44\nathus@email.com\nBrasil\n35930-000\nDev Back-End\nEngenharia da Computacao\nsenha123\n"
 
         InputStream systemInOriginal = System.in
         System.setIn(new ByteArrayInputStream(entradaSimulada.getBytes()))
@@ -87,11 +89,11 @@ class MenuConsoleTest extends Specification {
         and: "Validar se os dados foram inseridos corretamente no map"
         resultado.nome == "Athus"
         resultado.sobrenome == "Silva Souza"
-        resultado.dataNascimento == "2004/05/27"
-        resultado.cpf == "11122233344"
+        resultado.dataNascimento == "27/05/2004"
+        resultado.cpf == "111.222.333-44"
         resultado.email == "athus@email.com"
         resultado.pais == "Brasil"
-        resultado.cep == "35930000"
+        resultado.cep == "35930-000"
         resultado.descricao == "Dev Back-End"
         resultado.formacao == "Engenharia da Computacao"
         resultado.senha == "senha123"
@@ -101,7 +103,7 @@ class MenuConsoleTest extends Specification {
     }
     def "ReadInputCompany - Deve ler e mapear campos da empresa"() {
         given: "Entradas simuladas na ordem exata solicitada pelo Scanner"
-        String entradaSimulada = "Empresa1\n45.678.901/0001-23\nempresa1@mail.com\nBrasil\n123456-000\nEmpresa de software do brasil\nsenh@123\n"
+        String entradaSimulada = "Empresa1\n45.678.901/0001-23\nempresa1@mail.com\nBrasil\n12345-000\nEmpresa de software do brasil\nsenh@123\n"
 
         InputStream systemInOriginal = System.in
         System.setIn(new ByteArrayInputStream(entradaSimulada.getBytes()))
@@ -124,7 +126,7 @@ class MenuConsoleTest extends Specification {
         resultado.cnpj == "45.678.901/0001-23"
         resultado.email == "empresa1@mail.com"
         resultado.pais == "Brasil"
-        resultado.cep == "123456-000"
+        resultado.cep == "12345-000"
         resultado.descricao == "Empresa de software do brasil"
         resultado.senha == "senh@123"
 

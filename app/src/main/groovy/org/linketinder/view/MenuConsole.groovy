@@ -7,6 +7,7 @@ import org.linketinder.model.Pessoa.UserCandidate
 class MenuConsole {
     CandidatoController candidatoController = new CandidatoController()
     CompetenceController competenceController = new CompetenceController()
+    Scanner scanner = new Scanner(System.in)
 
     //============================================================
     //                  STRINGS DE INPUT
@@ -129,11 +130,84 @@ class MenuConsole {
 
 
     //============================================================
-    //                  MÉTODOS DE LEITURA DE INPUT
+    //     MÉTODOS DE LEITURA DE INPUT E VALIDAÇÃO DE ENTRADA
     //============================================================
 
+
+    boolean validadeCPF(String text) {
+        def cpfFormatado = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/
+        return text ==~ cpfFormatado
+    }
+
+    String lerCPF() {
+        while (true) {
+            print("Digite o cpf do Candidato: ")
+            def cpf = scanner.nextLine()
+
+            if (validadeCPF(cpf)) {
+                return cpf
+            }
+
+            println("CPF inválido. Use o formato 000.000.000-00.")
+        }
+    }
+
+    boolean validadeCNPJ(String text) {
+        def cnpjFormatado = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/
+
+        return text ==~ cnpjFormatado
+    }
+
+    String lerCNPJ() {
+        while (true) {
+            print("Digite o CNPJ da Empresa: ")
+            def cnpj = scanner.nextLine()
+
+            if (validadeCNPJ(cnpj)) {
+                return cnpj
+            }
+
+            println("CNPJ inválido. Use o formato 00.000.000/0000-00.")
+        }
+    }
+
+    boolean validadeCEP(String text) {
+        def cepFormatado = /^\d{5}-\d{3}$/
+        return text ==~ cepFormatado
+    }
+
+    String lerCEP() {
+        while (true) {
+            print("Digite o CEP: ")
+            def cep = scanner.nextLine()
+
+            if (validadeCEP(cep)) {
+                return cep
+            }
+
+            println("CEP inválido. Use o formato 00000-000.")
+        }
+    }
+
+    boolean validadeSenha(String senha){
+        return senha.length()>=6
+    }
+
+    String lerSenha(){
+        while (true){
+            println(inputUserString[4])
+            def senha = scanner.nextLine()
+
+            if (validadeSenha(senha)){
+                return senha
+            }
+
+            println("CPF inválido. Use o formato 000.000.000-00")
+        }
+    }
+
+
     Map readInputCandidate() {
-        def scanner = new Scanner(System.in)
         println(this.inputUserString[0])
         String nome = scanner.nextLine()
 
@@ -144,7 +218,7 @@ class MenuConsole {
         String dataNascimento = scanner.nextLine()
 
         println(this.inputCandidateString[1])
-        String cpf = scanner.nextLine()
+        String cpf = lerCPF()
 
         println(this.inputUserString[1])
         String email = scanner.nextLine()
@@ -153,7 +227,7 @@ class MenuConsole {
         String pais = scanner.nextLine()
 
         println(this.inputUserString[3])
-        String cep = scanner.nextLine()
+        String cep = lerCEP()
 
         println(this.inputCandidateString[3])
         String descricao = scanner.nextLine()
@@ -162,7 +236,7 @@ class MenuConsole {
         String formacao = scanner.nextLine()
 
         println(this.inputUserString[4])
-        String senha = scanner.nextLine()
+        String senha = lerSenha()
 
 
         return [nome          : nome,
@@ -179,12 +253,11 @@ class MenuConsole {
     }
 
     Map readInputCompany() {
-        def scanner = new Scanner(System.in)
         println(this.inputUserString[0])
         String nome = scanner.nextLine()
 
         println(this.inputCompanyString[0])
-        String cnpj = scanner.nextLine()
+        String cnpj = lerCNPJ()
 
         println(this.inputUserString[1])
         String email = scanner.nextLine()
@@ -215,7 +288,6 @@ class MenuConsole {
 
     List<String> lerCompetencias() {
         List<String> competencias = []
-        def scanner = new Scanner(System.in)
 
         while (true) {
             println(this.inputCompetenciasString[0])
@@ -256,7 +328,6 @@ class MenuConsole {
     void linketinder() {
         while (true) {
             exibirMenu()
-            def scanner = new Scanner(System.in)
             String opcao = scanner.nextLine()
 
             switch (opcao) {

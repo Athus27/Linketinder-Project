@@ -2,11 +2,15 @@ package org.linketinder.dao.competence
 
 import org.linketinder.dao.ConexaoDB
 
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+
 class CompetenceDAO {
     Map listarCompetencias() {
-        java.sql.Connection connection = null
-        java.sql.PreparedStatement statement = null
-        java.sql.ResultSet resultSet = null
+        Connection connection = null
+        PreparedStatement statement = null
+        ResultSet resultSet = null
 
         def competencias = []
 
@@ -41,8 +45,8 @@ class CompetenceDAO {
     }
 
     boolean adicionarCompetencia(String nome) {
-        java.sql.Connection connection = null
-        java.sql.PreparedStatement statement = null
+        Connection connection = null
+        PreparedStatement statement = null
         boolean sucesso = false
 
         if (checarCompetenciaExistente(nome)) {
@@ -76,9 +80,9 @@ class CompetenceDAO {
     }
 
     boolean checarCompetenciaExistente(String nome) {
-        java.sql.Connection connection = null
-        java.sql.PreparedStatement statement = null
-        java.sql.ResultSet resultSet = null
+        Connection connection = null
+        PreparedStatement statement = null
+        ResultSet resultSet = null
 
         boolean existe = false
 
@@ -111,9 +115,9 @@ class CompetenceDAO {
     }
 
     Map getCompetenciaPorNome(String nome) {
-        java.sql.Connection connection = null
-        java.sql.PreparedStatement statement = null
-        java.sql.ResultSet resultSet = null
+        Connection connection = null
+        PreparedStatement statement = null
+        ResultSet resultSet = null
 
         Map competencia = null
 
@@ -146,5 +150,59 @@ class CompetenceDAO {
             }
         }
         return competencia
+    }
+
+    Map buscarOuCriarCompetencia(Connection connection, String competencia) {
+        PreparedStatement selectStatement = null
+        PreparedStatement insertStatement = null
+        ResultSet selectResultSet = null
+        ResultSet insertResultSet = null
+
+        try {
+            selectStatement = connection.prepareStatement(
+                    """
+                    SELECT id, competencia
+                    FROM "Competencias"
+                    WHERE LOWER(competencia) = LOWER(?)
+                """
+            )
+
+            selectStatement.setString(1, competencia)
+            selectResultSet = selectStatement.executeQuery()
+
+            if (selectResultSet.next()) {
+                return [
+                        id  : selectResultSet.getInt("id"),
+                        nome: selectResultSet.getString("competencia")
+                ]
+            }
+
+            insertStatement = connection.prepareStatement(
+                    """
+                    INSERT INTO "Competencias" (competencia)
+                    VALUES (?)
+                    RETURNING id, competencia
+                """
+            )
+
+            insertStatement.setString(1, competencia)
+            insertResultSet = insertStatement.executeQuery()
+
+            if (!insertResultSet.next()) {
+                throw new java.sql.SQLException(
+                        "O banco não retornou a competência criada"
+                )
+            }
+
+            return [
+                    id  : insertResultSet.getInt("id"),
+                    nome: insertResultSet.getString("competencia")
+            ]
+        } finally {
+            if (insertResultSet != null) insertResultSet.close()
+            if (insertStatement != null) insertStatement.close()
+            if (selectResultSet != null) selectResultSet.close()
+            if (selectStatement != null) selectStatement.close()
+        }
     }
 }

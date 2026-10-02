@@ -245,4 +245,65 @@ class CompetenceDAO {
 
         return sucesso
     }
+
+    boolean atualizarCompetencia(int idCompetencia, String novoNome) {
+        Connection connection = null
+        PreparedStatement selectStatement = null
+        PreparedStatement updateStatement = null
+        ResultSet resultSet = null
+        boolean sucesso = false
+
+        try {
+            connection = ConexaoDB.getConnection()
+            connection.setAutoCommit(false)
+
+            selectStatement = connection.prepareStatement(
+                    """
+                        SELECT 1
+                        FROM "Competencias"
+                        WHERE LOWER(competencia) = LOWER(?) AND id <> ?
+                    """
+            )
+            selectStatement.setString(1, novoNome)
+            selectStatement.setInt(2, idCompetencia)
+            resultSet = selectStatement.executeQuery()
+
+            if (resultSet.next()) {
+                println("Competência '${novoNome}' já existe no banco de dados.")
+                connection.rollback()
+                return false
+            }
+
+            resultSet.close()
+            resultSet = null
+
+            updateStatement = connection.prepareStatement(
+                    """
+                        UPDATE "Competencias"
+                        SET competencia = ?
+                        WHERE id = ?
+                    """
+            )
+            updateStatement.setString(1, novoNome)
+            updateStatement.setInt(2, idCompetencia)
+
+            if (updateStatement.executeUpdate() != 1) {
+                throw new java.sql.SQLException("Competência não encontrada")
+            }
+
+            connection.commit()
+            sucesso = true
+            println("Competência atualizada com sucesso!")
+        } catch (Exception e) {
+            println("Erro ao atualizar competência: ${e.message}")
+            if (connection != null) connection.rollback()
+        } finally {
+            if (resultSet != null) resultSet.close()
+            if (selectStatement != null) selectStatement.close()
+            if (updateStatement != null) updateStatement.close()
+            if (connection != null) connection.close()
+        }
+
+        return sucesso
+    }
 }

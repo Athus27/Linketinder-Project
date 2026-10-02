@@ -3,6 +3,7 @@ package org.linketinder.view
 import org.linketinder.controller.CandidatoController
 import org.linketinder.controller.CompanyController
 import org.linketinder.controller.CompetenceController
+import org.linketinder.controller.CurtidaController
 import org.linketinder.controller.VagaController
 
 class MenuConsole {
@@ -10,6 +11,7 @@ class MenuConsole {
     CompanyController companyController = new CompanyController()
     CompetenceController competenceController = new CompetenceController()
     VagaController vagaController = new VagaController()
+    CurtidaController curtidaController = new CurtidaController()
     Scanner scanner = new Scanner(System.in)
 
     //============================================================
@@ -33,6 +35,7 @@ class MenuConsole {
             9. Empresa Curtir Candidato
 
             10. Mostrar Competencias
+            
             11. Editar candidato
             12. Editar empresa
             13. Editar vaga
@@ -41,6 +44,7 @@ class MenuConsole {
             15. Remover empresa
             16. Remover competência
             17. Remover vaga
+            18. Editar competência
             0. Sair
         ==================================
         """
@@ -442,6 +446,38 @@ class MenuConsole {
         }
     }
 
+    Map selecionarVagaDaEmpresa(Map empresa) {
+        List<Map> vagas = vagaController.listarVagas().findAll { Map vaga ->
+            (vaga.idEmpresa as int) == (empresa.id as int)
+        }
+
+        if (vagas.isEmpty()) {
+            println("A empresa selecionada não possui vagas cadastradas.")
+            return null
+        }
+
+        println("Selecione uma vaga da empresa ${empresa.nome}:")
+        vagas.eachWithIndex { Map vaga, int indice ->
+            println("${indice + 1}. ${vaga.titulo} - ${vaga.localVaga}")
+        }
+        println("0. Cancelar")
+
+        while (true) {
+            String entrada = scanner.nextLine()
+
+            try {
+                int opcao = entrada.toInteger()
+
+                if (opcao == 0) return null
+                if (opcao in 1..vagas.size()) return vagas[opcao - 1]
+
+                println("Opção inválida. Tente novamente.")
+            } catch (NumberFormatException ignored) {
+                println("Digite apenas o número da vaga.")
+            }
+        }
+    }
+
     Map selecionarCompetencia() {
         List<Map> competencias = competenceController.listarCompetencias()
 
@@ -611,9 +647,53 @@ class MenuConsole {
                     break
                 case "8":
                     // Candidato Curtir Vaga
+                    Map candidatoCurtindo = selecionarCandidato()
+                    if (candidatoCurtindo == null) break
+
+                    Map vagaCurtida = selecionarVaga()
+                    if (vagaCurtida == null) break
+
+                    Map resultadoCurtidaCandidato = curtidaController.candidatoCurtirVaga(
+                            candidatoCurtindo.id as int,
+                            vagaCurtida.id as int
+                    )
+
+                    if (!resultadoCurtidaCandidato.sucesso) {
+                        println("Erro ao curtir vaga: ${resultadoCurtidaCandidato.mensagem}")
+                    } else if (resultadoCurtidaCandidato.jaCurtiu) {
+                        println("O candidato já curtiu essa vaga.")
+                    } else if (resultadoCurtidaCandidato.deuMatch) {
+                        println("A empresa ${vagaCurtida.empresa} e o candidato ${candidatoCurtindo.nome} deram match na vaga ${vagaCurtida.titulo}!")
+                    } else {
+                        println("Candidato curtiu a vaga com sucesso!")
+                    }
                     break
                 case "9":
                     // Empresa Curtir Candidato
+                    Map empresaCurtindo = selecionarEmpresa()
+                    if (empresaCurtindo == null) break
+
+                    Map vagaDaEmpresa = selecionarVagaDaEmpresa(empresaCurtindo)
+                    if (vagaDaEmpresa == null) break
+
+                    Map candidatoCurtido = selecionarCandidato()
+                    if (candidatoCurtido == null) break
+
+                    Map resultadoCurtidaEmpresa = curtidaController.empresaCurtirCandidato(
+                            empresaCurtindo.id as int,
+                            vagaDaEmpresa.id as int,
+                            candidatoCurtido.id as int
+                    )
+
+                    if (!resultadoCurtidaEmpresa.sucesso) {
+                        println("Erro ao curtir candidato: ${resultadoCurtidaEmpresa.mensagem}")
+                    } else if (resultadoCurtidaEmpresa.jaCurtiu) {
+                        println("A empresa já curtiu esse candidato para essa vaga.")
+                    } else if (resultadoCurtidaEmpresa.deuMatch) {
+                        println("A empresa ${empresaCurtindo.nome} e o candidato ${candidatoCurtido.nome} deram match na vaga ${vagaDaEmpresa.titulo}!")
+                    } else {
+                        println("Empresa curtiu o candidato com sucesso!")
+                    }
                     break
                 case "10":
                     // Mostrar Competencias
@@ -695,6 +775,24 @@ class MenuConsole {
                     } else {
                         println("Remoção cancelada.")
                     }
+                    break
+                case "18":
+                    // Editar competência
+                    Map competenciaParaEditar = selecionarCompetencia()
+                    if (competenciaParaEditar == null) break
+
+                    println("Digite o novo nome da competência:")
+                    String novoNomeCompetencia = scanner.nextLine().trim()
+
+                    if (novoNomeCompetencia.isEmpty()) {
+                        println("O nome da competência não pode ficar vazio.")
+                        break
+                    }
+
+                    competenceController.atualizarCompetencia(
+                            competenciaParaEditar.id as int,
+                            novoNomeCompetencia
+                    )
                     break
                 case "0":
                     println("Saindo do programa...")

@@ -47,7 +47,7 @@ Nesta versao foi implementado o sistema de curtidas do Linketinder.
 
 O candidato pode selecionar uma vaga e curtir essa oportunidade. A empresa pode selecionar uma de suas vagas e curtir um candidato. Quando os dois lados curtem a mesma relacao de candidato e vaga, o sistema identifica o match e exibe uma mensagem no terminal.
 
-As curtidas sao armazenadas em memoria durante a execucao do programa.
+Na versao inicial, as curtidas eram armazenadas em memoria durante a execucao do programa. Agora elas sao persistidas na tabela `Curtida` do PostgreSQL utilizando JDBC. Cada registro relaciona um candidato e uma vaga, guarda a curtida de cada lado e registra a data quando acontece o match.
 
 ## Atualizacao: Integracao entre PostgreSQL e backend
 
@@ -67,6 +67,9 @@ Foram implementadas as seguintes funcionalidades:
 - Feed anonimo de candidatos, sem exibir os dados pessoais.
 - Feed anonimo de vagas, sem exibir o nome da empresa.
 - Validacao de CPF, CNPJ, CEP e tamanho minimo da senha.
+- CRUD de candidatos, empresas, competencias e vagas.
+- Curtidas de candidatos e empresas persistidas no PostgreSQL.
+- Identificacao e registro do match quando os dois lados curtem a mesma relacao entre candidato e vaga.
 
 No cadastro de candidato, a aplicacao cria o usuario, cria o candidato e relaciona suas competencias dentro da mesma transacao. No cadastro de empresa, cria o usuario e utiliza o ID retornado para criar a empresa.
 
@@ -80,7 +83,7 @@ Os arquivos relacionados ao banco estao em:
 - `sql/DadosIniciais.sql`: candidatos, empresas, competencias e vagas ficticias.
 - `docs/derLinketinder.png`: imagem atualizada do diagrama.
 
-O menu atual permite listar e cadastrar candidatos e empresas, mostrar competencias, visualizar os feeds anonimos e cadastrar vagas relacionadas a uma empresa existente.
+O menu atual permite listar, cadastrar, editar e remover candidatos, empresas, competencias e vagas. Tambem permite visualizar os feeds anonimos e registrar curtidas e matches persistidos no banco de dados.
 
 ## Como Executar
 
@@ -94,11 +97,13 @@ No terminal, dentro da pasta do projeto:
 
 - Groovy
 - Gradle
+- PostgreSQL
+- JDBC
 - Scanner para entrada de dados pelo terminal
-- ArrayList para armazenar candidatos, empresas e competencias
+- ArrayList utilizado na versao inicial para armazenar os dados em memoria
 
 ## Observacoes da versao inicial
 
 Os dados sao armazenados apenas em memoria. Ao encerrar o programa, os cadastros feitos pelo terminal nao sao salvos em arquivo ou banco de dados.
 
-Na versao atual, os fluxos integrados por JDBC sao persistidos no PostgreSQL. As curtidas e o match ainda pertencem ao fluxo antigo em memoria e serao integrados em uma proxima etapa.
+Na versao atual, candidatos, empresas, competencias, vagas, curtidas e matches sao persistidos no PostgreSQL utilizando JDBC.

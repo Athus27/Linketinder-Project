@@ -28,4 +28,8 @@ class CompetenceController {
     boolean removerCompetencia(int idCompetencia) {
         return competenceDAO.removerCompetencia(idCompetencia)
     }
+
+    boolean atualizarCompetencia(int idCompetencia, String novoNome) {
+        return competenceDAO.atualizarCompetencia(idCompetencia, novoNome)
+    }
 }

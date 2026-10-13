@@ -620,6 +620,11 @@ class MenuConsole {
         exibirCandidatos(candidatos)
     }
 
+    private void feedCandidatosPeloConsole() {
+        List<Map> candidatosFeed = candidatoController.feedCandidatos()
+        exibirFeedCandidatos(candidatosFeed)
+    }
+
     private void cadastrarEmpresaPeloConsole() {
         Map dadosEmpresa = readInputCompany()
         cadastrarEmpresa(dadosEmpresa)
@@ -650,10 +655,7 @@ class MenuConsole {
                     cadastrarEmpresaPeloConsole()
                     break
                 case "5":
-                    // Feed de Candidatos
-
-                    List<Map> candidatosFeed = candidatoController.feedCandidatos()
-                    exibirFeedCandidatos(candidatosFeed)
+                    feedCandidatosPeloConsole()
                     break
                 case "6":
                     // Feed de Vagas

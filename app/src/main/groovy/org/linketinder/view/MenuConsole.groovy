@@ -700,6 +700,17 @@ class MenuConsole {
         exibirEmpresas(empresas)
     }
 
+    private void editarEmpresaPeloConsole() {
+        Map empresaSelecionada = selecionarEmpresa()
+        if (empresaSelecionada == null) {
+            return
+        }
+
+        Map novosDadosEmpresa = readInputCompany()
+        novosDadosEmpresa.id = empresaSelecionada.id
+        atualizarEmpresa(novosDadosEmpresa)
+    }
+
     private void empresaCurtirCandidatoPeloConsole() {
         Map empresaSelecionada = selecionarEmpresa()
 
@@ -799,15 +810,7 @@ class MenuConsole {
                     editarCandidatoPeloConsole()
                     break
                 case "12":
-                    // Editar empresa
-                    Map empresaParaEditar = selecionarEmpresa()
-                    if (empresaParaEditar == null) {
-                        break
-                    }
-
-                    Map novosDadosEmpresa = readInputCompany()
-                    novosDadosEmpresa.id = empresaParaEditar.id
-                    atualizarEmpresa(novosDadosEmpresa)
+                    editarEmpresaPeloConsole()
                     break
                 case "13":
                     // Editar vaga

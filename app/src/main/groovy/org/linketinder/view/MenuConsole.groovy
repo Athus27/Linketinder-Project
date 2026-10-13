@@ -764,6 +764,23 @@ class MenuConsole {
         exibirFeedVagas(vagasFeed)
     }
 
+    private void editarVagaPeloConsole() {
+        Map vagaSelecionada = selecionarVaga()
+        if (vagaSelecionada == null) {
+            return
+        }
+
+        Map empresaDaVaga = selecionarEmpresa()
+        if (empresaDaVaga == null) {
+            return
+        }
+
+        Map novosDadosVaga = readInputVaga(empresaDaVaga)
+        novosDadosVaga.id = vagaSelecionada.id
+        novosDadosVaga.competencias = lerCompetencias()
+        atualizarVaga(novosDadosVaga)
+    }
+
     private void exibirCompetenciasPeloConsole() {
         List<Map> competencias = competenceController.listarCompetencias()
         exibirCompetencias(competencias)
@@ -813,22 +830,7 @@ class MenuConsole {
                     editarEmpresaPeloConsole()
                     break
                 case "13":
-                    // Editar vaga
-                    Map vagaSelecionada = selecionarVaga()
-                    if (vagaSelecionada == null) {
-                        break
-                    }
-
-                    println("Selecione a empresa responsável pela vaga:")
-                    Map empresaDaVaga = selecionarEmpresa()
-                    if (empresaDaVaga == null) {
-                        break
-                    }
-
-                    Map novosDadosVaga = readInputVaga(empresaDaVaga)
-                    novosDadosVaga.id = vagaSelecionada.id
-                    novosDadosVaga.competencias = lerCompetencias()
-                    atualizarVaga(novosDadosVaga)
+                    editarVagaPeloConsole()
                     break
                 case "14":
                     // Remover candidato

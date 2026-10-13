@@ -586,6 +586,16 @@ class MenuConsole {
     //============================================================
     //                  FLUXO DO PROGRAMA
     //============================================================
+
+    private void cadastrarCandidatoPeloConsole(){
+        Map dadosCandidato = readInputCandidate()
+        List<String> competencias = lerCompetencias()
+        dadosCandidato.competencias = competencias
+        cadastrarCandidato(dadosCandidato)
+    }
+
+
+
     void linketinder() {
         while (true) {
             exibirMenu()
@@ -607,13 +617,7 @@ class MenuConsole {
                     exibirEmpresas(empresas)
                     break
                 case "3":
-                    // Cadastrar candidato
-
-                    Map dadosCandidato = readInputCandidate()
-                    List<String> competencias = lerCompetencias()
-                    dadosCandidato.competencias = competencias
-
-                    cadastrarCandidato(dadosCandidato)
+                    cadastrarCandidatoPeloConsole()
                     break
                 case "4":
                     // Cadastrar empresa

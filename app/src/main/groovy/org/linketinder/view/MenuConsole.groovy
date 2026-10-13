@@ -261,16 +261,16 @@ class MenuConsole {
         }
     }
 
-    boolean validadeSenha(String senha){
-        return senha.length()>=6
+    boolean validadeSenha(String senha) {
+        return senha.length() >= 6
     }
 
-    String lerSenha(){
-        while (true){
+    String lerSenha() {
+        while (true) {
             println(inputUserString[4])
             def senha = scanner.nextLine()
 
-            if (validadeSenha(senha)){
+            if (validadeSenha(senha)) {
                 return senha
             }
 
@@ -406,8 +406,12 @@ class MenuConsole {
             try {
                 int opcao = entrada.toInteger()
 
-                if (opcao == 0) return null
-                if (opcao in 1..candidatos.size()) return candidatos[opcao - 1]
+                if (opcao == 0) {
+                    return null
+                }
+                if (opcao in 1..candidatos.size()) {
+                    return candidatos[opcao - 1]
+                }
 
                 println("Opção inválida. Tente novamente.")
             } catch (NumberFormatException ignored) {
@@ -436,8 +440,12 @@ class MenuConsole {
             try {
                 int opcao = entrada.toInteger()
 
-                if (opcao == 0) return null
-                if (opcao in 1..vagas.size()) return vagas[opcao - 1]
+                if (opcao == 0) {
+                    return null
+                }
+                if (opcao in 1..vagas.size()) {
+                    return vagas[opcao - 1]
+                }
 
                 println("Opção inválida. Tente novamente.")
             } catch (NumberFormatException ignored) {
@@ -468,8 +476,12 @@ class MenuConsole {
             try {
                 int opcao = entrada.toInteger()
 
-                if (opcao == 0) return null
-                if (opcao in 1..vagas.size()) return vagas[opcao - 1]
+                if (opcao == 0) {
+                    return null
+                }
+                if (opcao in 1..vagas.size()) {
+                    return vagas[opcao - 1]
+                }
 
                 println("Opção inválida. Tente novamente.")
             } catch (NumberFormatException ignored) {
@@ -498,8 +510,12 @@ class MenuConsole {
             try {
                 int opcao = entrada.toInteger()
 
-                if (opcao == 0) return null
-                if (opcao in 1..competencias.size()) return competencias[opcao - 1]
+                if (opcao == 0) {
+                    return null
+                }
+                if (opcao in 1..competencias.size()) {
+                    return competencias[opcao - 1]
+                }
 
                 println("Opção inválida. Tente novamente.")
             } catch (NumberFormatException ignored) {
@@ -566,18 +582,23 @@ class MenuConsole {
     boolean cadastrarCandidato(Map dadosCandidato) {
         return candidatoController.cadastrarCandidato(dadosCandidato)
     }
+
     boolean cadastrarEmpresa(Map dadosEmpresa) {
         return companyController.cadastrarEmpresa(dadosEmpresa)
     }
+
     boolean cadastrarVaga(Map dadosVaga) {
         return vagaController.cadastrarVaga(dadosVaga)
     }
+
     boolean atualizarCandidato(Map dadosCandidato) {
         return candidatoController.atualizarCandidato(dadosCandidato)
     }
+
     boolean atualizarEmpresa(Map dadosEmpresa) {
         return companyController.atualizarEmpresa(dadosEmpresa)
     }
+
     boolean atualizarVaga(Map dadosVaga) {
         return vagaController.atualizarVaga(dadosVaga)
     }
@@ -587,7 +608,7 @@ class MenuConsole {
     //                  FLUXO DO PROGRAMA
     //============================================================
 
-    private void cadastrarCandidatoPeloConsole(){
+    private void cadastrarCandidatoPeloConsole() {
         Map dadosCandidato = readInputCandidate()
         List<String> competencias = lerCompetencias()
         dadosCandidato.competencias = competencias
@@ -599,6 +620,10 @@ class MenuConsole {
         exibirCandidatos(candidatos)
     }
 
+    private void exibirEmpresasPeloConsole() {
+        List<Map> empresas = companyController.listarEmpresas()
+        exibirEmpresas(empresas)
+    }
 
 
     void linketinder() {
@@ -611,9 +636,7 @@ class MenuConsole {
                     exibirCandidatosPeloConsole()
                     break
                 case "2":
-                    // Exibir empresas
-                    List<Map> empresas = companyController.listarEmpresas()
-                    exibirEmpresas(empresas)
+                    exibirEmpresasPeloConsole()
                     break
                 case "3":
                     cadastrarCandidatoPeloConsole()
@@ -651,10 +674,14 @@ class MenuConsole {
                 case "8":
                     // Candidato Curtir Vaga
                     Map candidatoCurtindo = selecionarCandidato()
-                    if (candidatoCurtindo == null) break
+                    if (candidatoCurtindo == null) {
+                        break
+                    }
 
                     Map vagaCurtida = selecionarVaga()
-                    if (vagaCurtida == null) break
+                    if (vagaCurtida == null) {
+                        break
+                    }
 
                     Map resultadoCurtidaCandidato = curtidaController.candidatoCurtirVaga(
                             candidatoCurtindo.id as int,
@@ -674,13 +701,19 @@ class MenuConsole {
                 case "9":
                     // Empresa Curtir Candidato
                     Map empresaCurtindo = selecionarEmpresa()
-                    if (empresaCurtindo == null) break
+                    if (empresaCurtindo == null) {
+                        break
+                    }
 
                     Map vagaDaEmpresa = selecionarVagaDaEmpresa(empresaCurtindo)
-                    if (vagaDaEmpresa == null) break
+                    if (vagaDaEmpresa == null) {
+                        break
+                    }
 
                     Map candidatoCurtido = selecionarCandidato()
-                    if (candidatoCurtido == null) break
+                    if (candidatoCurtido == null) {
+                        break
+                    }
 
                     Map resultadoCurtidaEmpresa = curtidaController.empresaCurtirCandidato(
                             empresaCurtindo.id as int,
@@ -705,7 +738,9 @@ class MenuConsole {
                 case "11":
                     // Editar candidato
                     Map candidatoSelecionado = selecionarCandidato()
-                    if (candidatoSelecionado == null) break
+                    if (candidatoSelecionado == null) {
+                        break
+                    }
 
                     Map novosDadosCandidato = readInputCandidate()
                     novosDadosCandidato.id = candidatoSelecionado.id
@@ -715,7 +750,9 @@ class MenuConsole {
                 case "12":
                     // Editar empresa
                     Map empresaParaEditar = selecionarEmpresa()
-                    if (empresaParaEditar == null) break
+                    if (empresaParaEditar == null) {
+                        break
+                    }
 
                     Map novosDadosEmpresa = readInputCompany()
                     novosDadosEmpresa.id = empresaParaEditar.id
@@ -724,11 +761,15 @@ class MenuConsole {
                 case "13":
                     // Editar vaga
                     Map vagaSelecionada = selecionarVaga()
-                    if (vagaSelecionada == null) break
+                    if (vagaSelecionada == null) {
+                        break
+                    }
 
                     println("Selecione a empresa responsável pela vaga:")
                     Map empresaDaVaga = selecionarEmpresa()
-                    if (empresaDaVaga == null) break
+                    if (empresaDaVaga == null) {
+                        break
+                    }
 
                     Map novosDadosVaga = readInputVaga(empresaDaVaga)
                     novosDadosVaga.id = vagaSelecionada.id
@@ -738,7 +779,9 @@ class MenuConsole {
                 case "14":
                     // Remover candidato
                     Map candidatoParaRemover = selecionarCandidato()
-                    if (candidatoParaRemover == null) break
+                    if (candidatoParaRemover == null) {
+                        break
+                    }
 
                     if (confirmarRemocao("o candidato ${candidatoParaRemover.nome} ${candidatoParaRemover.sobrenome}")) {
                         candidatoController.removerCandidato(candidatoParaRemover.id as int)
@@ -749,7 +792,9 @@ class MenuConsole {
                 case "15":
                     // Remover empresa
                     Map empresaParaRemover = selecionarEmpresa()
-                    if (empresaParaRemover == null) break
+                    if (empresaParaRemover == null) {
+                        break
+                    }
 
                     if (confirmarRemocao("a empresa ${empresaParaRemover.nome}")) {
                         companyController.removerEmpresa(empresaParaRemover.id as int)
@@ -760,7 +805,9 @@ class MenuConsole {
                 case "16":
                     // Remover competência
                     Map competenciaParaRemover = selecionarCompetencia()
-                    if (competenciaParaRemover == null) break
+                    if (competenciaParaRemover == null) {
+                        break
+                    }
 
                     if (confirmarRemocao("a competência ${competenciaParaRemover.nome}")) {
                         competenceController.removerCompetencia(competenciaParaRemover.id as int)
@@ -771,7 +818,9 @@ class MenuConsole {
                 case "17":
                     // Remover vaga
                     Map vagaParaRemover = selecionarVaga()
-                    if (vagaParaRemover == null) break
+                    if (vagaParaRemover == null) {
+                        break
+                    }
 
                     if (confirmarRemocao("a vaga ${vagaParaRemover.titulo}")) {
                         vagaController.removerVaga(vagaParaRemover.id as int)
@@ -782,7 +831,9 @@ class MenuConsole {
                 case "18":
                     // Editar competência
                     Map competenciaParaEditar = selecionarCompetencia()
-                    if (competenciaParaEditar == null) break
+                    if (competenciaParaEditar == null) {
+                        break
+                    }
 
                     println("Digite o novo nome da competência:")
                     String novoNomeCompetencia = scanner.nextLine().trim()

@@ -9,6 +9,7 @@ build
 
 # Ignore IDE project files
 .idea/
+/app/bin/
 
 # Ignore local dependency jars
 lib/

@@ -635,6 +635,20 @@ class MenuConsole {
         exibirEmpresas(empresas)
     }
 
+    private void cadastrarVagaPeloConsole(){
+        Map empresaSelecionada = selecionarEmpresa()
+
+        if (empresaSelecionada == null) {
+            return
+        }
+
+        Map dadosVaga = readInputVaga(empresaSelecionada)
+        List<String> competenciasVaga = lerCompetencias()
+        dadosVaga.competencias = competenciasVaga
+
+        cadastrarVaga(dadosVaga)
+    }
+
     private void feedVagasPeloConsole() {
         List<Map> vagasFeed = vagaController.listarVagas()
         exibirFeedVagas(vagasFeed)
@@ -666,18 +680,7 @@ class MenuConsole {
                     feedVagasPeloConsole()
                     break
                 case "7":
-                    // Cadastrar vaga
-                    Map empresaSelecionada = selecionarEmpresa()
-
-                    if (empresaSelecionada == null) {
-                        break
-                    }
-
-                    Map dadosVaga = readInputVaga(empresaSelecionada)
-                    List<String> competenciasVaga = lerCompetencias()
-                    dadosVaga.competencias = competenciasVaga
-
-                    cadastrarVaga(dadosVaga)
+                    cadastrarVagaPeloConsole()
                     break
                 case "8":
                     // Candidato Curtir Vaga

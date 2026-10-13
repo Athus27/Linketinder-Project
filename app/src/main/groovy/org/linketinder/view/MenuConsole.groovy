@@ -932,10 +932,4 @@ class MenuConsole {
             }
         }
     }
-
-    static void main(String[] args) {
-        MenuConsole menu = new MenuConsole()
-        println("Bem-vindo ao Linketinder!")
-        menu.linketinder()
-    }
 }

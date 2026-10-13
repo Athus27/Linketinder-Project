@@ -635,6 +635,11 @@ class MenuConsole {
         exibirEmpresas(empresas)
     }
 
+    private void feedVagasPeloConsole() {
+        List<Map> vagasFeed = vagaController.listarVagas()
+        exibirFeedVagas(vagasFeed)
+    }
+
 
     void linketinder() {
         while (true) {
@@ -658,9 +663,7 @@ class MenuConsole {
                     feedCandidatosPeloConsole()
                     break
                 case "6":
-                    // Feed de Vagas
-                    List<Map> vagas = vagaController.listarVagas()
-                    exibirFeedVagas(vagas)
+                    feedVagasPeloConsole()
                     break
                 case "7":
                     // Cadastrar vaga

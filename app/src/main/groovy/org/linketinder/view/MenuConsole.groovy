@@ -646,6 +646,18 @@ class MenuConsole {
         exibirCandidatos(candidatos)
     }
 
+    private void editarCandidatoPeloConsole() {
+        Map candidatoSelecionado = selecionarCandidato()
+        if (candidatoSelecionado == null) {
+            return
+        }
+
+        Map novosDadosCandidato = readInputCandidate()
+        novosDadosCandidato.id = candidatoSelecionado.id
+        novosDadosCandidato.competencias = lerCompetencias()
+        atualizarCandidato(novosDadosCandidato)
+    }
+
     private void feedCandidatosPeloConsole() {
         List<Map> candidatosFeed = candidatoController.feedCandidatos()
         exibirFeedCandidatos(candidatosFeed)
@@ -784,16 +796,7 @@ class MenuConsole {
                     exibirCompetenciasPeloConsole()
                     break
                 case "11":
-                    // Editar candidato
-                    Map candidatoSelecionado = selecionarCandidato()
-                    if (candidatoSelecionado == null) {
-                        break
-                    }
-
-                    Map novosDadosCandidato = readInputCandidate()
-                    novosDadosCandidato.id = candidatoSelecionado.id
-                    novosDadosCandidato.competencias = lerCompetencias()
-                    atualizarCandidato(novosDadosCandidato)
+                    editarCandidatoPeloConsole()
                     break
                 case "12":
                     // Editar empresa

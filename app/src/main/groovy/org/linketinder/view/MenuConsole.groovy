@@ -823,6 +823,26 @@ class MenuConsole {
         exibirCompetencias(competencias)
     }
 
+    private void editarCompetenciaPeloConsole() {
+        Map competenciaSelecionada = selecionarCompetencia()
+        if (competenciaSelecionada == null) {
+            return
+        }
+
+        println("Digite o novo nome da competência:")
+        String novoNomeCompetencia = scanner.nextLine().trim()
+
+        if (novoNomeCompetencia.isEmpty()) {
+            println("O nome da competência não pode ficar vazio.")
+            return
+        }
+
+        competenceController.atualizarCompetencia(
+                competenciaSelecionada.id as int,
+                novoNomeCompetencia
+        )
+    }
+
     private void removerCompetenciaPeloConsole() {
         Map competenciaSelecionada = selecionarCompetencia()
         if (competenciaSelecionada == null) {
@@ -895,24 +915,7 @@ class MenuConsole {
                     removerVagaPeloConsole()
                     break
                 case "18":
-                    // Editar competência
-                    Map competenciaParaEditar = selecionarCompetencia()
-                    if (competenciaParaEditar == null) {
-                        break
-                    }
-
-                    println("Digite o novo nome da competência:")
-                    String novoNomeCompetencia = scanner.nextLine().trim()
-
-                    if (novoNomeCompetencia.isEmpty()) {
-                        println("O nome da competência não pode ficar vazio.")
-                        break
-                    }
-
-                    competenceController.atualizarCompetencia(
-                            competenciaParaEditar.id as int,
-                            novoNomeCompetencia
-                    )
+                    editarCompetenciaPeloConsole()
                     break
                 case "0":
                     println("Saindo do programa...")

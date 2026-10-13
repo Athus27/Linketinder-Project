@@ -47,7 +47,7 @@ class MenuConsoleTest extends Specification {
         !resultado.contains("Senha:")
     }
 
-    def LerCompetencias() {
+    def LerCompetenciasPeloConsole() {
         given: "Uma entrada simulada e um menu console"
         // Simula o usuário digitando "Java" e apertando Enter (\n)
         String entradaSimulada = "Java\nsair\n"
@@ -57,7 +57,7 @@ class MenuConsoleTest extends Specification {
         MenuConsole menuConsole = new MenuConsole()
 
         when: "Ler uma competência"
-        List<String> competencias = menuConsole.lerCompetencias()
+        List<String> competencias = menuConsole.lerCompetenciasPeloConsole()
 
         then: "A competência lida deve corresponder à entrada"
         competencias == ["Java"]

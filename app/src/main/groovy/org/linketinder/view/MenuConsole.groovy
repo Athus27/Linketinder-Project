@@ -573,38 +573,6 @@ class MenuConsole {
         ]
     }
 
-
-    List<String> lerCompetencias() {
-        List<String> competencias = []
-
-        while (true) {
-            println(this.inputCompetenciasString[0])
-            println(competencias ? "Competências atuais: ${competencias.join(', ')}" : "Nenhuma competência adicionada ainda.")
-            String competencia = scanner.nextLine()
-
-            if (competencia.equalsIgnoreCase("sair")) {
-                break
-            }
-
-            if (competenceController.checarCompetenciaExistente(competencia)) {
-                println(
-                        """
-                Competência '${competencia}' já existe no banco de dados...
-                \n adicionando a competência à lista.
-
-                        """
-                )
-            } else {
-                println("Adicionando competência '${competencia}' à lista.")
-
-            }
-
-            competencias << competencia
-        }
-        return competencias
-    }
-
-
     boolean cadastrarCandidato(Map dadosCandidato) {
         return candidatoController.cadastrarCandidato(dadosCandidato)
     }
@@ -636,7 +604,7 @@ class MenuConsole {
 
     private void cadastrarCandidatoPeloConsole() {
         Map dadosCandidato = readInputCandidate()
-        List<String> competencias = lerCompetencias()
+        List<String> competencias = lerCompetenciasPeloConsole()
         dadosCandidato.competencias = competencias
         cadastrarCandidato(dadosCandidato)
     }
@@ -654,8 +622,21 @@ class MenuConsole {
 
         Map novosDadosCandidato = readInputCandidate()
         novosDadosCandidato.id = candidatoSelecionado.id
-        novosDadosCandidato.competencias = lerCompetencias()
+        novosDadosCandidato.competencias = lerCompetenciasPeloConsole()
         atualizarCandidato(novosDadosCandidato)
+    }
+
+    private void removerCandidatoPeloConsole() {
+        Map candidatoSelecionado = selecionarCandidato()
+        if (candidatoSelecionado == null) {
+            return
+        }
+
+        if (confirmarRemocao("o candidato ${candidatoSelecionado.nome} ${candidatoSelecionado.sobrenome}")) {
+            candidatoController.removerCandidato(candidatoSelecionado.id as int)
+        } else {
+            println("Remoção cancelada.")
+        }
     }
 
     private void feedCandidatosPeloConsole() {
@@ -711,6 +692,19 @@ class MenuConsole {
         atualizarEmpresa(novosDadosEmpresa)
     }
 
+    private void removerEmpresaPeloConsole() {
+        Map empresaSelecionada = selecionarEmpresa()
+        if (empresaSelecionada == null) {
+            return
+        }
+
+        if (confirmarRemocao("a empresa ${empresaSelecionada.nome}")) {
+            companyController.removerEmpresa(empresaSelecionada.id as int)
+        } else {
+            println("Remoção cancelada.")
+        }
+    }
+
     private void empresaCurtirCandidatoPeloConsole() {
         Map empresaSelecionada = selecionarEmpresa()
 
@@ -753,7 +747,7 @@ class MenuConsole {
         }
 
         Map dadosVaga = readInputVaga(empresaSelecionada)
-        List<String> competenciasVaga = lerCompetencias()
+        List<String> competenciasVaga = lerCompetenciasPeloConsole()
         dadosVaga.competencias = competenciasVaga
 
         cadastrarVaga(dadosVaga)
@@ -777,13 +771,69 @@ class MenuConsole {
 
         Map novosDadosVaga = readInputVaga(empresaDaVaga)
         novosDadosVaga.id = vagaSelecionada.id
-        novosDadosVaga.competencias = lerCompetencias()
+        novosDadosVaga.competencias = lerCompetenciasPeloConsole()
         atualizarVaga(novosDadosVaga)
+    }
+
+    private void removerVagaPeloConsole() {
+        Map vagaSelecionada = selecionarVaga()
+        if (vagaSelecionada == null) {
+            return
+        }
+
+        if (confirmarRemocao("a vaga ${vagaSelecionada.titulo}")) {
+            vagaController.removerVaga(vagaSelecionada.id as int)
+        } else {
+            println("Remoção cancelada.")
+        }
+    }
+
+    List<String> lerCompetenciasPeloConsole() {
+        List<String> competencias = []
+
+        while (true) {
+            println(this.inputCompetenciasString[0])
+            println(competencias ? "Competências atuais: ${competencias.join(', ')}" : "Nenhuma competência adicionada ainda.")
+            String competencia = scanner.nextLine()
+
+            if (competencia.equalsIgnoreCase("sair")) {
+                break
+            }
+
+            if (competenceController.checarCompetenciaExistente(competencia)) {
+                println(
+                        """
+                Competência '${competencia}' já existe no banco de dados...
+                \n adicionando a competência à lista.
+
+                        """
+                )
+            } else {
+                println("Adicionando competência '${competencia}' à lista.")
+
+            }
+
+            competencias << competencia
+        }
+        return competencias
     }
 
     private void exibirCompetenciasPeloConsole() {
         List<Map> competencias = competenceController.listarCompetencias()
         exibirCompetencias(competencias)
+    }
+
+    private void removerCompetenciaPeloConsole() {
+        Map competenciaSelecionada = selecionarCompetencia()
+        if (competenciaSelecionada == null) {
+            return
+        }
+
+        if (confirmarRemocao("a competência ${competenciaSelecionada.nome}")) {
+            competenceController.removerCompetencia(competenciaSelecionada.id as int)
+        } else {
+            println("Remoção cancelada.")
+        }
     }
 
 
@@ -833,56 +883,16 @@ class MenuConsole {
                     editarVagaPeloConsole()
                     break
                 case "14":
-                    // Remover candidato
-                    Map candidatoParaRemover = selecionarCandidato()
-                    if (candidatoParaRemover == null) {
-                        break
-                    }
-
-                    if (confirmarRemocao("o candidato ${candidatoParaRemover.nome} ${candidatoParaRemover.sobrenome}")) {
-                        candidatoController.removerCandidato(candidatoParaRemover.id as int)
-                    } else {
-                        println("Remoção cancelada.")
-                    }
+                    removerCandidatoPeloConsole()
                     break
                 case "15":
-                    // Remover empresa
-                    Map empresaParaRemover = selecionarEmpresa()
-                    if (empresaParaRemover == null) {
-                        break
-                    }
-
-                    if (confirmarRemocao("a empresa ${empresaParaRemover.nome}")) {
-                        companyController.removerEmpresa(empresaParaRemover.id as int)
-                    } else {
-                        println("Remoção cancelada.")
-                    }
+                    removerEmpresaPeloConsole()
                     break
                 case "16":
-                    // Remover competência
-                    Map competenciaParaRemover = selecionarCompetencia()
-                    if (competenciaParaRemover == null) {
-                        break
-                    }
-
-                    if (confirmarRemocao("a competência ${competenciaParaRemover.nome}")) {
-                        competenceController.removerCompetencia(competenciaParaRemover.id as int)
-                    } else {
-                        println("Remoção cancelada.")
-                    }
+                    removerCompetenciaPeloConsole()
                     break
                 case "17":
-                    // Remover vaga
-                    Map vagaParaRemover = selecionarVaga()
-                    if (vagaParaRemover == null) {
-                        break
-                    }
-
-                    if (confirmarRemocao("a vaga ${vagaParaRemover.titulo}")) {
-                        vagaController.removerVaga(vagaParaRemover.id as int)
-                    } else {
-                        println("Remoção cancelada.")
-                    }
+                    removerVagaPeloConsole()
                     break
                 case "18":
                     // Editar competência

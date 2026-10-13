@@ -75,6 +75,14 @@ class MenuConsole {
             /*[1] */ "Competências atuais: ",
             /*[2] */ "Nenhuma competência adicionada ainda.",]
 
+    Map<String, String> mensagemDaCurtidaString = [
+            "mensagemDeErro"              : "Erro ao curtir: ",
+            "mensagemCandidatoJaCurtiu"   : "O candidato já curtiu essa vaga.",
+            "mensagemEmpresaJaCurtiu"     : "A empresa já curtiu esse candidato para essa vaga.",
+            "mensagemMatch"               : "Deu match!",
+            "mensagemSucessoParaCandidato": "Candidato curtiu a vaga com sucesso!",
+            "mensagemSucessoParaEmpresa"  : "Empresa curtiu o candidato com sucesso!"
+    ]
     //============================================================
     //                  MÉTODOS DE EXIBIÇÃO E STRINGS RELACIONADAS
     //============================================================
@@ -199,7 +207,25 @@ class MenuConsole {
             println("----------------------------------------")
         }
     }
+    //============================================================
+    //                  MAPEANDO DE INPUTS E VALIDAÇÕES
+    //============================================================
 
+    private String mensagemDaCurtida(
+            Map resultado,
+            String mensagemJaCurtiu,
+            String mensagemSucesso
+    ) {
+        if (!resultado.sucesso) {
+            return "${mensagemDaCurtidaString.mensagemDeErro}${resultado.mensagem}"
+        } else if (resultado.jaCurtiu) {
+            return mensagemJaCurtiu
+        } else if (resultado.deuMatch) {
+            return mensagemDaCurtidaString.mensagemMatch
+        } else {
+            return mensagemSucesso
+        }
+    }
 
     //============================================================
     //     MÉTODOS DE LEITURA DE INPUT E VALIDAÇÃO DE ENTRADA
@@ -625,6 +651,33 @@ class MenuConsole {
         exibirFeedCandidatos(candidatosFeed)
     }
 
+    private void candidatoCurtirVagaPeloConsole() {
+        Map candidatoSelecionado = selecionarCandidato()
+
+        if (candidatoSelecionado == null) {
+            return
+        }
+
+        Map vagaSelecionada = selecionarVaga()
+
+        if (vagaSelecionada == null) {
+            return
+        }
+
+        Map resultadoCurtida = curtidaController.candidatoCurtirVaga(
+                candidatoSelecionado.id as int,
+                vagaSelecionada.id as int
+        )
+
+        String mensagem = mensagemDaCurtida(
+                resultadoCurtida,
+                mensagemDaCurtidaString.mensagemCandidatoJaCurtiu,
+                mensagemDaCurtidaString.mensagemSucessoParaCandidato
+        )
+
+        println(mensagem)
+    }
+
     private void cadastrarEmpresaPeloConsole() {
         Map dadosEmpresa = readInputCompany()
         cadastrarEmpresa(dadosEmpresa)
@@ -635,7 +688,41 @@ class MenuConsole {
         exibirEmpresas(empresas)
     }
 
-    private void cadastrarVagaPeloConsole(){
+    private void empresaCurtirCandidatoPeloConsole() {
+        Map empresaSelecionada = selecionarEmpresa()
+
+        if (empresaSelecionada == null) {
+            return
+        }
+
+        Map vagaSelecionada = selecionarVagaDaEmpresa(empresaSelecionada)
+
+        if (vagaSelecionada == null) {
+            return
+        }
+
+        Map candidatoSelecionado = selecionarCandidato()
+
+        if (candidatoSelecionado == null) {
+            return
+        }
+
+        Map resultadoCurtida = curtidaController.empresaCurtirCandidato(
+                empresaSelecionada.id as int,
+                vagaSelecionada.id as int,
+                candidatoSelecionado.id as int
+        )
+
+        String mensagem = mensagemDaCurtida(
+                resultadoCurtida,
+                mensagemDaCurtidaString.mensagemEmpresaJaCurtiu,
+                mensagemDaCurtidaString.mensagemSucessoParaEmpresa
+        )
+
+        println(mensagem)
+    }
+
+    private void cadastrarVagaPeloConsole() {
         Map empresaSelecionada = selecionarEmpresa()
 
         if (empresaSelecionada == null) {
@@ -683,64 +770,10 @@ class MenuConsole {
                     cadastrarVagaPeloConsole()
                     break
                 case "8":
-                    // Candidato Curtir Vaga
-                    Map candidatoCurtindo = selecionarCandidato()
-                    if (candidatoCurtindo == null) {
-                        break
-                    }
-
-                    Map vagaCurtida = selecionarVaga()
-                    if (vagaCurtida == null) {
-                        break
-                    }
-
-                    Map resultadoCurtidaCandidato = curtidaController.candidatoCurtirVaga(
-                            candidatoCurtindo.id as int,
-                            vagaCurtida.id as int
-                    )
-
-                    if (!resultadoCurtidaCandidato.sucesso) {
-                        println("Erro ao curtir vaga: ${resultadoCurtidaCandidato.mensagem}")
-                    } else if (resultadoCurtidaCandidato.jaCurtiu) {
-                        println("O candidato já curtiu essa vaga.")
-                    } else if (resultadoCurtidaCandidato.deuMatch) {
-                        println("A empresa ${vagaCurtida.empresa} e o candidato ${candidatoCurtindo.nome} deram match na vaga ${vagaCurtida.titulo}!")
-                    } else {
-                        println("Candidato curtiu a vaga com sucesso!")
-                    }
+                    candidatoCurtirVagaPeloConsole()
                     break
                 case "9":
-                    // Empresa Curtir Candidato
-                    Map empresaCurtindo = selecionarEmpresa()
-                    if (empresaCurtindo == null) {
-                        break
-                    }
-
-                    Map vagaDaEmpresa = selecionarVagaDaEmpresa(empresaCurtindo)
-                    if (vagaDaEmpresa == null) {
-                        break
-                    }
-
-                    Map candidatoCurtido = selecionarCandidato()
-                    if (candidatoCurtido == null) {
-                        break
-                    }
-
-                    Map resultadoCurtidaEmpresa = curtidaController.empresaCurtirCandidato(
-                            empresaCurtindo.id as int,
-                            vagaDaEmpresa.id as int,
-                            candidatoCurtido.id as int
-                    )
-
-                    if (!resultadoCurtidaEmpresa.sucesso) {
-                        println("Erro ao curtir candidato: ${resultadoCurtidaEmpresa.mensagem}")
-                    } else if (resultadoCurtidaEmpresa.jaCurtiu) {
-                        println("A empresa já curtiu esse candidato para essa vaga.")
-                    } else if (resultadoCurtidaEmpresa.deuMatch) {
-                        println("A empresa ${empresaCurtindo.nome} e o candidato ${candidatoCurtido.nome} deram match na vaga ${vagaDaEmpresa.titulo}!")
-                    } else {
-                        println("Empresa curtiu o candidato com sucesso!")
-                    }
+                    empresaCurtirCandidatoPeloConsole()
                     break
                 case "10":
                     // Mostrar Competencias

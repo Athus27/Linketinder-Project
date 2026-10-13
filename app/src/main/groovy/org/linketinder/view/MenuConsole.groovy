@@ -620,6 +620,11 @@ class MenuConsole {
         exibirCandidatos(candidatos)
     }
 
+    private void cadastrarEmpresaPeloConsole() {
+        Map dadosEmpresa = readInputCompany()
+        cadastrarEmpresa(dadosEmpresa)
+    }
+
     private void exibirEmpresasPeloConsole() {
         List<Map> empresas = companyController.listarEmpresas()
         exibirEmpresas(empresas)
@@ -642,9 +647,7 @@ class MenuConsole {
                     cadastrarCandidatoPeloConsole()
                     break
                 case "4":
-                    // Cadastrar empresa
-                    Map dadosEmpresa = readInputCompany()
-                    cadastrarEmpresa(dadosEmpresa)
+                    cadastrarEmpresaPeloConsole()
                     break
                 case "5":
                     // Feed de Candidatos

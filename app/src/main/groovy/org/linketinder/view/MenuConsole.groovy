@@ -594,6 +594,11 @@ class MenuConsole {
         cadastrarCandidato(dadosCandidato)
     }
 
+    private void exibirCandidatosPeloConsole() {
+        List<Map> candidatos = candidatoController.listarCandidatos()
+        exibirCandidatos(candidatos)
+    }
+
 
 
     void linketinder() {
@@ -603,13 +608,7 @@ class MenuConsole {
 
             switch (opcao) {
                 case "1":
-                    // Exibir candidatos
-
-                    List<Map> candidatos = candidatoController.listarCandidatos()
-                    exibirCandidatos(candidatos)
-
-                    break
-
+                    exibirCandidatosPeloConsole()
                     break
                 case "2":
                     // Exibir empresas

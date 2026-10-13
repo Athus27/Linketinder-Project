@@ -8,7 +8,7 @@ class UserCompany extends User {
     ArrayList<Vaga> vagas = new ArrayList<>()
 
     @Override
-    public String toString() {
+    String toString() {
         return """
                 Nome: ${nome}
                     Descricao: ${descricao}
@@ -30,28 +30,24 @@ class UserCompany extends User {
         return null
     }
 
-    void exibirInformacoesVagas(){
-        if(vagas){
-            vagas.eachWithIndex{ Vaga vaga, int i ->
-                printf """
-            Vaga: ${vaga.titulo}
-                Descrição: ${vaga.descricao}
-                Competencias: ${competencias.join(", ")}
-                ----------------------------------------\n
-""".stripIndent()
-            }
-        }
-    }
-
     boolean equals(o) {
-        if (this.is(o)) return true
-        if (o == null || getClass() != o.class) return false
+        if (this.is(o)) {
+            return true
+        }
+        if (o == null ||
+            getClass() !=
+            o.class) {
+            return false
+        }
 
         UserCompany that = (UserCompany) o
 
-        if (CNPJ != that.CNPJ) return false
-        if (pais != that.pais) return false
-
+        if (CNPJ != that.CNPJ) {
+            return false
+        }
+        if (pais != that.pais) {
+            return false
+        }
 
         return true
     }
@@ -59,7 +55,8 @@ class UserCompany extends User {
     int hashCode() {
         int result
         result = (CNPJ != null ? CNPJ.hashCode() : 0)
-        result = 31 * result + (pais != null ? pais.hashCode() : 0)
+        result = 31 * result +
+                 (pais != null ? pais.hashCode() : 0)
         return result
     }
 }

@@ -4,9 +4,8 @@ class UserCandidate extends User {
     String cpf
     int idade
 
-
     @Override
-    public String toString() {
+    String toString() {
         return """
                 Nome: ${nome}
                     Idade: ${idade} anos

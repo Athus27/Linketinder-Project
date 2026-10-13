@@ -599,9 +599,10 @@ class MenuConsole {
 
 
     //============================================================
-    //                  FLUXO DO PROGRAMA
+    //    OPERAÇÕES DE CADASTRO, EDIÇÃO E REMOÇÃO DAS ENTIDADES
     //============================================================
 
+    //=====================CANDIDATO==========================
     private void cadastrarCandidatoPeloConsole() {
         Map dadosCandidato = readInputCandidate()
         List<String> competencias = lerCompetenciasPeloConsole()
@@ -671,6 +672,7 @@ class MenuConsole {
         println(mensagem)
     }
 
+    //=====================EMPRESA==========================
     private void cadastrarEmpresaPeloConsole() {
         Map dadosEmpresa = readInputCompany()
         cadastrarEmpresa(dadosEmpresa)
@@ -739,6 +741,7 @@ class MenuConsole {
         println(mensagem)
     }
 
+    //=====================VAGA==========================
     private void cadastrarVagaPeloConsole() {
         Map empresaSelecionada = selecionarEmpresa()
 
@@ -788,6 +791,7 @@ class MenuConsole {
         }
     }
 
+    //=====================COMPETENCIA==========================
     List<String> lerCompetenciasPeloConsole() {
         List<String> competencias = []
 
@@ -856,6 +860,9 @@ class MenuConsole {
         }
     }
 
+    //============================================================
+    //                  FLUXO PRINCIPAL DO PROGRAMA
+    //============================================================
 
     void linketinder() {
         while (true) {
@@ -926,10 +933,6 @@ class MenuConsole {
         }
     }
 
-
-    //============================================================
-    //                  METODO MAIN
-    //============================================================
     static void main(String[] args) {
         MenuConsole menu = new MenuConsole()
         println("Bem-vindo ao Linketinder!")

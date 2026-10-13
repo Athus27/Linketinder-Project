@@ -741,6 +741,11 @@ class MenuConsole {
         exibirFeedVagas(vagasFeed)
     }
 
+    private void exibirCompetenciasPeloConsole() {
+        List<Map> competencias = competenceController.listarCompetencias()
+        exibirCompetencias(competencias)
+    }
+
 
     void linketinder() {
         while (true) {
@@ -776,8 +781,7 @@ class MenuConsole {
                     empresaCurtirCandidatoPeloConsole()
                     break
                 case "10":
-                    // Mostrar Competencias
-                    exibirCompetencias(competenceController.listarCompetencias())
+                    exibirCompetenciasPeloConsole()
                     break
                 case "11":
                     // Editar candidato

@@ -39,13 +39,11 @@ class ConexaoDB {
             connection = getConnection()
             statement = connection.createStatement()
 
-            // Comando SQL correto para listar as tabelas públicas no SQL
             String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
             resultSet = statement.executeQuery(sql)
 
             println "--- Tabelas do Sistema ---"
             while (resultSet.next()) {
-                // Pega o valor da coluna "table_name"
                 println resultSet.getString("table_name")
             }
 
@@ -55,7 +53,6 @@ class ConexaoDB {
             println "Erro ao mostrar tabelas: ${e.message}"
             result = false
         } finally {
-            // É necessário verificar se não são nulos antes de fechar
             if (resultSet != null) resultSet.close()
             if (statement != null) statement.close()
             if (connection != null) connection.close()

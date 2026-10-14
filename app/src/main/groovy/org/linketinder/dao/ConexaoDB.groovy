@@ -14,10 +14,15 @@ class ConexaoDB {
         def resourceStream = classLoader.getResourceAsStream(resourceName)
 
         if (resourceStream) {
-            props.load(resourceStream)
+            try {
+                props.load(resourceStream)
+            } finally {
+                resourceStream.close()
+            }
         } else {
             throw new FileNotFoundException("Arquivo de propriedades '${resourceName}' não encontrado no classpath.")
         }
+
     }
 
     static Connection getConnection() {

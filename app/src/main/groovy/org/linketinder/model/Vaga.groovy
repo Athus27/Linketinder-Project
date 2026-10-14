@@ -25,9 +25,8 @@ class Vaga {
         this.localVaga = localVaga
     }
 
-
     @Override
-    public String toString() {
+    String toString() {
         return "Vaga{" +
                 "id=" + id +
                 ", idEmpresa=" + idEmpresa +

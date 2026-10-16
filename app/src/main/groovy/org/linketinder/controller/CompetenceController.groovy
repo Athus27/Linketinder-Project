@@ -5,8 +5,8 @@ import org.linketinder.dao.competence.CompetenceDAO
 class CompetenceController {
     private final CompetenceDAO competenceDAO
 
-    CompetenceController() {
-        this.competenceDAO = new CompetenceDAO()
+    CompetenceController(CompetenceDAO competenceDAO) {
+        this.competenceDAO = competenceDAO
     }
 
     List <Map> listarCompetencias() {

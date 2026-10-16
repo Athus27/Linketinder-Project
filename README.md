@@ -10,8 +10,8 @@ Aplicacao em Groovy para o MVP do Linketinder, um sistema simples de contratacao
 
 - Lista candidatos pre-cadastrados.
 - Lista empresas pre-cadastradas.
-- Mantem no minimo 5 candidatos em memoria.
-- Mantem no minimo 5 empresas em memoria.
+- Persiste os dados dos candidatos no PostgreSQL.
+- Persiste os dados das empresas no PostgreSQL.
 - Cadastra novos candidatos pelo terminal.
 - Cadastra novas empresas pelo terminal.
 - Armazena competencias de candidatos e empresas.
@@ -23,18 +23,24 @@ Aplicacao em Groovy para o MVP do Linketinder, um sistema simples de contratacao
 
 ## Estrutura Principal
 
-- `App.groovy`: ponto de entrada da aplicacao, controla o menu, os dados iniciais e os cadastros.
-- `Pessoa.groovy`: classe base com atributos comuns, como nome, email, estado, CEP, descricao e competencias.
-- `PessoaFisica.groovy`: representa um candidato, com CPF e idade.
-- `PessoaJuridica.groovy`: representa uma empresa, com CNPJ e pais.
+- `App.groovy`: ponto de entrada da aplicacao, cria o Scanner e o LeitorConsole e inicia o menu principal.
+- `view/console/MenuConsole.groovy`: direciona para os menus de candidatos, empresas, vagas e competencias.
+- `CandidateConsole`, `CompanyConsole`, `VagaConsole` e `CompetenceConsole`: organizam os fluxos de cada menu.
+- `view/console/input/types`: readers responsaveis por coletar os dados pelo terminal.
+- `view/console/input/utils/formatter`: formatacao dos dados para exibicao no terminal.
+- `controller`: faz a comunicacao entre os consoles e os DAOs.
+- `dao`: executa os comandos SQL e controla as transacoes.
+- `ConexaoDB.groovy`: carrega as configuracoes de conexao e abre conexoes com o PostgreSQL.
+- `User.groovy`: classe base com atributos comuns, como nome, email, estado, CEP, descricao e competencias.
+- `UserCandidate.groovy`: representa um candidato, com CPF e idade.
+- `UserCompany.groovy`: representa uma empresa, com CNPJ, pais e vagas.
 - `Vaga.groovy`: representa uma vaga publicada por uma empresa, com titulo, descricao e competencias esperadas.
-- `Curtida.groovy`: representa a relacao de curtida entre candidato, empresa e vaga, alem de indicar quando ocorre match.
-- `IPessoa.groovy`: interface criada para praticar conceitos de POO.
+- `CurtidaDAO.groovy`: registra as curtidas e identifica o match usando os dados do banco.
 
 ## Atualização: Banco de dados PostgreSQL
 foi desenhado o **DER** do linketinder, utilizando o **dbdiagram.io**, a imagem gerada pelo diagrama está em `docs/derLinketinder.png`
 - link: https://dbdiagram.io/d/Linketinder-6abbe06e5869425612cd1b34
-- Os codigos SQL para criar o banco de dados e as tabelas estão em `docs/derLinketinder.sql`
+- Os codigos SQL para criar as tabelas estão em `sql/Linketinder.sql`
 - Para armazenar as senhas utilizei o `pgcrypto`, que é uma extensão do PostgreSQL que acrescenta funções de criptografia e hash, a principal função utilizada é a crypt():
 ```sql
 crypt('Senha123', gen_salt('bf'))
@@ -83,7 +89,60 @@ Os arquivos relacionados ao banco estao em:
 - `sql/DadosIniciais.sql`: candidatos, empresas, competencias e vagas ficticias.
 - `docs/derLinketinder.png`: imagem atualizada do diagrama.
 
-O menu atual permite listar, cadastrar, editar e remover candidatos, empresas, competencias e vagas. Tambem permite visualizar os feeds anonimos e registrar curtidas e matches persistidos no banco de dados.
+O menu atual permite listar, cadastrar, editar e remover candidatos, empresas e vagas. Para competencias, permite listar, editar e remover, alem de cria-las durante o cadastro de candidatos e vagas. Tambem permite visualizar os feeds anonimos e registrar curtidas e matches persistidos no banco de dados.
+
+## Atualizacao: Boas Praticas - Clean Code e SOLID (K2-T1)
+
+Nesta etapa refatorei a organizacao do backend para separar melhor as responsabilidades e facilitar a leitura do codigo.
+
+O `App` ficou responsavel por iniciar a aplicacao. Removi dele o fluxo antigo que mantinha os dados em memoria, pois a versao atual utiliza o PostgreSQL. A classe `Curtida` tambem foi removida porque nao era mais utilizada pelo fluxo atual.
+
+Dividi o `MenuConsole`, que antes concentrava as operacoes, em consoles de candidatos, empresas, vagas e competencias. Agora o menu principal direciona para cada um deles, e cada opcao chama um metodo com o fluxo correspondente.
+
+As principais mudancas foram:
+
+- Separei a leitura dos campos em readers, como `CandidateReader`, `CompanyReader` e `VagaReader`.
+- Separei a formatacao dos dados em formatters, deixando os consoles responsaveis por conduzir os fluxos do terminal.
+- Passei o mesmo `LeitorConsole` pelo construtor para compartilhar a entrada do terminal, sem criar um Scanner para cada menu.
+- Utilizei atributos e metodos privados para os detalhes internos dos consoles, mantendo acessiveis os metodos utilizados por outras classes.
+- Mantive os retornos antecipados quando o usuario cancela uma selecao, evitando continuar o cadastro, edicao ou remocao sem um registro selecionado.
+- Reaproveitei a filtragem das vagas por empresa na consulta e na selecao de vaga para curtida, evitando repetir essa regra.
+- Corrigi o fechamento do arquivo `db.properties` com `try/finally`, para fechar o stream mesmo quando ocorre um erro na leitura.
+- Removi as dependencias diretas de Guava e JUnit 4, que nao eram utilizadas pelo codigo e pelos testes atuais.
+
+Com essa separacao, apliquei o principio da responsabilidade unica (SRP) de forma pratica: leitura, formatacao e fluxo do menu ficaram em classes com tarefas mais claras. A extracao dos metodos tambem deixou os blocos de `case` menores e mais faceis de entender. Fiz essas melhorias por partes, seguindo a regra do escoteiro, aproveitando o codigo que ja existia.
+
+## Atualizacao: Organizacao dos testes
+
+Adaptei os testes que antes chamavam o `MenuConsole` para testar diretamente os readers e o formatter que receberam esses metodos. Mantive as verificacoes dos campos lidos e da exibicao dos dados do candidato sem mostrar a senha.
+
+Separei os testes em duas suites:
+
+- `app/src/test/groovy`: testes unitarios dos modelos, readers, formatter e DAOs com o banco simulado.
+- `app/src/integrationTest/groovy`: testes de integracao da conexao com o PostgreSQL e da listagem das tabelas.
+
+Na validacao desta etapa, passaram 33 testes unitarios e 2 testes de integracao com o PostgreSQL.
+
+Para executar os testes unitarios:
+
+```bash
+./gradlew :app:test
+# Executa os testes unitarios do modulo app.
+```
+
+Para executar os testes de integracao, o PostgreSQL precisa estar disponivel e o `db.properties` configurado no classpath:
+
+```bash
+./gradlew :app:integrationTest
+# Executa os testes de integracao com o PostgreSQL.
+```
+
+Para gerar o build e executar as duas suites:
+
+```bash
+./gradlew :app:build :app:integrationTest
+# Gera o build e executa os testes unitarios e de integracao.
+```
 
 ## Como Executar
 
@@ -91,6 +150,7 @@ No terminal, dentro da pasta do projeto:
 
 ```bash
 ./gradlew run
+# Inicia a aplicacao pelo terminal.
 ```
 
 ## Tecnologias
@@ -99,11 +159,12 @@ No terminal, dentro da pasta do projeto:
 - Gradle
 - PostgreSQL
 - JDBC
+- Spock para os testes
 - Scanner para entrada de dados pelo terminal
 - ArrayList utilizado na versao inicial para armazenar os dados em memoria
 
 ## Observacoes da versao inicial
 
-Os dados sao armazenados apenas em memoria. Ao encerrar o programa, os cadastros feitos pelo terminal nao sao salvos em arquivo ou banco de dados.
+Na versao inicial, os dados eram armazenados apenas em memoria. Ao encerrar o programa, os cadastros feitos pelo terminal nao eram salvos em arquivo ou banco de dados.
 
 Na versao atual, candidatos, empresas, competencias, vagas, curtidas e matches sao persistidos no PostgreSQL utilizando JDBC.

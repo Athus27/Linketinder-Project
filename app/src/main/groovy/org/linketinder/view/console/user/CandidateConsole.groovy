@@ -22,15 +22,16 @@ class CandidateConsole {
 
     private final CandidateDAO candidateDAO = new CandidateDAO()
 
-    private final CandidatoController candidatoController = new CandidatoController(candidateDAO)
+    private final CandidatoController candidatoController
     private final CurtidaController curtidaController = new CurtidaController()
 
-    CandidateConsole(LeitorConsole leitorConsole) {
+    CandidateConsole(LeitorConsole leitorConsole, CompetenceReader competenceReader) {
         this.leitorConsole = leitorConsole
         this.userReader = new UserReader(leitorConsole)
         this.candidateReader = new CandidateReader(leitorConsole, this.userReader)
-        this.competenceReader = new CompetenceReader(leitorConsole)
-        this.vagaConsole = new VagaConsole(leitorConsole)
+        this.competenceReader = competenceReader
+        this.candidatoController = new CandidatoController(candidateDAO)
+        this.vagaConsole = new VagaConsole(leitorConsole, competenceReader)
     }
 
     private void exibirCandidatos(List<Map> candidatos) {

@@ -18,16 +18,16 @@ class VagaConsole {
 
     private final VagaController vagaController = new VagaController()
 
-    VagaConsole(LeitorConsole leitorConsole) {
+    VagaConsole(LeitorConsole leitorConsole, CompetenceReader competenceReader) {
         this.leitorConsole = leitorConsole
         this.vagaReader = new VagaReader(leitorConsole)
-        this.competenceReader = new CompetenceReader(leitorConsole)
+        this.competenceReader = competenceReader
     }
 
     private CompanyConsole obterCompanyConsole() {
         // Evita a criação circular entre os consoles de empresa e vaga.
         if (companyConsole == null) {
-            companyConsole = new CompanyConsole(leitorConsole)
+            companyConsole = new CompanyConsole(leitorConsole, competenceReader)
         }
         return companyConsole
     }

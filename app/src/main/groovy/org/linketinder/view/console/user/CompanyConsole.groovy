@@ -3,6 +3,7 @@ package org.linketinder.view.console.user
 import org.linketinder.controller.CompanyController
 import org.linketinder.controller.CurtidaController
 import org.linketinder.view.console.input.types.CompanyReader
+import org.linketinder.view.console.input.types.CompetenceReader
 import org.linketinder.view.console.input.types.UserReader
 
 import org.linketinder.view.console.input.LeitorConsole
@@ -22,10 +23,10 @@ class CompanyConsole {
     private final CompanyController companyController = new CompanyController()
     private final CurtidaController curtidaController = new CurtidaController()
 
-    CompanyConsole(LeitorConsole leitorConsole) {
+    CompanyConsole(LeitorConsole leitorConsole, CompetenceReader competenceReader) {
         this.leitorConsole = leitorConsole
-        this.vagaConsole = new VagaConsole(leitorConsole)
-        this.candidateConsole = new CandidateConsole(leitorConsole)
+        this.vagaConsole = new VagaConsole(leitorConsole, competenceReader)
+        this.candidateConsole = new CandidateConsole(leitorConsole, competenceReader)
         UserReader userReader = new UserReader(leitorConsole)
         this.companyReader = new CompanyReader(leitorConsole, userReader)
     }

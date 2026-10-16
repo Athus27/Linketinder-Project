@@ -8,9 +8,10 @@ class CompetenceReader {
     public final InputStrings inputStrings = new InputStrings()
     public final LeitorConsole leitorConsole
 
-    public final CompetenceController competenceController = new CompetenceController()
+    public final CompetenceController competenceController
 
-    CompetenceReader(LeitorConsole leitorConsole) {
+    CompetenceReader(LeitorConsole leitorConsole, CompetenceController competenceController) {
+        this.competenceController = competenceController
         this.leitorConsole = leitorConsole
     }
 

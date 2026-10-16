@@ -30,3 +30,15 @@ tasks.named('test') {
 run{
     standardInput=System.in
 }
+
+testing {
+    suites {
+        integrationTest(JvmTestSuite) {
+            useSpock('2.4-groovy-4.0')
+
+            dependencies {
+                implementation project()
+            }
+        }
+    }
+}

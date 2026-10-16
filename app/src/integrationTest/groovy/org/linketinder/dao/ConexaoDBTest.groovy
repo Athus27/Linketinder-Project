@@ -1,6 +1,5 @@
 package org.linketinder.dao
 
-
 import spock.lang.Specification
 
 import java.sql.Connection

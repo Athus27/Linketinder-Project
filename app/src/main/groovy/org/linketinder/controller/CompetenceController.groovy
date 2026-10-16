@@ -10,26 +10,26 @@ class CompetenceController {
     }
 
     List <Map> listarCompetencias() {
-        return competenceDAO.listarCompetencias().competencias
+        return this.competenceDAO.listarCompetencias().competencias
     }
 
     boolean checarCompetenciaExistente(String nome) {
-        return competenceDAO.checarCompetenciaExistente(nome)
+        return this.competenceDAO.checarCompetenciaExistente(nome)
     }
 
     boolean adicionarCompetencia(String nome) {
-        return competenceDAO.adicionarCompetencia(nome)
+        return this.competenceDAO.adicionarCompetencia(nome)
     }
 
     Map getCompetenciaPorNome(String nome) {
-        return competenceDAO.getCompetenciaPorNome(nome)
+        return this.competenceDAO.getCompetenciaPorNome(nome)
     }
 
     boolean removerCompetencia(int idCompetencia) {
-        return competenceDAO.removerCompetencia(idCompetencia)
+        return this.competenceDAO.removerCompetencia(idCompetencia)
     }
 
     boolean atualizarCompetencia(int idCompetencia, String novoNome) {
-        return competenceDAO.atualizarCompetencia(idCompetencia, novoNome)
+        return this.competenceDAO.atualizarCompetencia(idCompetencia, novoNome)
     }
 }

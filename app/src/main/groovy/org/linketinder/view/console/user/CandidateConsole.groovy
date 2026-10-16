@@ -2,6 +2,7 @@ package org.linketinder.view.console.user
 
 import org.linketinder.controller.CandidatoController
 import org.linketinder.controller.CurtidaController
+import org.linketinder.dao.user.CandidateDAO
 import org.linketinder.view.console.input.LeitorConsole
 import org.linketinder.view.console.input.types.CandidateReader
 import org.linketinder.view.console.input.types.CompetenceReader
@@ -19,7 +20,9 @@ class CandidateConsole {
     private final CompetenceReader competenceReader
     private final VagaConsole vagaConsole
 
-    private final CandidatoController candidatoController = new CandidatoController()
+    private final CandidateDAO candidateDAO = new CandidateDAO()
+
+    private final CandidatoController candidatoController = new CandidatoController(candidateDAO)
     private final CurtidaController curtidaController = new CurtidaController()
 
     CandidateConsole(LeitorConsole leitorConsole) {

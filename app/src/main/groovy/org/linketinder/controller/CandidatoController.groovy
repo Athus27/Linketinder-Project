@@ -5,27 +5,27 @@ import org.linketinder.dao.user.CandidateDAO
 class CandidatoController {
     private final CandidateDAO candidateDAO
 
-    CandidatoController() {
-        this.candidateDAO = new CandidateDAO()
+    CandidatoController(CandidateDAO candidateDAO) {
+        this.candidateDAO = candidateDAO
     }
 
     List<Map> listarCandidatos() {
-        return candidateDAO.listarCandidatos().candidatos
+        return this.candidateDAO.listarCandidatos().candidatos
     }
 
     List<Map> feedCandidatos() {
-        return candidateDAO.listarCandidatos().candidatos
+        return this.candidateDAO.listarCandidatos().candidatos
     }
 
     boolean cadastrarCandidato(Map candidato) {
-        return candidateDAO.adicionarCandidato(candidato)
+        return this.candidateDAO.adicionarCandidato(candidato)
     }
 
     boolean atualizarCandidato(Map candidato) {
-        return candidateDAO.atualizarCandidato(candidato)
+        return this.candidateDAO.atualizarCandidato(candidato)
     }
 
     boolean removerCandidato(int idCandidato) {
-        return candidateDAO.removerCandidato(idCandidato)
+        return this.candidateDAO.removerCandidato(idCandidato)
     }
 }

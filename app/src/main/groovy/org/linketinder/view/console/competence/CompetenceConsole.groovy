@@ -1,11 +1,15 @@
 package org.linketinder.view.console.competence
 
 import org.linketinder.controller.CompetenceController
+import org.linketinder.dao.competence.CompetenceDAO
 import org.linketinder.view.console.input.LeitorConsole
 
 class CompetenceConsole {
     private final LeitorConsole leitorConsole
-    private final CompetenceController competenceController = new CompetenceController()
+
+    CompetenceDAO competenceDAO = new CompetenceDAO()
+
+    private final CompetenceController competenceController = new CompetenceController(competenceDAO)
 
     CompetenceConsole(LeitorConsole leitorConsole) {
         this.leitorConsole = leitorConsole

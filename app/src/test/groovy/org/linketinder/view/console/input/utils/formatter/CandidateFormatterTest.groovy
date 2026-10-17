@@ -3,9 +3,10 @@ package org.linketinder.view.console.input.utils.formatter
 import spock.lang.Specification
 
 class CandidateFormatterTest extends Specification {
-    def "StringCandidato - Deve exibir todos os campos, exceto a senha"() {
-        given: "um candidato com todos os campos"
-        Map candidato = [
+    private Map candidato
+
+    def setup() {
+        candidato = [
                 id            : 1,
                 nome          : "Fulano",
                 sobrenome     : "da Silva",
@@ -19,8 +20,10 @@ class CandidateFormatterTest extends Specification {
                 competencias  : ["Groovy", "SQL"],
                 senha         : "segredo"
         ]
+    }
 
-        when: "formatamos os dados para exibição"
+    def "StringCandidato - Deve exibir todos os campos, exceto a senha"() {
+        when: "dado um candidato, formatamos os dados para exibição"
         String resultado = CandidateFormatter.stringCandidato(candidato)
 
         then: "todos os campos públicos são exibidos"
@@ -42,5 +45,18 @@ class CandidateFormatterTest extends Specification {
         and: "a senha não é exibida"
         !resultado.contains("segredo")
         !resultado.contains("Senha:")
+    }
+
+    def "String de Candidate para feed não deve exibir informações pessoais"() {
+        when: "formatamos o candidato de setup"
+        String candidatoParaFeed = CandidateFormatter.stringCandidatoParaFeed(candidato)
+        then: "não deve exibir dados sensíveis"
+        !candidatoParaFeed.contains("Fulano") &&
+        !candidatoParaFeed.contains("Silva") &&
+        !candidatoParaFeed.contains("1990-01-15") &&
+        !candidatoParaFeed.contains("111.111.111-11") &&
+        !candidatoParaFeed.contains("fulano@email.com") &&
+        !candidatoParaFeed.contains("Brasil") &&
+        !candidatoParaFeed.contains("01010-000")
     }
 }

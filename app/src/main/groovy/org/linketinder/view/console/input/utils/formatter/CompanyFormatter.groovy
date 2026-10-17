@@ -3,7 +3,7 @@ package org.linketinder.view.console.input.utils.formatter
 class CompanyFormatter {
     static String stringEmpresa(Map empresa) {
         String empresaString =
-                """
+        """
             ID: ${empresa.id}
             Nome: ${empresa.nome}
             CNPJ: ${empresa.cnpj}

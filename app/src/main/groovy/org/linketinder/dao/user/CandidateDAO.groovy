@@ -7,19 +7,6 @@ import org.linketinder.dao.competence.CompetenceDAO
 
 
 class CandidateDAO {
-    boolean testarConexao() {
-        def connectoin = ConexaoDB.getConnection()
-
-        if (connectoin != null && !connectoin.isClosed()) {
-            println("Conexão estabelecida com sucesso!")
-            connectoin.close()
-            return true
-        } else {
-            println("Falha ao estabelecer conexão.")
-            return false
-        }
-    }
-
     Map listarCandidatos() {
         java.sql.Connection connection = null
         java.sql.PreparedStatement statement = null

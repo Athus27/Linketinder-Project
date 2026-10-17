@@ -11,20 +11,6 @@ import java.sql.ResultSet
 import java.sql.PreparedStatement
 
 class CandidateDAOTest extends Specification {
-    /**
-     * teste de integração para verificar se a classe CandidateDAO é instanciada corretamente e se a conexão com o banco de dados é estabelecida com sucesso.
-     */
-    def "deve criar uma instancia de CandidateDAO com sucesso"() {
-        given: "uma classe CandidateDAO"
-        CandidateDAO candidateDAO = new CandidateDAO()
-
-        when: "testamos a conexão"
-        boolean conexaoEstabelecida = candidateDAO.testarConexao()
-
-        then: "a instancia deve ser criada e nao ser nula"
-        conexaoEstabelecida == true
-    }
-
     def "deve listar candidatos com sucesso"() {
         given: "as dependencias simuladas do banco"
         def connection = Mock(Connection)

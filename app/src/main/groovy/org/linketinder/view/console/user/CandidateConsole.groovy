@@ -114,9 +114,9 @@ class CandidateConsole {
             return
         }
 
-        Map novosDadosCandidato = readInputCandidate()
+        Map novosDadosCandidato = candidateReader.readInputCandidate()
         novosDadosCandidato.id = candidatoSelecionado.id
-        novosDadosCandidato.competencias = lerCompetenciasPeloConsole()
+        novosDadosCandidato.competencias = competenceReader.lerCompetenciasPeloConsole()
         candidatoController.atualizarCandidato(novosDadosCandidato)
     }
 

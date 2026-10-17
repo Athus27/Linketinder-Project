@@ -101,27 +101,38 @@ Dividi o `MenuConsole`, que antes concentrava as operacoes, em consoles de candi
 
 As principais mudancas foram:
 
-- Separei a leitura dos campos em readers, como `CandidateReader`, `CompanyReader` e `VagaReader`.
-- Separei a formatacao dos dados em formatters, deixando os consoles responsaveis por conduzir os fluxos do terminal.
-- Passei o mesmo `LeitorConsole` pelo construtor para compartilhar a entrada do terminal, sem criar um Scanner para cada menu.
+- Separei a leitura dos campos em readers, como `CandidateReader`, `CompanyReader` e `VagaReader`. O `UserReader` reaproveita a leitura de CEP e senha nos cadastros de candidatos e empresas.
+- Separei a formatacao dos dados em formatters, incluindo os feeds sem dados pessoais, deixando os consoles responsaveis por conduzir os fluxos do terminal.
+- Passei o mesmo `LeitorConsole` pelo construtor para centralizar a leitura do terminal, sem criar um Scanner para cada menu.
+- Centralizei no `ValidationConsole` as validacoes de formato de CPF, CNPJ, CEP e tamanho minimo da senha.
 - Utilizei atributos e metodos privados para os detalhes internos dos consoles, mantendo acessiveis os metodos utilizados por outras classes.
 - Mantive os retornos antecipados quando o usuario cancela uma selecao, evitando continuar o cadastro, edicao ou remocao sem um registro selecionado.
 - Reaproveitei a filtragem das vagas por empresa na consulta e na selecao de vaga para curtida, evitando repetir essa regra.
 - Corrigi o fechamento do arquivo `db.properties` com `try/finally`, para fechar o stream mesmo quando ocorre um erro na leitura.
 - Removi as dependencias diretas de Guava e JUnit 4, que nao eram utilizadas pelo codigo e pelos testes atuais.
+- Removi o `UserFormatter`, que duplicava codigo de mensagens e nao era utilizado.
+- Corrigi as chamadas da edicao de candidato para utilizar os readers responsaveis pela leitura dos dados e competencias.
 
-Com essa separacao, apliquei o principio da responsabilidade unica (SRP) de forma pratica: leitura, formatacao e fluxo do menu ficaram em classes com tarefas mais claras. A extracao dos metodos tambem deixou os blocos de `case` menores e mais faceis de entender. Fiz essas melhorias por partes, seguindo a regra do escoteiro, aproveitando o codigo que ja existia.
+Passei os DAOs pelo construtor de `CandidatoController` e `CompetenceController`, e o controller pelo construtor do `CompetenceReader`. Com essa injecao de dependencias, essas classes recebem os objetos que utilizam, facilitando fornecer dependencias simuladas nos testes.
+
+Com essa separacao, apliquei o principio da responsabilidade unica (SRP) de forma pratica: leitura, validacao, formatacao e fluxo do menu ficaram em classes com tarefas mais claras. Isso facilita localizar cada comportamento e testar as partes sem executar todo o menu.
+
+Para melhorar a legibilidade, extrai os blocos dos `case` para metodos com nomes que descrevem as operacoes. Tambem utilizei retornos antecipados nos cancelamentos, atributos privados e removi codigo sem uso e comentarios desnecessarios. Fiz essas melhorias por partes, seguindo a regra do escoteiro, aproveitando o codigo que ja existia.
 
 ## Atualizacao: Organizacao dos testes
 
 Adaptei os testes que antes chamavam o `MenuConsole` para testar diretamente os readers e o formatter que receberam esses metodos. Mantive as verificacoes dos campos lidos e da exibicao dos dados do candidato sem mostrar a senha.
+
+Ampliei os testes de validacao, formatacao e DAOs. Utilizei `setup()` para preparar os dados antes de cada teste e mocks para simular respostas do banco, incluindo falhas de consulta e verificacoes de fechamento dos recursos. Adicionei Byte Buddy para permitir mocks de classes com Spock.
+
+Removi o metodo e o teste de conexao do `CandidateDAO`, pois essa verificacao ja esta no `ConexaoDBTest`, na suite de integracao.
 
 Separei os testes em duas suites:
 
 - `app/src/test/groovy`: testes unitarios dos modelos, readers, formatter e DAOs com o banco simulado.
 - `app/src/integrationTest/groovy`: testes de integracao da conexao com o PostgreSQL e da listagem das tabelas.
 
-Na validacao desta etapa, passaram 33 testes unitarios e 2 testes de integracao com o PostgreSQL.
+Na validacao mais recente, passaram **49 testes unitarios e 2 testes de integracao com o PostgreSQL**.
 
 Para executar os testes unitarios:
 

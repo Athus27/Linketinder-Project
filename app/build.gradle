@@ -12,6 +12,7 @@ dependencies {
     implementation 'org.postgresql:postgresql:42.6.0'
     testImplementation libs.spock.core
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'net.bytebuddy:byte-buddy:1.18.3'
 }
 java {
     toolchain {

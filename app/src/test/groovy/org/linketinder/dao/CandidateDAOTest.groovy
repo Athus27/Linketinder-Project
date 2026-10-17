@@ -2,9 +2,8 @@ package org.linketinder.dao
 
 import org.linketinder.dao.competence.CandidateCompetenceDAO
 import org.linketinder.dao.user.CandidateDAO
-import spock.lang.Specification
 
-//Spy
+import spock.lang.Specification
 
 import java.sql.Connection
 import java.sql.Date
@@ -31,10 +30,9 @@ class CandidateDAOTest extends Specification {
         def connection = Mock(Connection)
         def statement = Mock(PreparedStatement)
         def resultSet = Mock(ResultSet)
-        def candidateCompetenceDAO = new CandidateCompetenceDAO()
-        candidateCompetenceDAO.metaClass.listarCompetenciasDoCandidato = { int idCandidato ->
-            [(1): ["Groovy", "SQL"], (2): ["Java", "PostgreSQL"]][idCandidato]
-        }
+        def candidateCompetenceDAO = Mock(CandidateCompetenceDAO)
+        candidateCompetenceDAO.listarCompetenciasDoCandidato(1) >> ["Groovy", "SQL"]
+        candidateCompetenceDAO.listarCompetenciasDoCandidato(2) >> ["Java", "PostgreSQL"]
 
         GroovyMock(ConexaoDB, global: true)
         GroovyMock(CandidateCompetenceDAO, global: true)

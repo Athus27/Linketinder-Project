@@ -163,6 +163,17 @@ No terminal, dentro da pasta do projeto:
 ./gradlew run
 # Inicia a aplicacao pelo terminal.
 ```
+## Atualizacao: Design Patterns (K2-T2)
+
+Nesta etapa refatorei a criacao das conexoes com o banco utilizando Factory e Singleton.
+
+- **Factory:** criei a interface `ConnectionFactory` e a implementacao `PostgresConnectionFactory`. O gerenciador `DatabaseConnectionFactory` le o `db.type` no `db.properties` e escolhe a fabrica correspondente. Atualmente, a implementacao disponivel e PostgreSQL.
+- **Singleton:** o gerenciador possui uma unica instancia e guarda a fabrica escolhida para reutiliza-la. As conexoes continuam sendo abertas por operacao e fechadas pelos DAOs.
+- Centralizei o carregamento das configuracoes no gerenciador e passei as propriedades pelo construtor da fabrica PostgreSQL.
+- Atualizei os DAOs para obter as conexoes pelo gerenciador, sem chamar diretamente a implementacao PostgreSQL.
+- Adaptei os testes para simular o gerenciador, a fabrica e as conexoes. Adicionei Objenesis para permitir que o Spock crie o mock da classe com construtor privado.
+
+Essa organizacao separa a escolha da fabrica da abertura das conexoes e prepara o projeto para acrescentar outras implementacoes. A troca de banco ainda pode exigir ajustes no SQL dos DAOs.
 
 ## Tecnologias
 

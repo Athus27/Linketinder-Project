@@ -1,6 +1,6 @@
 package org.linketinder.dao.competence
 
-import org.linketinder.dao.ConexaoDB
+import org.linketinder.dao.connection.DatabaseConnectionFactory
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -15,7 +15,7 @@ class CompetenceDAO {
         def competencias = []
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             statement = connection.prepareStatement(
                     """
                         SELECT id AS id, competencia
@@ -55,7 +55,7 @@ class CompetenceDAO {
         }
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             statement = connection.prepareStatement(
                     """
                         INSERT INTO "Competencias" (competencia)
@@ -87,7 +87,7 @@ class CompetenceDAO {
         boolean existe = false
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             statement = connection.prepareStatement(
                     """
                         SELECT 1
@@ -122,7 +122,7 @@ class CompetenceDAO {
         Map competencia = null
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             statement = connection.prepareStatement(
                     """
                         SELECT id, competencia
@@ -211,7 +211,7 @@ class CompetenceDAO {
         boolean sucesso = false
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             connection.setAutoCommit(false)
 
             List<String> comandos = [
@@ -254,7 +254,7 @@ class CompetenceDAO {
         boolean sucesso = false
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             connection.setAutoCommit(false)
 
             selectStatement = connection.prepareStatement(

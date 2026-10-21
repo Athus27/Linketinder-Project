@@ -1,8 +1,9 @@
 package org.linketinder.dao
 
 import org.linketinder.dao.competence.CandidateCompetenceDAO
+import org.linketinder.dao.connection.ConnectionFactory
+import org.linketinder.dao.connection.DatabaseConnectionFactory
 import org.linketinder.dao.user.CandidateDAO
-
 import spock.lang.Specification
 
 import java.sql.Connection
@@ -11,19 +12,49 @@ import java.sql.ResultSet
 import java.sql.PreparedStatement
 
 class CandidateDAOTest extends Specification {
+
+    private DatabaseConnectionFactory gerenciadorMock
+    private ConnectionFactory fabricaMock
+
+    private CandidateDAO candidateDAO
+    private Connection connection
+    private PreparedStatement statement
+    private ResultSet resultSet
+
+    private Map candidato
+
+    def setup() {
+        candidato = [
+                id          : 1,
+                nome        : "Fulano",
+                cpf         : "111.111.111-11",
+                email       : "fulano@email.com",
+                descricao   : "Desenvolvedor backend",
+                formacao    : "Ciência da Computação",
+                competencias: ["Groovy", "SQL"]
+        ]
+
+        connection = Mock(Connection)
+        statement = Mock(PreparedStatement)
+        resultSet = Mock(ResultSet)
+
+        fabricaMock = Mock(ConnectionFactory)
+        gerenciadorMock = Mock(DatabaseConnectionFactory)
+
+        GroovyMock(DatabaseConnectionFactory, global: true)
+        DatabaseConnectionFactory.getInstance() >> gerenciadorMock
+
+        gerenciadorMock.getFactoryDatabaseConnection() >> fabricaMock
+        fabricaMock.getConnection() >> connection
+    }
+
     def "deve listar candidatos com sucesso"() {
         given: "as dependencias simuladas do banco"
-        def connection = Mock(Connection)
-        def statement = Mock(PreparedStatement)
-        def resultSet = Mock(ResultSet)
         def candidateCompetenceDAO = Mock(CandidateCompetenceDAO)
         candidateCompetenceDAO.listarCompetenciasDoCandidato(1) >> ["Groovy", "SQL"]
         candidateCompetenceDAO.listarCompetenciasDoCandidato(2) >> ["Java", "PostgreSQL"]
 
-        GroovyMock(ConexaoDB, global: true)
         GroovyMock(CandidateCompetenceDAO, global: true)
-
-        ConexaoDB.getConnection() >> connection
         new CandidateCompetenceDAO() >> candidateCompetenceDAO
 
         connection.prepareStatement(_) >> statement
@@ -103,8 +134,6 @@ class CandidateDAOTest extends Specification {
 
     def "deve adicionar candidato e relacionar competencia existente"() {
         given: "uma transacao simulada para cadastrar candidato e competencia"
-        Connection connection = Mock()
-
         PreparedStatement userStatement = Mock()
         PreparedStatement candidateStatement = Mock()
         PreparedStatement selectCompetenceStatement = Mock()
@@ -112,9 +141,6 @@ class CandidateDAOTest extends Specification {
 
         ResultSet userResultSet = Mock()
         ResultSet competenceResultSet = Mock()
-
-        GroovyMock(ConexaoDB, global: true)
-        ConexaoDB.getConnection() >> connection
 
         connection.prepareStatement(_) >>> [
                 userStatement,
@@ -158,7 +184,7 @@ class CandidateDAOTest extends Specification {
         then: "o cadastro e o vínculo são confirmados"
         resultado
         1 * candidateStatement.setInt(1, 11)
-        1 * candidateStatement.setDate(3, java.sql.Date.valueOf("2004-05-27"))
+        1 * candidateStatement.setDate(3, Date.valueOf("2004-05-27"))
         1 * selectCompetenceStatement.setString(1, "Groovy")
         1 * linkStatement.setInt(1, 11)
         1 * linkStatement.setInt(2, 2)

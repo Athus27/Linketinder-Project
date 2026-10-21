@@ -1,6 +1,7 @@
 package org.linketinder.dao.competence
 
-import org.linketinder.dao.ConexaoDB
+import org.linketinder.dao.connection.DatabaseConnectionFactory
+import org.linketinder.dao.connection.PostgresConnectionFactory
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -15,7 +16,7 @@ class VagaCompetenceDAO {
         List<String> competencias = []
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
 
             statement = connection.prepareStatement(
                     """

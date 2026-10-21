@@ -1,8 +1,10 @@
 package org.linketinder.dao.vaga
 
-import org.linketinder.dao.ConexaoDB
+
 import org.linketinder.dao.competence.CompetenceDAO
 import org.linketinder.dao.competence.VagaCompetenceDAO
+import org.linketinder.dao.connection.DatabaseConnectionFactory
+import org.linketinder.dao.connection.PostgresConnectionFactory
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -18,7 +20,7 @@ class VagaDAO {
         List<Map> vagas = []
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             statement = connection.prepareStatement(
                     """
                         SELECT
@@ -73,7 +75,7 @@ class VagaDAO {
         boolean sucesso = false
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             connection.setAutoCommit(false)
 
             statement = connection.prepareStatement(
@@ -154,7 +156,7 @@ class VagaDAO {
         boolean sucesso = false
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             connection.setAutoCommit(false)
 
             statement = connection.prepareStatement(
@@ -219,7 +221,7 @@ class VagaDAO {
         boolean sucesso = false
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             connection.setAutoCommit(false)
 
             List<String> comandos = [

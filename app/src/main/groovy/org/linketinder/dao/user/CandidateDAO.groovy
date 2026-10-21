@@ -1,22 +1,29 @@
 package org.linketinder.dao.user
 
-import org.linketinder.dao.ConexaoDB
 
 import org.linketinder.dao.competence.CandidateCompetenceDAO
 import org.linketinder.dao.competence.CompetenceDAO
+import org.linketinder.dao.connection.DatabaseConnectionFactory
+import org.linketinder.dao.connection.PostgresConnectionFactory
+
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+import java.sql.SQLException
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 class CandidateDAO {
     Map listarCandidatos() {
-        java.sql.Connection connection = null
-        java.sql.PreparedStatement statement = null
-        java.sql.ResultSet resultSet = null
+        Connection connection = null
+        PreparedStatement statement = null
+        ResultSet resultSet = null
 
         def candidatos = []
 
-
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             statement = connection.prepareStatement(
                     """
                         SELECT
@@ -86,12 +93,12 @@ class CandidateDAO {
     }
 
     boolean adicionarCandidato(Map candidato) {
-        java.sql.Connection connection = null
-        java.sql.PreparedStatement statement = null
+        Connection connection = null
+        PreparedStatement statement = null
         boolean sucesso = false
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             connection.setAutoCommit(false)
 
             // Inserindo dados na tabela User
@@ -110,7 +117,7 @@ class CandidateDAO {
 
             def resultSet = statement.executeQuery()
             if (!resultSet.next()) {
-                throw new java.sql.SQLException("banco n retornou id")
+                throw new SQLException("banco n retornou id")
             }
             int userId = resultSet.getInt("id")
 
@@ -127,10 +134,10 @@ class CandidateDAO {
             statement.setInt(1, userId)
             statement.setString(2, candidato.sobrenome)
 
-            java.time.format.DateTimeFormatter formatoData =
-                    java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
-            java.time.LocalDate dataNascimento =
-                    java.time.LocalDate.parse(candidato.dataNascimento, formatoData)
+            DateTimeFormatter formatoData =
+                    DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            LocalDate dataNascimento =
+                    LocalDate.parse(candidato.dataNascimento, formatoData)
             statement.setDate(3, java.sql.Date.valueOf(dataNascimento))
 
             statement.setString(4, candidato.cpf)
@@ -153,7 +160,7 @@ class CandidateDAO {
                     boolean vinculada = candidateCompetenceDAO.adicionarCompetenciaAoCandidato(connection, userId,competenciaSalva.id as int)
 
                     if (!vinculada) {
-                        throw new java.sql.SQLException(
+                        throw new SQLException(
                                 "Não foi possível vincular '${nomeCompetencia}' ao candidato"
                         )
                     }
@@ -188,12 +195,12 @@ class CandidateDAO {
     }
 
     boolean atualizarCandidato(Map candidato) {
-        java.sql.Connection connection = null
-        java.sql.PreparedStatement statement = null
+        Connection connection = null
+        PreparedStatement statement = null
         boolean sucesso = false
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             connection.setAutoCommit(false)
 
             statement = connection.prepareStatement(
@@ -212,7 +219,7 @@ class CandidateDAO {
             statement.setInt(6, candidato.id as int)
 
             if (statement.executeUpdate() != 1) {
-                throw new java.sql.SQLException("Candidato não encontrado")
+                throw new SQLException("Candidato não encontrado")
             }
 
             statement.close()
@@ -226,10 +233,10 @@ class CandidateDAO {
             )
             statement.setString(1, candidato.sobrenome)
 
-            java.time.format.DateTimeFormatter formatoData =
-                    java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
-            java.time.LocalDate dataNascimento =
-                    java.time.LocalDate.parse(candidato.dataNascimento, formatoData)
+            DateTimeFormatter formatoData =
+                    DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            LocalDate dataNascimento =
+                    LocalDate.parse(candidato.dataNascimento, formatoData)
             statement.setDate(2, java.sql.Date.valueOf(dataNascimento))
 
             statement.setString(3, candidato.cpf)
@@ -238,7 +245,7 @@ class CandidateDAO {
             statement.setInt(6, candidato.id as int)
 
             if (statement.executeUpdate() != 1) {
-                throw new java.sql.SQLException("Dados do candidato não encontrados")
+                throw new SQLException("Dados do candidato não encontrados")
             }
 
             CandidateCompetenceDAO candidateCompetenceDAO =
@@ -262,7 +269,7 @@ class CandidateDAO {
                         candidato.id as int,
                         competencia.id as int
                 )) {
-                    throw new java.sql.SQLException(
+                    throw new SQLException(
                             "Não foi possível vincular '${nomeCompetencia}' ao candidato"
                     )
                 }
@@ -283,11 +290,11 @@ class CandidateDAO {
     }
 
     boolean removerCandidato(int idCandidato) {
-        java.sql.Connection connection = null
+        Connection connection = null
         boolean sucesso = false
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             connection.setAutoCommit(false)
 
             List<String> comandos = [
@@ -298,12 +305,12 @@ class CandidateDAO {
             ]
 
             comandos.eachWithIndex { String sql, int indice ->
-                java.sql.PreparedStatement statement = connection.prepareStatement(sql)
+                PreparedStatement statement = connection.prepareStatement(sql)
                 try {
                     statement.setInt(1, idCandidato)
                     int linhasAfetadas = statement.executeUpdate()
                     if (indice >= 2 && linhasAfetadas != 1) {
-                        throw new java.sql.SQLException("Candidato não encontrado")
+                        throw new SQLException("Candidato não encontrado")
                     }
                 } finally {
                     statement.close()

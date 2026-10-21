@@ -1,13 +1,16 @@
 package org.linketinder.dao
 
+
+import org.linketinder.dao.connection.PostgresConnectionFactory
 import spock.lang.Specification
 
 import java.sql.Connection
 
-class ConexaoDBTest extends Specification {
+class PostgresConnectionFactoryTest extends Specification {
     def "deve estabelecer conexao com o banco de dados com sucesso"() {
         when: "solicitamos uma conexao"
-        Connection conexao = ConexaoDB.getConnection()
+        PostgresConnectionFactory conexaoDB = new PostgresConnectionFactory()
+        Connection conexao = conexaoDB.getConnection()
 
         then: "a conexao deve ser retornada e nao ser nula"
         conexao != null
@@ -23,12 +26,12 @@ class ConexaoDBTest extends Specification {
     }
 
     def "mostrarTabelas deve listar todas as tabelas do banco de dados"() {
-        given: "uma instancia de ConexaoDB"
+        given: "uma instancia de PostgresConnectionFactory"
         PrintStream saidaOriginal = System.out
         ByteArrayOutputStream saidaCapturada = new ByteArrayOutputStream()
         System.setOut(new PrintStream(saidaCapturada))
 
-        ConexaoDB conexaoDB = new ConexaoDB()
+        PostgresConnectionFactory conexaoDB = new PostgresConnectionFactory()
 
         when: "chamamos o metodo mostrarTabelas"
         boolean resultado = conexaoDB.mostrarTabelas()

@@ -1,6 +1,7 @@
 package org.linketinder.dao.curtida
 
-import org.linketinder.dao.ConexaoDB
+import org.linketinder.dao.connection.DatabaseConnectionFactory
+import org.linketinder.dao.connection.PostgresConnectionFactory
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -19,7 +20,7 @@ class CurtidaDAO {
         ResultSet resultSet = null
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             statement = connection.prepareStatement(
                     'SELECT 1 FROM "Vaga" WHERE id = ? AND id_empresa = ?'
             )
@@ -48,7 +49,7 @@ class CurtidaDAO {
         ResultSet resultSet = null
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             connection.setAutoCommit(false)
 
             selectStatement = connection.prepareStatement(

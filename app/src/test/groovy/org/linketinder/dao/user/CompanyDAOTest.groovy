@@ -1,6 +1,7 @@
 package org.linketinder.dao.user
 
-import org.linketinder.dao.ConexaoDB
+import org.linketinder.dao.connection.ConnectionFactory
+import org.linketinder.dao.connection.DatabaseConnectionFactory
 import spock.lang.Specification
 
 import java.sql.Connection
@@ -8,6 +9,10 @@ import java.sql.ResultSet
 import java.sql.PreparedStatement
 
 class CompanyDAOTest extends Specification {
+
+    private DatabaseConnectionFactory gerenciadorMock
+    private ConnectionFactory fabricaMock
+
     private CompanyDAO companyDAO
     private Connection connection
     private PreparedStatement statement
@@ -31,12 +36,19 @@ class CompanyDAOTest extends Specification {
         statement = Mock(PreparedStatement)
         resultSet = Mock(ResultSet)
 
-        GroovyMock(ConexaoDB, global: true)
+        fabricaMock = Mock(ConnectionFactory)
+        gerenciadorMock = Mock(DatabaseConnectionFactory)
+
+        GroovyMock(DatabaseConnectionFactory, global: true)
+        DatabaseConnectionFactory.getInstance() >> gerenciadorMock
+
+        gerenciadorMock.getFactoryDatabaseConnection() >> fabricaMock
+        fabricaMock.getConnection() >> connection
     }
 
     def "deve adicionar uma empresa com sucesso"() {
         given: "as dependencias simuladas do banco"
-        ConexaoDB.getConnection() >> connection
+
 
         def userStatement = Mock(PreparedStatement)
         def companyStatement = Mock(PreparedStatement)
@@ -70,7 +82,6 @@ class CompanyDAOTest extends Specification {
 
     def "lista empresa deve retornar lista de empresas"() {
         given: "uma empresa no banco"
-        ConexaoDB.getConnection() >> connection
         connection.prepareStatement(_) >> statement
         statement.executeQuery() >> resultSet
 
@@ -131,7 +142,7 @@ class CompanyDAOTest extends Specification {
     }
 
     private void prepararConsultaEmpresa() {
-        ConexaoDB.getConnection() >> connection
+        DatabaseConnectionFactory.getInstance().factoryDatabaseConnection.getConnection() >> connection
         connection.prepareStatement(_) >> statement
     }
 }

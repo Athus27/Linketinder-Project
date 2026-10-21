@@ -1,31 +1,20 @@
-package org.linketinder.dao
+package org.linketinder.dao.connection
 
 import groovy.transform.PackageScope
 
 import java.sql.Connection
 import java.sql.DriverManager
+import java.sql.ResultSet
+import java.sql.Statement
 
-class ConexaoDB {
-    private static Properties props = new Properties()
+class PostgresConnectionFactory implements ConnectionFactory {
+    private final Properties props
 
-    static {
-        def resourceName = "db.properties"
-        def classLoader = Thread.currentThread().getContextClassLoader()
-        def resourceStream = classLoader.getResourceAsStream(resourceName)
-
-        if (resourceStream) {
-            try {
-                props.load(resourceStream)
-            } finally {
-                resourceStream.close()
-            }
-        } else {
-            throw new FileNotFoundException("Arquivo de propriedades '${resourceName}' não encontrado no classpath.")
-        }
-
+    PostgresConnectionFactory(Properties props) {
+        this.props = props
     }
 
-    static Connection getConnection() {
+    Connection getConnection() {
         return DriverManager.getConnection(
                 props.getProperty("db.url"),
                 props.getProperty("db.user"),
@@ -36,8 +25,8 @@ class ConexaoDB {
     @PackageScope
     boolean mostrarTabelas() {
         Connection connection = null
-        java.sql.Statement statement = null
-        java.sql.ResultSet resultSet = null
+        Statement statement = null
+        ResultSet resultSet = null
         boolean result = false
 
         try {
@@ -58,9 +47,15 @@ class ConexaoDB {
             println "Erro ao mostrar tabelas: ${e.message}"
             result = false
         } finally {
-            if (resultSet != null) resultSet.close()
-            if (statement != null) statement.close()
-            if (connection != null) connection.close()
+            if (resultSet != null) {
+                resultSet.close()
+            }
+            if (statement != null) {
+                statement.close()
+            }
+            if (connection != null) {
+                connection.close()
+            }
         }
 
         return result

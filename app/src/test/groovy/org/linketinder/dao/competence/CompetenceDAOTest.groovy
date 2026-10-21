@@ -1,7 +1,9 @@
 package org.linketinder.dao.competence
 
-import org.linketinder.controller.CompetenceController
-import org.linketinder.dao.ConexaoDB
+import org.linketinder.dao.connection.ConnectionFactory
+import org.linketinder.dao.connection.DatabaseConnectionFactory
+import org.linketinder.dao.connection.PostgresConnectionFactory
+import org.linketinder.dao.user.CompanyDAO
 import spock.lang.Specification
 
 import java.sql.Connection
@@ -9,17 +11,31 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 
 class CompetenceDAOTest extends Specification {
+    private DatabaseConnectionFactory gerenciadorMock
+    private ConnectionFactory fabricaMock
+
+    private Connection connection
+    private PreparedStatement statement
+    private ResultSet resultSet
+
+    def setup(){
+
+        connection = Mock(Connection)
+        statement = Mock(PreparedStatement)
+        resultSet = Mock(ResultSet)
+
+        fabricaMock = Mock(ConnectionFactory)
+        gerenciadorMock = Mock(DatabaseConnectionFactory)
+
+        GroovyMock(DatabaseConnectionFactory, global: true)
+        DatabaseConnectionFactory.getInstance() >> gerenciadorMock
+
+        gerenciadorMock.getFactoryDatabaseConnection() >> fabricaMock
+        fabricaMock.getConnection() >> connection
+    }
+
     def "ListarCompetencias"() {
         given: "dado uma resposta simulada do BD"
-        //Simulando conexão c BD
-        Connection connection = Mock()
-        PreparedStatement statement = Mock()
-        ResultSet resultSet = Mock()
-
-        GroovyMock(ConexaoDB, global: true)
-
-        //Simulando query
-        ConexaoDB.getConnection() >> connection
         connection.prepareStatement(_) >> statement
         statement.executeQuery() >> resultSet
 
@@ -50,11 +66,6 @@ class CompetenceDAOTest extends Specification {
 
     def "retorna competencia existente usando a conexao recebida"() {
         given:
-        Connection connection = Mock()
-        PreparedStatement statement = Mock()
-        ResultSet resultSet = Mock()
-
-        //Simulando query
         connection.prepareStatement(_) >> statement
         statement.executeQuery() >> resultSet
 
@@ -80,8 +91,6 @@ class CompetenceDAOTest extends Specification {
 
     def "deve criar e retornar competencia inexistente"() {
         given:
-        Connection connection = Mock()
-
         PreparedStatement selectStatement = Mock()
         PreparedStatement insertStatement = Mock()
 

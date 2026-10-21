@@ -1,6 +1,7 @@
 package org.linketinder.dao.user
 
-import org.linketinder.dao.ConexaoDB
+import org.linketinder.dao.connection.DatabaseConnectionFactory
+import org.linketinder.dao.connection.PostgresConnectionFactory
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -13,7 +14,7 @@ class CompanyDAO {
         boolean sucesso = false
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             connection.setAutoCommit(false)
 
             // Inserindo dados na tabela User
@@ -82,7 +83,7 @@ class CompanyDAO {
 
         def empresas = []
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             statement = connection.prepareStatement(
                     """
                         SELECT
@@ -132,7 +133,7 @@ class CompanyDAO {
         boolean sucesso = false
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             connection.setAutoCommit(false)
 
             statement = connection.prepareStatement(
@@ -189,7 +190,7 @@ class CompanyDAO {
         boolean sucesso = false
 
         try {
-            connection = ConexaoDB.getConnection()
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
             connection.setAutoCommit(false)
 
             List<String> comandos = [

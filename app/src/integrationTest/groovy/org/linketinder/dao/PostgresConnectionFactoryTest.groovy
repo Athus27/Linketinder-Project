@@ -1,18 +1,41 @@
 package org.linketinder.dao
 
-
+import org.linketinder.dao.connection.ConnectionFactory
+import org.linketinder.dao.connection.DatabaseConnectionFactory
 import org.linketinder.dao.connection.PostgresConnectionFactory
 import spock.lang.Specification
 
 import java.sql.Connection
 
 class PostgresConnectionFactoryTest extends Specification {
-    def "deve estabelecer conexao com o banco de dados com sucesso"() {
-        when: "solicitamos uma conexao"
-        PostgresConnectionFactory conexaoDB = new PostgresConnectionFactory()
-        Connection conexao = conexaoDB.getConnection()
+    private PostgresConnectionFactory conexaoDB
+    private Connection conexao
 
-        then: "a conexao deve ser retornada e nao ser nula"
+    private static Properties DbProps = new Properties()
+
+    static {
+        def resourceName = "db.properties"
+        def classLoader = Thread.currentThread().getContextClassLoader()
+        def resourceStream = classLoader.getResourceAsStream(resourceName)
+
+        if (resourceStream) {
+            try {
+                DbProps.load(resourceStream)
+            } finally {
+                resourceStream.close()
+            }
+        } else {
+            throw new FileNotFoundException("Arquivo de propriedades '${resourceName}' não encontrado no classpath.")
+        }
+
+    }
+
+    def setup (){
+        conexaoDB = new PostgresConnectionFactory(DbProps)
+        conexao = conexaoDB.getConnection()
+    }
+    def "deve estabelecer conexao com o banco de dados com sucesso"() {
+        expect: "quando solicitamos uma conexao, a conexao deve ser retornada e nao ser nula"
         conexao != null
 
         and: "a conexao deve estar aberta (valida)"
@@ -30,8 +53,6 @@ class PostgresConnectionFactoryTest extends Specification {
         PrintStream saidaOriginal = System.out
         ByteArrayOutputStream saidaCapturada = new ByteArrayOutputStream()
         System.setOut(new PrintStream(saidaCapturada))
-
-        PostgresConnectionFactory conexaoDB = new PostgresConnectionFactory()
 
         when: "chamamos o metodo mostrarTabelas"
         boolean resultado = conexaoDB.mostrarTabelas()

@@ -5,8 +5,8 @@ import org.linketinder.dao.user.CompanyDAO
 class CompanyController {
     private final CompanyDAO companyDAO
 
-    CompanyController() {
-        this.companyDAO = new CompanyDAO()
+    CompanyController(CompanyDAO companyDAO) {
+        this.companyDAO = companyDAO
     }
 
     boolean cadastrarEmpresa(Map empresa) {

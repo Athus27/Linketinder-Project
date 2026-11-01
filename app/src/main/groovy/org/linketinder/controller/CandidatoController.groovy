@@ -4,7 +4,7 @@ import org.linketinder.dao.user.CandidateDAO
 
 class CandidatoController {
     private final CandidateDAO candidateDAO
-
+    // TODO: separar interfaces
     CandidatoController(CandidateDAO candidateDAO) {
         this.candidateDAO = candidateDAO
     }

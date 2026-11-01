@@ -29,8 +29,8 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-run{
-    standardInput=System.in
+run {
+    standardInput = System.in
 }
 
 testing {
@@ -41,6 +41,24 @@ testing {
             dependencies {
                 implementation project()
             }
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('integrationTest')
+}
+
+tasks.withType(Test).configureEach { Test testTask ->
+    afterSuite { descriptor, result ->
+        if (descriptor.parent == null) {
+            println """
+${testTask.name}:
+- Executados: ${result.testCount}
+- Passaram: ${result.successfulTestCount}
+- Falharam: ${result.failedTestCount}
+- Ignorados: ${result.skippedTestCount}
+"""
         }
     }
 }

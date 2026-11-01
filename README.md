@@ -93,11 +93,8 @@ Cada clique em uma requisição `POST` tenta inserir um novo registro no banco. 
 Os handlers foram desenvolvidos com TDD. Primeiro foi escrito um teste que falhava; depois foi implementado somente o comportamento necessário para fazê-lo passar.
 
 ```bash
-./gradlew test
-# Executa os testes unitários com banco e requisições simulados.
-
-./gradlew integrationTest
-# Executa os testes que dependem da conexão real com o PostgreSQL.
+./gradlew check
+# Executa os testes unitários e de integração e mostra o resumo dos resultados.
 ```
 
 Os testes dos handlers verificam o recebimento do JSON, a chamada do controller, o status `201` e a resposta `405` para métodos que não são permitidos.

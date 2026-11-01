@@ -1,0 +1,51 @@
+### Cadastrar candidato
+POST http://localhost:8080/api/candidatos
+Content-Type: application/json
+
+{
+  "nome": "Sandubinha",
+  "sobrenome": "Silva",
+  "dataNascimento": "15/01/2002",
+  "email": "sandubinha@email.com",
+  "cpf": "111.222.333-44",
+  "pais": "Brasil",
+  "cep": "01010-000",
+  "descricao": "Desenvolvedor em formação",
+  "formacao": "Engenharia da Computação",
+  "senha": "123456",
+  "competencias": [
+    "Groovy",
+    "Java",
+    "SQL"
+  ]
+}
+
+### Cadastrar empresa
+POST http://localhost:8080/api/empresas
+Content-Type: application/json
+
+{
+  "nome": "Tapetes Bolinho",
+  "email": "contato@tapetesbolinho.com",
+  "cnpj": "67.890.123/0001-45",
+  "pais": "Brasil",
+  "cep": "01020-000",
+  "descricao": "Fabricante de tapetes personalizados",
+  "senha": "123456"
+}
+
+### Cadastrar vaga para a empresa de ID 6
+POST http://localhost:8080/api/vagas
+Content-Type: application/json
+
+{
+  "idEmpresa": 6,
+  "titulo": "Desenvolvedor Groovy",
+  "descricao": "Desenvolvimento de APIs e sistemas backend",
+  "localVaga": "São Paulo - SP",
+  "competencias": [
+    "Groovy",
+    "Java",
+    "SQL"
+  ]
+}

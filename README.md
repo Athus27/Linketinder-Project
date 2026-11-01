@@ -1,192 +1,103 @@
-# Linketinder-Project
+# Linketinder REST API
 
-Aplicacao em Groovy para o MVP do Linketinder, um sistema simples de contratacao inspirado na ideia de combinar candidatos e empresas por competencias.
+Versão do backend do Linketinder adaptada para funcionar como uma API REST. O projeto foi desenvolvido em Groovy, sem Spring ou outro framework web, utilizando o `HttpServer` nativo do Java.
 
-- **Trello Backlog:** https://trello.com/b/RVX7qZoN/linketinder
+Esta implementação faz parte do desafio **K2-T4: REST/RESTful API**.
 
-- **Autor: Athus**
+## O que foi implementado
 
-## Funcionalidades
+A API possui os três endpoints obrigatórios do desafio:
 
-- Lista candidatos pre-cadastrados.
-- Lista empresas pre-cadastradas.
-- Persiste os dados dos candidatos no PostgreSQL.
-- Persiste os dados das empresas no PostgreSQL.
-- Cadastra novos candidatos pelo terminal.
-- Cadastra novas empresas pelo terminal.
-- Armazena competencias de candidatos e empresas.
-- Valida formato de CPF, CNPJ e CEP.
-- Mantem vagas associadas as empresas.
-- Permite que candidatos curtam vagas.
-- Permite que empresas curtam candidatos.
-- Identifica match quando candidato e empresa se curtem para a mesma vaga.
+| Método | Endpoint | Descrição | Sucesso |
+|---|---|---|---|
+| `POST` | `/api/candidatos` | Cadastra um candidato | `201 Created` |
+| `POST` | `/api/empresas` | Cadastra uma empresa | `201 Created` |
+| `POST` | `/api/vagas` | Cadastra uma vaga | `201 Created` |
 
-## Estrutura Principal
+Os endpoints recebem dados em JSON e utilizam os DAOs que já existiam no Linketinder para persistir as informações no PostgreSQL.
 
-- `App.groovy`: ponto de entrada da aplicacao, cria o Scanner e o LeitorConsole e inicia o menu principal.
-- `view/console/MenuConsole.groovy`: direciona para os menus de candidatos, empresas, vagas e competencias.
-- `CandidateConsole`, `CompanyConsole`, `VagaConsole` e `CompetenceConsole`: organizam os fluxos de cada menu.
-- `view/console/input/types`: readers responsaveis por coletar os dados pelo terminal.
-- `view/console/input/utils/formatter`: formatacao dos dados para exibicao no terminal.
-- `controller`: faz a comunicacao entre os consoles e os DAOs.
-- `dao`: executa os comandos SQL e controla as transacoes.
-- `ConexaoDB.groovy`: carrega as configuracoes de conexao e abre conexoes com o PostgreSQL.
-- `User.groovy`: classe base com atributos comuns, como nome, email, estado, CEP, descricao e competencias.
-- `UserCandidate.groovy`: representa um candidato, com CPF e idade.
-- `UserCompany.groovy`: representa uma empresa, com CNPJ, pais e vagas.
-- `Vaga.groovy`: representa uma vaga publicada por uma empresa, com titulo, descricao e competencias esperadas.
-- `CurtidaDAO.groovy`: registra as curtidas e identifica o match usando os dados do banco.
+## Como a API foi organizada
 
-## Atualização: Banco de dados PostgreSQL
-foi desenhado o **DER** do linketinder, utilizando o **dbdiagram.io**, a imagem gerada pelo diagrama está em `docs/derLinketinder.png`
-- link: https://dbdiagram.io/d/Linketinder-6abbe06e5869425612cd1b34
-- Os codigos SQL para criar as tabelas estão em `sql/Linketinder.sql`
-- Para armazenar as senhas utilizei o `pgcrypto`, que é uma extensão do PostgreSQL que acrescenta funções de criptografia e hash, a principal função utilizada é a crypt():
-```sql
-crypt('Senha123', gen_salt('bf'))
-```
-> esse **gen_salt('bf')** gera um valor aleatório chamado salt e seleciona o algoritmo bcrypt, e o `crypt()` usa a senha e o salt para produzir o hash que será gravado. Tudo isso é executado dentro de `BEGIN` e `COMMIT`, que são clausulas **DTL**, ou grava tudo ou não grava nada!
+Mantive cada parte com uma responsabilidade:
 
-## Atualizacao: Curtidas e Match
-
-Nesta versao foi implementado o sistema de curtidas do Linketinder.
-
-O candidato pode selecionar uma vaga e curtir essa oportunidade. A empresa pode selecionar uma de suas vagas e curtir um candidato. Quando os dois lados curtem a mesma relacao de candidato e vaga, o sistema identifica o match e exibe uma mensagem no terminal.
-
-Na versao inicial, as curtidas eram armazenadas em memoria durante a execucao do programa. Agora elas sao persistidas na tabela `Curtida` do PostgreSQL utilizando JDBC. Cada registro relaciona um candidato e uma vaga, guarda a curtida de cada lado e registra a data quando acontece o match.
-
-## Atualizacao: Integracao entre PostgreSQL e backend
-
-Nesta etapa comecei a integrar o backend do Linketinder com o PostgreSQL utilizando JDBC, sem utilizar JPA ou Hibernate.
-
-Separei as responsabilidades entre `view`, `controller` e `dao`. O `MenuConsole` coleta e exibe os dados, os controllers fazem a comunicacao com os DAOs e os DAOs executam os comandos SQL.
-
-Foram implementadas as seguintes funcionalidades:
-
-- Cadastro e listagem de candidatos no banco de dados.
-- Cadastro e listagem de empresas no banco de dados.
-- Cadastro, busca e listagem de competencias.
-- Relacao N:N entre candidatos e competencias utilizando `CandidatoCompetencia`.
-- Cadastro e listagem de vagas.
-- Relacao N:N entre vagas e competencias utilizando `VagaCompetencia`.
-- Relacao 1:N entre empresa e vagas utilizando `Vaga.id_empresa`.
-- Feed anonimo de candidatos, sem exibir os dados pessoais.
-- Feed anonimo de vagas, sem exibir o nome da empresa.
-- Validacao de CPF, CNPJ, CEP e tamanho minimo da senha.
-- CRUD de candidatos, empresas, competencias e vagas.
-- Curtidas de candidatos e empresas persistidas no PostgreSQL.
-- Identificacao e registro do match quando os dois lados curtem a mesma relacao entre candidato e vaga.
-
-No cadastro de candidato, a aplicacao cria o usuario, cria o candidato e relaciona suas competencias dentro da mesma transacao. No cadastro de empresa, cria o usuario e utiliza o ID retornado para criar a empresa.
-
-Para cadastrar uma vaga, o usuario seleciona uma empresa ja cadastrada, informa titulo, descricao e local, depois adiciona as competencias. Caso a competencia nao exista, ela e criada antes de gerar o relacionamento com a vaga.
-
-Foi utilizado `commit` para confirmar as operacoes e `rollback` para desfazer tudo quando ocorre algum erro durante o cadastro.
-
-Os arquivos relacionados ao banco estao em:
-
-- `sql/Linketinder.sql`: criacao das tabelas e relacionamentos.
-- `sql/DadosIniciais.sql`: candidatos, empresas, competencias e vagas ficticias.
-- `docs/derLinketinder.png`: imagem atualizada do diagrama.
-
-O menu atual permite listar, cadastrar, editar e remover candidatos, empresas e vagas. Para competencias, permite listar, editar e remover, alem de cria-las durante o cadastro de candidatos e vagas. Tambem permite visualizar os feeds anonimos e registrar curtidas e matches persistidos no banco de dados.
-
-## Atualizacao: Boas Praticas - Clean Code e SOLID (K2-T1)
-
-Nesta etapa refatorei a organizacao do backend para separar melhor as responsabilidades e facilitar a leitura do codigo.
-
-O `App` ficou responsavel por iniciar a aplicacao. Removi dele o fluxo antigo que mantinha os dados em memoria, pois a versao atual utiliza o PostgreSQL. A classe `Curtida` tambem foi removida porque nao era mais utilizada pelo fluxo atual.
-
-Dividi o `MenuConsole`, que antes concentrava as operacoes, em consoles de candidatos, empresas, vagas e competencias. Agora o menu principal direciona para cada um deles, e cada opcao chama um metodo com o fluxo correspondente.
-
-As principais mudancas foram:
-
-- Separei a leitura dos campos em readers, como `CandidateReader`, `CompanyReader` e `VagaReader`. O `UserReader` reaproveita a leitura de CEP e senha nos cadastros de candidatos e empresas.
-- Separei a formatacao dos dados em formatters, incluindo os feeds sem dados pessoais, deixando os consoles responsaveis por conduzir os fluxos do terminal.
-- Passei o mesmo `LeitorConsole` pelo construtor para centralizar a leitura do terminal, sem criar um Scanner para cada menu.
-- Centralizei no `ValidationConsole` as validacoes de formato de CPF, CNPJ, CEP e tamanho minimo da senha.
-- Utilizei atributos e metodos privados para os detalhes internos dos consoles, mantendo acessiveis os metodos utilizados por outras classes.
-- Mantive os retornos antecipados quando o usuario cancela uma selecao, evitando continuar o cadastro, edicao ou remocao sem um registro selecionado.
-- Reaproveitei a filtragem das vagas por empresa na consulta e na selecao de vaga para curtida, evitando repetir essa regra.
-- Corrigi o fechamento do arquivo `db.properties` com `try/finally`, para fechar o stream mesmo quando ocorre um erro na leitura.
-- Removi as dependencias diretas de Guava e JUnit 4, que nao eram utilizadas pelo codigo e pelos testes atuais.
-- Removi o `UserFormatter`, que duplicava codigo de mensagens e nao era utilizado.
-- Corrigi as chamadas da edicao de candidato para utilizar os readers responsaveis pela leitura dos dados e competencias.
-
-Passei os DAOs pelo construtor de `CandidatoController` e `CompetenceController`, e o controller pelo construtor do `CompetenceReader`. Com essa injecao de dependencias, essas classes recebem os objetos que utilizam, facilitando fornecer dependencias simuladas nos testes.
-
-Com essa separacao, apliquei o principio da responsabilidade unica (SRP) de forma pratica: leitura, validacao, formatacao e fluxo do menu ficaram em classes com tarefas mais claras. Isso facilita localizar cada comportamento e testar as partes sem executar todo o menu.
-
-Para melhorar a legibilidade, extrai os blocos dos `case` para metodos com nomes que descrevem as operacoes. Tambem utilizei retornos antecipados nos cancelamentos, atributos privados e removi codigo sem uso e comentarios desnecessarios. Fiz essas melhorias por partes, seguindo a regra do escoteiro, aproveitando o codigo que ja existia.
-
-## Atualizacao: Organizacao dos testes
-
-Adaptei os testes que antes chamavam o `MenuConsole` para testar diretamente os readers e o formatter que receberam esses metodos. Mantive as verificacoes dos campos lidos e da exibicao dos dados do candidato sem mostrar a senha.
-
-Ampliei os testes de validacao, formatacao e DAOs. Utilizei `setup()` para preparar os dados antes de cada teste e mocks para simular respostas do banco, incluindo falhas de consulta e verificacoes de fechamento dos recursos. Adicionei Byte Buddy para permitir mocks de classes com Spock.
-
-Removi o metodo e o teste de conexao do `CandidateDAO`, pois essa verificacao ja esta no `ConexaoDBTest`, na suite de integracao.
-
-Separei os testes em duas suites:
-
-- `app/src/test/groovy`: testes unitarios dos modelos, readers, formatter e DAOs com o banco simulado.
-- `app/src/integrationTest/groovy`: testes de integracao da conexao com o PostgreSQL e da listagem das tabelas.
-
-Na validacao mais recente, passaram **49 testes unitarios e 2 testes de integracao com o PostgreSQL**.
-
-Para executar os testes unitarios:
-
-```bash
-./gradlew :app:test
-# Executa os testes unitarios do modulo app.
+```text
+Requisição HTTP
+    ↓
+Router
+    ↓
+Handler
+    ↓
+Controller
+    ↓
+DAO
+    ↓
+PostgreSQL
 ```
 
-Para executar os testes de integracao, o PostgreSQL precisa estar disponivel e o `db.properties` configurado no classpath:
+- `ApiApp`: monta as dependências e inicia a aplicação;
+- `HttpServerConfig`: configura endereço, porta e pool de threads;
+- `Router`: relaciona cada endpoint ao seu handler;
+- `CandidateHandler`, `CompanyHandler` e `VagaHandler`: leem o método e o JSON da requisição e constroem a resposta HTTP;
+- controllers: fazem a comunicação entre os handlers e os DAOs;
+- DAOs: executam o SQL e controlam as transações com `commit` e `rollback`.
 
-```bash
-./gradlew :app:integrationTest
-# Executa os testes de integracao com o PostgreSQL.
+Essa separação evita que o código responsável pelo HTTP conheça diretamente os detalhes do banco.
+
+## Recursos utilizados
+
+- Java 21;
+- Groovy;
+- Gradle;
+- `com.sun.net.httpserver.HttpServer`;
+- `JsonSlurper` para converter JSON em `Map`;
+- JDBC e PostgreSQL;
+- Spock para os testes;
+- HTTP Client do IntelliJ por meio do arquivo `requests.http`.
+
+## Configuração do PostgreSQL
+
+Crie o arquivo `app/src/main/resources/db.properties`:
+
+```properties
+db.type=postgres
+db.url=jdbc:postgresql://localhost:5432/linketinder
+db.user=seu_usuario
+db.password=sua_senha
 ```
 
-Para gerar o build e executar as duas suites:
+O banco deve possuir as tabelas definidas em `sql/Linketinder.sql`. A extensão `pgcrypto` é utilizada para gerar o hash das senhas.
 
-```bash
-./gradlew :app:build :app:integrationTest
-# Gera o build e executa os testes unitarios e de integracao.
-```
-
-## Como Executar
-
-No terminal, dentro da pasta do projeto:
+## Como executar
 
 ```bash
 ./gradlew run
-# Inicia a aplicacao pelo terminal.
+# Compila o projeto e inicia a API.
 ```
-## Atualizacao: Design Patterns (K2-T2)
 
-Nesta etapa refatorei a criacao das conexoes com o banco utilizando Factory e Singleton.
+Por padrão, a aplicação fica disponível em:
 
-- **Factory:** criei a interface `ConnectionFactory` e a implementacao `PostgresConnectionFactory`. O gerenciador `DatabaseConnectionFactory` le o `db.type` no `db.properties` e escolhe a fabrica correspondente. Atualmente, a implementacao disponivel e PostgreSQL.
-- **Singleton:** o gerenciador possui uma unica instancia e guarda a fabrica escolhida para reutiliza-la. As conexoes continuam sendo abertas por operacao e fechadas pelos DAOs.
-- Centralizei o carregamento das configuracoes no gerenciador e passei as propriedades pelo construtor da fabrica PostgreSQL.
-- Atualizei os DAOs para obter as conexoes pelo gerenciador, sem chamar diretamente a implementacao PostgreSQL.
-- Adaptei os testes para simular o gerenciador, a fabrica e as conexoes. Adicionei Objenesis para permitir que o Spock crie o mock da classe com construtor privado.
+```text
+http://localhost:8080
+```
 
-Essa organizacao separa a escolha da fabrica da abertura das conexoes e prepara o projeto para acrescentar outras implementacoes. A troca de banco ainda pode exigir ajustes no SQL dos DAOs.
+Também é possível alterar o endereço e a porta pelas variáveis de ambiente `HOST` e `PORT`.
 
-## Tecnologias
+## Como testar os endpoints
 
-- Groovy
-- Gradle
-- PostgreSQL
-- JDBC
-- Spock para os testes
-- Scanner para entrada de dados pelo terminal
-- ArrayList utilizado na versao inicial para armazenar os dados em memoria
+O arquivo `requests.http` possui exemplos completos dos três cadastros. No IntelliJ, abra o arquivo e clique no botão verde ao lado da requisição desejada.
 
-## Observacoes da versao inicial
+Cada clique em uma requisição `POST` tenta inserir um novo registro no banco. Campos únicos, como CPF e CNPJ, não podem ser repetidos.
 
-Na versao inicial, os dados eram armazenados apenas em memoria. Ao encerrar o programa, os cadastros feitos pelo terminal nao eram salvos em arquivo ou banco de dados.
+## Testes automatizados
 
-Na versao atual, candidatos, empresas, competencias, vagas, curtidas e matches sao persistidos no PostgreSQL utilizando JDBC.
+Os handlers foram desenvolvidos com TDD. Primeiro foi escrito um teste que falhava; depois foi implementado somente o comportamento necessário para fazê-lo passar.
+
+```bash
+./gradlew test
+# Executa os testes unitários com banco e requisições simulados.
+
+./gradlew integrationTest
+# Executa os testes que dependem da conexão real com o PostgreSQL.
+```
+
+Os testes dos handlers verificam o recebimento do JSON, a chamada do controller, o status `201` e a resposta `405` para métodos que não são permitidos.

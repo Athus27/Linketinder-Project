@@ -5,8 +5,8 @@ import org.linketinder.dao.vaga.VagaDAO
 class VagaController {
     private final VagaDAO vagaDAO
 
-    VagaController() {
-        this.vagaDAO = new VagaDAO()
+    VagaController(VagaDAO vagaDAO) {
+        this.vagaDAO = vagaDAO
     }
 
     List<Map> listarVagas() {

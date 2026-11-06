@@ -33,10 +33,10 @@ class Router {
         server.createContext(
                 "/api/empresas",
                 companyHandler
-        ).filters.add(new CorsFilter(frontendOrigin, ["POST"]))
+        ).filters.add(new CorsFilter(frontendOrigin, ["GET", "POST"]))
         server.createContext(
                 "/api/vagas",
                 vagaHandler
-        ).filters.add(new CorsFilter(frontendOrigin, ["POST"]))
+        ).filters.add(new CorsFilter(frontendOrigin, ["GET", "POST"]))
     }
 }

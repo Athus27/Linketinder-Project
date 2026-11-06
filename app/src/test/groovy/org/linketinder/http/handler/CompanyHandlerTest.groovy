@@ -3,6 +3,7 @@ package org.linketinder.http.handler
 import com.sun.net.httpserver.Headers
 import com.sun.net.httpserver.HttpExchange
 import org.linketinder.controller.CompanyController
+import groovy.json.JsonSlurper
 import spock.lang.Specification
 
 class CompanyHandlerTest extends Specification {
@@ -23,9 +24,9 @@ class CompanyHandlerTest extends Specification {
         exchange.responseBody >> responseBody
     }
 
-    def "deve responder 405 quando o método não for POST"() {
+    def "deve responder 405 quando o método não for GET nem POST"() {
         given:
-        exchange.requestMethod >> "GET"
+        exchange.requestMethod >> "DELETE"
         exchange.requestURI >> URI.create("/api/empresas")
 
         when:
@@ -34,7 +35,7 @@ class CompanyHandlerTest extends Specification {
         then:
         0 * companyController.cadastrarEmpresa(_)
         1 * exchange.sendResponseHeaders(405, _)
-        responseHeaders.getFirst("Allow") == "POST"
+        responseHeaders.getFirst("Allow") == "GET, POST"
     }
 
     def "deve cadastrar empresa recebida como JSON"() {
@@ -107,6 +108,50 @@ class CompanyHandlerTest extends Specification {
         then:
         0 * companyController.cadastrarEmpresa(_)
         1 * exchange.sendResponseHeaders(404, _)
+    }
+
+    def "deve listar empresas em JSON"() {
+        given:
+        exchange.requestMethod >> "GET"
+        exchange.requestURI >> URI.create("/api/empresas")
+        def registros = [[id: 7, nome: "Empresa teste", cnpj: "123", descricao: "Descrição", email: "teste@example.com", pais: "Brasil", cep: "12345"]]
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        1 * companyController.listarEmpresas() >> registros
+        1 * exchange.sendResponseHeaders(200, _)
+        responseHeaders.getFirst("Content-Type") == "application/json; charset=UTF-8"
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == registros
+    }
+
+    def "deve retornar array vazio quando não houver empresas"() {
+        given:
+        exchange.requestMethod >> "GET"
+        exchange.requestURI >> URI.create("/api/empresas")
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        1 * companyController.listarEmpresas() >> []
+        1 * exchange.sendResponseHeaders(200, _)
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == []
+    }
+
+    def "deve responder 500 quando a listagem de empresas falhar"() {
+        given:
+        exchange.requestMethod >> "GET"
+        exchange.requestURI >> URI.create("/api/empresas")
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        1 * companyController.listarEmpresas() >> { throw new RuntimeException("falha") }
+        1 * exchange.sendResponseHeaders(500, _)
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Erro ao listar empresas"]
     }
 
     private static InputStream jsonBody(String json) {

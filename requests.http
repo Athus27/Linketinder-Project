@@ -1,3 +1,21 @@
+### Listar candidatos
+GET http://localhost:8080/api/candidatos
+
+### Buscar candidato por ID
+GET http://localhost:8080/api/candidatos/1
+
+### Candidato inexistente (404 se não houver esse ID)
+GET http://localhost:8080/api/candidatos/2147483647
+
+### ID inválido (400)
+GET http://localhost:8080/api/candidatos/abc
+
+### Listar empresas
+GET http://localhost:8080/api/empresas
+
+### Listar vagas
+GET http://localhost:8080/api/vagas
+
 ### Cadastrar candidato
 POST http://localhost:8080/api/candidatos
 Content-Type: application/json

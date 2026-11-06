@@ -92,6 +92,69 @@ class CandidateDAO {
         }
     }
 
+    Map buscarPorId(int idCandidato) {
+        Connection connection = null
+        PreparedStatement statement = null
+        ResultSet resultSet = null
+
+        Map candidato = null
+
+        try {
+            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            statement = connection.prepareStatement(
+                    """
+                        SELECT
+                            candidate.id_candidato AS id,
+                            user_data.nome AS nome,
+                            candidate.sobrenome AS sobrenome,
+                            candidate.data_nascimento AS data_nascimento,
+                            candidate.cpf AS cpf,
+                            candidate.descricao AS descricao,
+                            user_data.email AS email,
+                            candidate.formacao AS formacao,
+                            user_data."país" AS pais,
+                            user_data.cep AS cep
+                        FROM "Candidate" AS candidate
+                        JOIN "User" AS user_data
+                            ON user_data.id = candidate.id_candidato
+                        WHERE candidate.id_candidato = ?
+                    """
+            )
+            statement.setInt(1, idCandidato)
+            resultSet = statement.executeQuery()
+
+            if (resultSet.next()) {
+                CandidateCompetenceDAO competenceDAO = new CandidateCompetenceDAO()
+                List<String> competencias = competenceDAO.listarCompetenciasDoCandidato(idCandidato)
+
+                candidato = [
+                        id            : resultSet.getInt("id"),
+                        nome          : resultSet.getString("nome"),
+                        sobrenome     : resultSet.getString("sobrenome"),
+                        dataNascimento: resultSet.getDate("data_nascimento"),
+                        cpf           : resultSet.getString("cpf"),
+                        descricao     : resultSet.getString("descricao"),
+                        email         : resultSet.getString("email"),
+                        formacao      : resultSet.getString("formacao"),
+                        pais          : resultSet.getString("pais"),
+                        cep           : resultSet.getString("cep"),
+                        competencias  : competencias
+                ]
+            }
+
+        } catch (Exception e) {
+            println("Erro ao buscar candidato por ID: ${e.message}")
+        } finally {
+            try {
+                if (resultSet != null) resultSet.close()
+                if (statement != null) statement.close()
+                if (connection != null) connection.close()
+            } catch (Exception e) {
+                println("Erro ao fechar recursos: ${e.message}")
+            }
+        }
+        return candidato
+    }
     boolean adicionarCandidato(Map candidato) {
         Connection connection = null
         PreparedStatement statement = null

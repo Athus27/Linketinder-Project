@@ -13,6 +13,10 @@ class CandidatoController {
         return this.candidateDAO.listarCandidatos().candidatos
     }
 
+    Map buscarCandidatoPorId(int idCandidato) {
+        return candidateDAO.buscarPorId(idCandidato)
+    }
+
     List<Map> feedCandidatos() {
         return this.candidateDAO.listarCandidatos().candidatos
     }

@@ -150,7 +150,7 @@ class CandidateHandlerTest extends Specification {
         1 * exchange.sendResponseHeaders(500, _)
     }
 
-    def "deve responder 404 para caminho diferente do endpoint"() {
+    def "deve responder 400 para ID inválido"() {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/candidatos/qualquer-coisa")
@@ -160,7 +160,49 @@ class CandidateHandlerTest extends Specification {
 
         then:
         0 * candidatoController.cadastrarCandidato(_)
+        1 * exchange.sendResponseHeaders(400, _)
+    }
+
+    def "deve buscar candidato por ID com data ISO"() {
+        given:
+        exchange.requestMethod >> "GET"
+        exchange.requestURI >> URI.create("/api/candidatos/1")
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        1 * candidatoController.buscarCandidatoPorId(1) >> [id: 1, nome: "Fulano", dataNascimento: java.sql.Date.valueOf("2002-01-15")]
+        0 * candidatoController.listarCandidatos()
+        1 * exchange.sendResponseHeaders(200, _)
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [id: 1, nome: "Fulano", dataNascimento: "2002-01-15"]
+    }
+
+    def "deve responder 404 para candidato inexistente"() {
+        given:
+        exchange.requestMethod >> "GET"
+        exchange.requestURI >> URI.create("/api/candidatos/999")
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        1 * candidatoController.buscarCandidatoPorId(999) >> null
         1 * exchange.sendResponseHeaders(404, _)
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Candidato não encontrado"]
+    }
+
+    def "deve rejeitar POST com ID sem cadastrar"() {
+        given:
+        exchange.requestMethod >> "POST"
+        exchange.requestURI >> URI.create("/api/candidatos/1")
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        0 * candidatoController._
+        1 * exchange.sendResponseHeaders(405, _)
     }
 
     private static InputStream jsonBody(String json) {

@@ -2,6 +2,7 @@ package org.linketinder.http.handler
 
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
+import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import org.linketinder.controller.CandidatoController
 
@@ -24,8 +25,25 @@ class CandidateHandler implements HttpHandler {
         String responseText
         int status
 
+        if (method == "GET") {
+            try {
+                List<Map> candidatos = candidatoController.listarCandidatos()
+
+                def dados = candidatos.collect { candidato ->
+                    candidato + [
+                            dataNascimento: candidato.dataNascimento?.toString()
+                    ]
+                }
+
+                responder(exchange, 200, JsonOutput.toJson(dados))
+            } catch (Exception ignored) {
+                responder(exchange, 500, '{"erro":"Erro ao listar candidatos"}')
+            }
+            return
+        }
+
         if (method != "POST") {
-            exchange.responseHeaders.set("Allow", "POST")
+            exchange.responseHeaders.set("Allow", "GET, POST")
             responder(exchange, 405, '{"erro":"Método não permitido"}')
             return
         }

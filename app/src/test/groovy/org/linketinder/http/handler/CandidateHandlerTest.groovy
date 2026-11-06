@@ -1,6 +1,7 @@
 package org.linketinder.http.handler
 
 import com.sun.net.httpserver.Headers
+import groovy.json.JsonSlurper
 import com.sun.net.httpserver.HttpExchange
 import org.linketinder.controller.CandidatoController
 import spock.lang.Specification
@@ -23,9 +24,9 @@ class CandidateHandlerTest extends Specification {
         exchange.responseBody >> responseBody
     }
 
-    def "deve responder 405 quando o método não for POST"() {
+    def "deve responder 405 quando o método não for GET nem POST"() {
         given:
-        exchange.requestMethod >> "GET"
+        exchange.requestMethod >> "DELETE"
         exchange.requestURI >> URI.create("/api/candidatos")
 
         when:
@@ -34,7 +35,60 @@ class CandidateHandlerTest extends Specification {
         then:
         0 * candidatoController.cadastrarCandidato(_)
         1 * exchange.sendResponseHeaders(405, _)
-        responseHeaders.getFirst("Allow") == "POST"
+        responseHeaders.getFirst("Allow") == "GET, POST"
+    }
+
+    def "deve listar candidatos como JSON com data de nascimento no formato ISO"() {
+        given:
+        exchange.requestMethod >> "GET"
+        exchange.requestURI >> URI.create("/api/candidatos")
+        def candidatos = [
+                [id: 1, nome: "João", dataNascimento: java.sql.Date.valueOf("1990-01-15"), competencias: ["Groovy"]],
+                [id: 2, nome: "Ana", dataNascimento: java.sql.Date.valueOf("2000-12-31"), competencias: []]
+        ]
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        1 * candidatoController.listarCandidatos() >> candidatos
+        0 * candidatoController.cadastrarCandidato(_)
+        1 * exchange.sendResponseHeaders(200, _)
+        responseHeaders.getFirst("Content-Type") == "application/json; charset=UTF-8"
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [
+                [id: 1, nome: "João", dataNascimento: "1990-01-15", competencias: ["Groovy"]],
+                [id: 2, nome: "Ana", dataNascimento: "2000-12-31", competencias: []]
+        ]
+    }
+
+    def "deve responder 200 com lista vazia quando não houver candidatos"() {
+        given:
+        exchange.requestMethod >> "GET"
+        exchange.requestURI >> URI.create("/api/candidatos")
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        1 * candidatoController.listarCandidatos() >> []
+        0 * candidatoController.cadastrarCandidato(_)
+        1 * exchange.sendResponseHeaders(200, _)
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == []
+    }
+
+    def "deve responder 500 quando a listagem lançar exceção"() {
+        given:
+        exchange.requestMethod >> "GET"
+        exchange.requestURI >> URI.create("/api/candidatos")
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        1 * candidatoController.listarCandidatos() >> { throw new RuntimeException("falha interna") }
+        0 * candidatoController.cadastrarCandidato(_)
+        1 * exchange.sendResponseHeaders(500, _)
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Erro ao listar candidatos"]
     }
 
     def "deve cadastrar candidato recebido como JSON"() {

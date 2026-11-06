@@ -106,6 +106,29 @@ ocorrer antes de qualquer código.
     aditiva, com testes em database/schema temporário e fixtures
     `@example.test`.
 
+## Registro da sessão — plano da feature
+
+Sessão atual: leitura manual de `skills/feature-com-spec/SKILL.md`, da spec
+revisada e dos dois repositórios na branch `codex/recrutador`. Baseline recebido:
+backend 94, frontend 31 + build; Postgres ligado. Foram apenas inspecionados
+arquivos e escritos `docs/specs/recrutador/plano.md`, este registro e o
+`CHANGELOG.md`; não foram executados testes, não foram lidos segredos e não
+houve alteração em código, migração, banco, commit ou push.
+
+Decisão de infraestrutura: menor mudança é manter `ConnectionFactory` como
+seam injetável e criar no escopo de integração uma fábrica de schema temporário
+com assinatura concreta `TemporarySchemaConnectionFactory(ConnectionFactory
+base, String schema)`, `getConnection()` configurando `search_path` para
+`schema, public`; fixture aplica schema inicial+V1+V2 e remove somente seu
+schema. Não será introduzido `DB_SCHEMA` global nem atributo compartilhado de
+identidade HTTP.
+
+Conflito novo: nenhum encontrado. A validação Tutor permanece pendente; nomes
+finais de DTOs e telas só podem variar mantendo os contratos da spec. O plano
+exige commits separados por tarefa/repositório e atualização posterior deste
+registro com resultados observados, sem declarar tarefa concluída antes dos
+testes reais.
+
 ## Referências da feature
 
 - Issue: https://github.com/Athus27/Linketinder-Project/issues/3

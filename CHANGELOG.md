@@ -9,10 +9,11 @@
 - Registro de autoria e verificações desta preparação em `PROMPTS.md`.
 - Levantamento factual inicial do recrutador em `docs/specs/recrutador/levantamento.md`.
 - Spec proposta de recrutador em `docs/specs/recrutador/spec.md`, com contratos, anonimato, autorização, modelo de dados e critérios de aceite.
+- Plano executável em `docs/specs/recrutador/plano.md`, dividido em seis commits/tarefas e com isolamento PostgreSQL por schema temporário.
 
 ### Modificado
 
-- Nenhum código, migração ou schema foi modificado nesta etapa; a spec registra contratos propostos para revisão.
+- Nenhum código, migração ou schema foi modificado nesta etapa; a spec e o plano registram contratos propostos para revisão.
 
 ### Corrigido
 

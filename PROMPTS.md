@@ -138,6 +138,41 @@ testes reais.
   delegação explícita; não está aprovada pelo Tutor. A validação de negócio
   com Athus/Tutor permanece pendente antes da entrega.
 
+## Registro da T2 — sessão e gestão do recrutador
+
+Implementação realizada pelo Copilot sem commit, push, PR, merge ou alteração
+do schema público. A T1 existente foi confirmada no histórico como commit
+`82ea1a2` (`feat: adicionar persistência e modelo de recrutadores`).
+
+Foram adicionados `SessionStore`, `Session`, `AuthPrincipal`, validação
+server-side do principal, login/logout Bearer, `RecruiterDAO`,
+`RecruiterController`, `RecruiterHandler`, fábrica testável da `ApiApp`,
+injeção opcional de `ConnectionFactory` em `AuthDAO`/`RecruiterDAO` e CORS para
+`Authorization`. O cadastro usa uma transação única User+Recruiter, deriva a
+empresa da sessão, trata SQLState `23505` como conflito genérico e nunca
+serializa CPF, nascimento, senha ou hash. Recrutadores inativos não autenticam
+nem usam sessões emitidas anteriormente.
+
+RED observado: `SessionStoreTest` não compilou antes das classes de sessão
+existirem. GREEN observado: 107 testes unitários passaram inicialmente, e o fluxo
+`RecruiterFlowTest` passou em fixture PostgreSQL temporária, e a verificação
+final `./gradlew check --rerun-tasks --console=plain` passou. Não foram
+executados frontend, T3, migrações no schema público ou operações GitHub.
+
+Revisão Codex pré-commit: o modo inseguro sem `SessionStore` foi removido e o
+construtor rejeita `null`; login sempre emite token e allowlist. O boundary do
+`RecruiterHandler` agora converte indisponibilidade de auth/listagem em
+`{erro,codigo:INTERNAL_ERROR}` genérico. IDs não positivos, overflow e
+`idEmpresa` não inteiro são rejeitados sem escolher vínculo. Foram adicionados
+testes de limites de campos e senha UTF-8 (72/74 bytes), rollback completo em
+CPF duplicado, conflito de e-mail normalizado sem valores na mensagem e RED →
+GREEN da revisão. A execução final da revisão foi
+`./gradlew check --rerun-tasks --console=plain`; frontend, T3 e schema público
+continuam fora do escopo.
+
+Resultado final após a revisão: `./gradlew check --rerun-tasks --console=plain`
+passou com 130 testes unitários e 11 testes de integração.
+
 ## Registro da T1 — persistência V2 e modelo
 
 Sessão Copilot: `167e783c-7030-4cbe-b90b-3f2631e1a8d3`. Branch:

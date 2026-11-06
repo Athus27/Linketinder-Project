@@ -5,6 +5,7 @@ import org.linketinder.http.handler.CandidateHandler
 import org.linketinder.http.handler.CompanyHandler
 import org.linketinder.http.handler.VagaHandler
 import org.linketinder.http.handler.AuthHandler
+import org.linketinder.http.handler.RecruiterHandler
 
 class Router {
     private final HttpServer server
@@ -12,6 +13,7 @@ class Router {
     private final CompanyHandler companyHandler
     private final VagaHandler vagaHandler
     private final AuthHandler authHandler
+    private final RecruiterHandler recruiterHandler
 
     Router(
             HttpServer server,
@@ -20,11 +22,23 @@ class Router {
             VagaHandler vagaHandler,
             AuthHandler authHandler
     ) {
+        this(server, candidateHandler, companyHandler, vagaHandler, authHandler, null)
+    }
+
+    Router(
+            HttpServer server,
+            CandidateHandler candidateHandler,
+            CompanyHandler companyHandler,
+            VagaHandler vagaHandler,
+            AuthHandler authHandler,
+            RecruiterHandler recruiterHandler
+    ) {
         this.server = server
         this.candidateHandler = candidateHandler
         this.companyHandler = companyHandler
         this.vagaHandler = vagaHandler
         this.authHandler = authHandler
+        this.recruiterHandler = recruiterHandler
     }
 
     void registrarRotas() {
@@ -46,5 +60,15 @@ class Router {
                 "/api/auth/login",
                 authHandler
         ).filters.add(new CorsFilter(frontendOrigin, ["POST"]))
+        if (recruiterHandler != null) {
+            server.createContext(
+                    "/api/auth/logout",
+                    authHandler
+            ).filters.add(new CorsFilter(frontendOrigin, ["POST"]))
+            server.createContext(
+                    "/api/recrutadores",
+                    recruiterHandler
+            ).filters.add(new CorsFilter(frontendOrigin, ["GET", "POST", "DELETE"]))
+        }
     }
 }

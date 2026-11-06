@@ -1,8 +1,9 @@
 # Plano executável — recrutador (Issue #3)
 
 **Estado:** plano pós-spec revisada pelo Codex sob delegação; validação do Tutor
-pendente. Tarefa 1 concluída tecnicamente nesta sessão, sem commit. Um agente executa somente uma tarefa por
-vez; Codex revisa e faz um commit próprio por tarefa e por repositório afetado.
+pendente. Tarefa 1 foi commitada em `82ea1a2` (`feat: adicionar persistência e
+modelo de recrutadores`). Um agente executa somente uma tarefa por vez; Codex
+revisa e faz um commit próprio por tarefa e por repositório afetado.
 Não haverá reset público, credencial local exposta, PR, merge ou entrega.
 
 ## Isolamento e testabilidade
@@ -68,13 +69,31 @@ ajustes `AuthDAO.groovy`, `AuthController.groovy`, `AuthHandler.groovy`,
 token opaco, TTL 4h, logout idempotente e reinício invalidador; login retorna
 `token,id,nome,tipo,idEmpresa` mínimo. CRUD de `/api/recrutadores` deriva
 empresa da sessão, valida campos e nunca serializa CPF/nascimento/hash.
-**RED/GREEN:** testes HTTP/unitários de 401/403/404/409, expiração,
-desativação bloqueando sessão aberta e transação User+Recruiter; depois
-`./gradlew test --tests '*Auth*' --tests '*Recruiter*'`.
-**Checklist (aceites 1–7, 15, 17):** [ ] autorização por requisição e sem
-HttpContext compartilhado; [ ] anonimato, allowlist e segredos; [ ] proteção de
-atores e dados sintéticos; [ ] RED/GREEN e regressão/limitações reais;
-[ ] atualizar plano/CHANGELOG/PROMPTS; commit backend.
+**RED/GREEN:** o teste inicial de `SessionStoreTest` falhou por classes
+ausentes; depois passaram 2 testes de TTL/revogação com `Clock` injetável.
+Passaram 130 testes unitários e 11 testes de integração
+com fixture de schema temporário. A validação cobre tokens distintos,
+expiração em quatro horas, logout idempotente, 401/403/404/409, validações de
+CPF/data/senha, allowlist sem PII, criação atômica, isolamento por empresa,
+desativação e invalidação de login/sessão existente. A verificação final foi
+`./gradlew check --rerun-tasks --console=plain` (130 unitários e 11 de
+integração); nenhum banco público foi
+alterado. Na revisão Codex, o RED adicional cobriu o bypass de sessão nula,
+falhas de autenticação/listagem fora do boundary, IDs zero/overflow e
+`idEmpresa` não inteiro; o GREEN passou após remover o modo sem sessão,
+centralizar o erro 500 genérico e endurecer a validação. Também passaram
+casos de senha UTF-8 em 72/74 bytes e limites de campos, além de rollback
+completo em CPF duplicado e conflito de e-mail normalizado.
+**Checklist (aceites 1–7, 15, 17):** [x] autorização por requisição e sem
+HttpContext compartilhado; [x] anonimato, allowlist e segredos; [x] proteção de
+atores e dados sintéticos; [x] RED/GREEN e regressão/limitações reais;
+[x] atualizar plano/CHANGELOG/PROMPTS; [ ] commit backend pelo Codex.
+
+Limitação para T3: `ApiApp.buildRouter` injeta a fábrica apenas em
+`AuthDAO`/`RecruiterDAO`; os DAOs legados ainda precisam receber a fábrica para
+testes HTTP isolados. Como país/CEP de `User` são nullable após V2, T3 deve
+manter a obrigatoriedade de candidato/empresa na validação HTTP, com testes de
+cadastros incompletos.
 
 ### 3. Anonimato, curtidas, matches e autorizações backend
 

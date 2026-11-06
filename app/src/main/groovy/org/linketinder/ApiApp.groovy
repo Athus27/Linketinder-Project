@@ -9,19 +9,38 @@ import org.linketinder.controller.AuthController
 import org.linketinder.dao.user.CandidateDAO
 import org.linketinder.dao.user.CompanyDAO
 import org.linketinder.dao.user.AuthDAO
+import org.linketinder.dao.user.RecruiterDAO
+import org.linketinder.dao.connection.ConnectionFactory
+import org.linketinder.dao.connection.DatabaseConnectionFactory
+import org.linketinder.auth.SessionStore
+import org.linketinder.controller.RecruiterController
 import org.linketinder.dao.vaga.VagaDAO
 import org.linketinder.http.Router
 import org.linketinder.http.handler.CandidateHandler
 import org.linketinder.http.handler.CompanyHandler
 import org.linketinder.http.handler.VagaHandler
 import org.linketinder.http.handler.AuthHandler
+import org.linketinder.http.handler.RecruiterHandler
 
 class ApiApp {
 
     static void main(String[] args) {
         HttpServerConfig serverConfig = new HttpServerConfig()
         HttpServer server = serverConfig.criarServidor()
+        ConnectionFactory connectionFactory =
+                DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection()
+        Router router = buildRouter(server, connectionFactory, new SessionStore())
+        router.registrarRotas()
+        server.start()
 
+        println("API rodando em http://${serverConfig.host}:${serverConfig.port}")
+    }
+
+    static Router buildRouter(
+            HttpServer server,
+            ConnectionFactory connectionFactory,
+            SessionStore sessionStore
+    ) {
         CandidateDAO candidateDAO = new CandidateDAO()
 
         CandidatoController candidatoController =
@@ -42,22 +61,21 @@ class ApiApp {
         VagaHandler vagaHandler =
                 new VagaHandler(vagaController)
 
-        AuthDAO authDAO = new AuthDAO()
+        AuthDAO authDAO = new AuthDAO(connectionFactory)
         AuthController authController = new AuthController(authDAO)
-        AuthHandler authHandler = new AuthHandler(authController)
+        AuthHandler authHandler = new AuthHandler(authController, sessionStore)
+        RecruiterDAO recruiterDAO = new RecruiterDAO(connectionFactory)
+        RecruiterController recruiterController = new RecruiterController(recruiterDAO)
+        RecruiterHandler recruiterHandler =
+                new RecruiterHandler(recruiterController, authController, sessionStore)
 
-        Router router =
-                new Router(
-                        server,
-                        candidateHandler,
-                        companyHandler,
-                        vagaHandler,
-                        authHandler
-                )
-
-        router.registrarRotas()
-        server.start()
-
-        println("API rodando em http://${serverConfig.host}:${serverConfig.port}")
+        return new Router(
+                server,
+                candidateHandler,
+                companyHandler,
+                vagaHandler,
+                authHandler,
+                recruiterHandler
+        )
     }
 }

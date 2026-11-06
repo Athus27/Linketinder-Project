@@ -5,13 +5,16 @@ import org.linketinder.config.HttpServerConfig
 import org.linketinder.controller.CandidatoController
 import org.linketinder.controller.CompanyController
 import org.linketinder.controller.VagaController
+import org.linketinder.controller.AuthController
 import org.linketinder.dao.user.CandidateDAO
 import org.linketinder.dao.user.CompanyDAO
+import org.linketinder.dao.user.AuthDAO
 import org.linketinder.dao.vaga.VagaDAO
 import org.linketinder.http.Router
 import org.linketinder.http.handler.CandidateHandler
 import org.linketinder.http.handler.CompanyHandler
 import org.linketinder.http.handler.VagaHandler
+import org.linketinder.http.handler.AuthHandler
 
 class ApiApp {
 
@@ -39,12 +42,17 @@ class ApiApp {
         VagaHandler vagaHandler =
                 new VagaHandler(vagaController)
 
+        AuthDAO authDAO = new AuthDAO()
+        AuthController authController = new AuthController(authDAO)
+        AuthHandler authHandler = new AuthHandler(authController)
+
         Router router =
                 new Router(
                         server,
                         candidateHandler,
                         companyHandler,
-                        vagaHandler
+                        vagaHandler,
+                        authHandler
                 )
 
         router.registrarRotas()

@@ -24,7 +24,81 @@ class CandidateHandlerTest extends Specification {
         exchange.responseBody >> responseBody
     }
 
-    def "deve responder 405 quando o método não for GET nem POST"() {
+    def "deve responder 405 quando o método não for GET, POST ou DELETE"() {
+        given:
+        exchange.requestMethod >> "PUT"
+        exchange.requestURI >> URI.create("/api/candidatos")
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        0 * candidatoController.cadastrarCandidato(_)
+        1 * exchange.sendResponseHeaders(405, _)
+        responseHeaders.getFirst("Allow") == "GET, POST"
+    }
+
+    def "deve informar GET e DELETE como métodos permitidos na rota com ID"() {
+        given:
+        exchange.requestMethod >> "PUT"
+        exchange.requestURI >> URI.create("/api/candidatos/23")
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        0 * candidatoController._
+        1 * exchange.sendResponseHeaders(405, _)
+        responseHeaders.getFirst("Allow") == "GET, DELETE"
+    }
+
+    def "deve excluir candidato por ID sem corpo na resposta"() {
+        given:
+        exchange.requestMethod >> "DELETE"
+        exchange.requestURI >> URI.create("/api/candidatos/23")
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        1 * candidatoController.buscarCandidatoPorId(23) >> [id: 23]
+        1 * candidatoController.removerCandidato(23) >> true
+        1 * exchange.sendResponseHeaders(204, -1)
+        1 * exchange.close()
+        responseBody.size() == 0
+    }
+
+    def "deve responder 404 sem excluir quando o candidato não existir"() {
+        given:
+        exchange.requestMethod >> "DELETE"
+        exchange.requestURI >> URI.create("/api/candidatos/999")
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        1 * candidatoController.buscarCandidatoPorId(999) >> null
+        0 * candidatoController.removerCandidato(_)
+        1 * exchange.sendResponseHeaders(404, _)
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Candidato não encontrado"]
+    }
+
+    def "deve responder 500 quando a persistência da exclusão falhar"() {
+        given:
+        exchange.requestMethod >> "DELETE"
+        exchange.requestURI >> URI.create("/api/candidatos/23")
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        1 * candidatoController.buscarCandidatoPorId(23) >> [id: 23]
+        1 * candidatoController.removerCandidato(23) >> false
+        1 * exchange.sendResponseHeaders(500, _)
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Erro ao excluir candidato"]
+    }
+
+    def "deve responder 405 para DELETE sem ID"() {
         given:
         exchange.requestMethod >> "DELETE"
         exchange.requestURI >> URI.create("/api/candidatos")
@@ -33,7 +107,7 @@ class CandidateHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        0 * candidatoController.cadastrarCandidato(_)
+        0 * candidatoController._
         1 * exchange.sendResponseHeaders(405, _)
         responseHeaders.getFirst("Allow") == "GET, POST"
     }
@@ -95,7 +169,7 @@ class CandidateHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/candidatos")
-        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","email":"sandubinha@email.com"}')
+        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","email":"sandubinha@email.com","senha":"123456"}')
 
         when:
         handler.handle(exchange)
@@ -106,6 +180,21 @@ class CandidateHandlerTest extends Specification {
                     candidato.email == "sandubinha@email.com"
         }) >> true
         1 * exchange.sendResponseHeaders(201, _)
+    }
+
+    def "deve rejeitar candidato com senha menor que seis caracteres"() {
+        given:
+        exchange.requestMethod >> "POST"
+        exchange.requestURI >> URI.create("/api/candidatos")
+        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","senha":"123"}')
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        0 * candidatoController.cadastrarCandidato(_)
+        1 * exchange.sendResponseHeaders(400, _)
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "A senha deve ter pelo menos 6 caracteres"]
     }
 
     def "deve responder 400 para JSON inválido"() {
@@ -126,7 +215,7 @@ class CandidateHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/candidatos")
-        exchange.requestBody >> jsonBody('{"nome":"Sandubinha"}')
+        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","senha":"123456"}')
 
         when:
         handler.handle(exchange)
@@ -140,7 +229,7 @@ class CandidateHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/candidatos")
-        exchange.requestBody >> jsonBody('{"nome":"Sandubinha"}')
+        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","senha":"123456"}')
 
         when:
         handler.handle(exchange)
@@ -150,9 +239,24 @@ class CandidateHandlerTest extends Specification {
         1 * exchange.sendResponseHeaders(500, _)
     }
 
-    def "deve responder 400 para ID inválido"() {
+    def "deve responder 409 quando os dados únicos do candidato já existem"() {
         given:
         exchange.requestMethod >> "POST"
+        exchange.requestURI >> URI.create("/api/candidatos")
+        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","senha":"123456"}')
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        1 * candidatoController.cadastrarCandidato(_) >> { throw new java.sql.SQLException("unique", "23505") }
+        1 * exchange.sendResponseHeaders(409, _)
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Já existe um cadastro com esses dados"]
+    }
+
+    def "deve responder 400 para ID inválido"() {
+        given:
+        exchange.requestMethod >> "DELETE"
         exchange.requestURI >> URI.create("/api/candidatos/qualquer-coisa")
 
         when:
@@ -203,6 +307,7 @@ class CandidateHandlerTest extends Specification {
         then:
         0 * candidatoController._
         1 * exchange.sendResponseHeaders(405, _)
+        responseHeaders.getFirst("Allow") == "GET, DELETE"
     }
 
     private static InputStream jsonBody(String json) {

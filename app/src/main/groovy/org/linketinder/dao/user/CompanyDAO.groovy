@@ -21,7 +21,7 @@ class CompanyDAO {
             statement = connection.prepareStatement(
                     """
                         INSERT INTO "User" (nome, email, "país", cep,senha)
-                        VALUES (?, ?, ?, ?,crypt(?, gen_salt('bf')))
+                        VALUES (?, lower(trim(?)), ?, ?,crypt(?, gen_salt('bf')))
                         RETURNING id
                     """
             )
@@ -63,10 +63,19 @@ class CompanyDAO {
 
         } catch (Exception e) {
             sucesso = false
-            println("Erro ao adicionar empresa: ${e.message}")
+            boolean cadastroDuplicado = e instanceof java.sql.SQLException && e.SQLState == "23505"
+            if (cadastroDuplicado) {
+                println("Cadastro da empresa rejeitado por conflito de dado único.")
+            } else {
+                println("Erro ao adicionar empresa: ${e.message}")
+            }
 
             if (connection != null) {
                 connection.rollback()
+            }
+
+            if (cadastroDuplicado) {
+                throw new java.sql.SQLException("Cadastro já existente", "23505")
             }
         } finally {
             if (statement != null) statement.close()
@@ -139,7 +148,7 @@ class CompanyDAO {
             statement = connection.prepareStatement(
                     """
                         UPDATE "User"
-                        SET nome = ?, email = ?, "país" = ?, cep = ?,
+                        SET nome = ?, email = lower(trim(?)), "país" = ?, cep = ?,
                             senha = crypt(?, gen_salt('bf'))
                         WHERE id = ?
                     """

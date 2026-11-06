@@ -63,6 +63,23 @@ class CorsFilterTest extends Specification {
         responseHeaders.getFirst("Access-Control-Allow-Headers") == "Content-Type"
     }
 
+    def "responde ao preflight de DELETE quando o método está liberado"() {
+        given:
+        def deleteFilter = new CorsFilter("http://localhost:5173", ["GET", "POST", "DELETE"])
+        requestHeaders.set("Origin", "http://localhost:5173")
+        requestHeaders.set("Access-Control-Request-Method", "DELETE")
+        exchange.requestMethod >> "OPTIONS"
+
+        when:
+        deleteFilter.doFilter(exchange, chain)
+
+        then:
+        0 * chain.doFilter(_)
+        1 * exchange.sendResponseHeaders(204, -1)
+        1 * exchange.close()
+        responseHeaders.getFirst("Access-Control-Allow-Methods") == "GET, POST, DELETE"
+    }
+
     def "rejeita origem diferente sem executar o handler"() {
         given:
         requestHeaders.set("Origin", "http://site-nao-autorizado.test")

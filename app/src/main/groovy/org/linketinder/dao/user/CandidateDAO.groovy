@@ -168,7 +168,7 @@ class CandidateDAO {
             statement = connection.prepareStatement(
                     """
                         INSERT INTO "User" (nome, email, "país", cep,senha)
-                        VALUES (?, ?, ?, ?,crypt(?, gen_salt('bf')))
+                        VALUES (?, lower(trim(?)), ?, ?,crypt(?, gen_salt('bf')))
                         RETURNING id
                     """
             )
@@ -237,7 +237,12 @@ class CandidateDAO {
             }
 
         } catch (Exception e) {
-            println("Erro ao adicionar candidato: ${e.message}")
+            boolean cadastroDuplicado = e instanceof SQLException && e.SQLState == "23505"
+            if (cadastroDuplicado) {
+                println("Cadastro do candidato rejeitado por conflito de dado único.")
+            } else {
+                println("Erro ao adicionar candidato: ${e.message}")
+            }
             try {
                 if (connection != null) {
                     connection.rollback()
@@ -245,6 +250,9 @@ class CandidateDAO {
                 }
             } catch (Exception rollbackEx) {
                 println("Erro ao tentar rolar de volta: ${rollbackEx.message}")
+            }
+            if (cadastroDuplicado) {
+                throw new SQLException("Cadastro já existente", "23505")
             }
         } finally {
             try {
@@ -269,7 +277,7 @@ class CandidateDAO {
             statement = connection.prepareStatement(
                     """
                         UPDATE "User"
-                        SET nome = ?, email = ?, "país" = ?, cep = ?,
+                        SET nome = ?, email = lower(trim(?)), "país" = ?, cep = ?,
                             senha = crypt(?, gen_salt('bf'))
                         WHERE id = ?
                     """

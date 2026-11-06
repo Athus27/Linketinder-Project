@@ -6,6 +6,7 @@ import org.linketinder.http.HttpLogger
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import org.linketinder.controller.CandidatoController
+import java.sql.SQLException
 
 class CandidateHandler implements HttpHandler {
     private static final String ENDPOINT = "/api/candidatos"
@@ -97,13 +98,68 @@ class CandidateHandler implements HttpHandler {
             return
         }
 
+        if (method == "DELETE") {
+            if (id == null) {
+                exchange.responseHeaders.set("Allow", "GET, POST")
+                responder(exchange, 405, '{"erro":"DELETE exige o ID do candidato"}', inicio)
+                return
+            }
+
+            Map candidato
+            try {
+                candidato = candidatoController.buscarCandidatoPorId(id)
+            } catch (Exception ignored) {
+                responder(
+                        exchange,
+                        500,
+                        '{"erro":"Erro ao excluir candidato"}',
+                        inicio
+                )
+                return
+            }
+
+            if (candidato == null) {
+                responder(
+                        exchange,
+                        404,
+                        '{"erro":"Candidato não encontrado"}',
+                        inicio
+                )
+                return
+            }
+
+            boolean removido
+            try {
+                removido = candidatoController.removerCandidato(id)
+            } catch (Exception ignored) {
+                removido = false
+            }
+
+            if (!removido) {
+                responder(
+                        exchange,
+                        500,
+                        '{"erro":"Erro ao excluir candidato"}',
+                        inicio
+                )
+                return
+            }
+
+            exchange.sendResponseHeaders(204, -1)
+            exchange.close()
+            HttpLogger.registrar(method, path, 204, inicio)
+            return
+        }
+
         if (method != "POST") {
-            exchange.responseHeaders.set("Allow", "GET, POST")
+            String allowedMethods = id == null ? "GET, POST" : "GET, DELETE"
+            exchange.responseHeaders.set("Allow", allowedMethods)
             responder(exchange, 405, '{"erro":"Método não permitido"}', inicio)
             return
         }
 
         if (id != null) {
+            exchange.responseHeaders.set("Allow", "GET, DELETE")
             responder(exchange, 405, '{"erro":"POST não permitido nesta rota"}', inicio)
             return
         }
@@ -117,12 +173,25 @@ class CandidateHandler implements HttpHandler {
             return
         }
 
+        if (!(candidato.senha instanceof String) || candidato.senha.length() < 6) {
+            responder(exchange, 400, '{"erro":"A senha deve ter pelo menos 6 caracteres"}', inicio)
+            return
+        }
+
         try {
             boolean cadastrado = candidatoController.cadastrarCandidato(candidato)
             status = cadastrado ? 201 : 500
             responseText = cadastrado
                     ? '{"mensagem":"Candidato cadastrado com sucesso"}'
                     : '{"erro":"Erro ao persistir o candidato"}'
+        } catch (SQLException exception) {
+            if (exception.SQLState == "23505") {
+                status = 409
+                responseText = '{"erro":"Já existe um cadastro com esses dados"}'
+            } else {
+                status = 500
+                responseText = '{"erro":"Erro interno do servidor"}'
+            }
         } catch (Exception ignored) {
             status = 500
             responseText = '{"erro":"Erro interno do servidor"}'

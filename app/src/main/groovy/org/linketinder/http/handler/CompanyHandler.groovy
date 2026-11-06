@@ -6,6 +6,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import org.linketinder.controller.CompanyController
 import org.linketinder.http.HttpLogger
+import java.sql.SQLException
 
 class CompanyHandler implements HttpHandler {
     private static final String ENDPOINT = "/api/empresas"
@@ -47,6 +48,11 @@ class CompanyHandler implements HttpHandler {
             return
         }
 
+        if (!(empresa.senha instanceof String) || empresa.senha.length() < 6) {
+            responder(exchange, 400, '{"erro":"A senha deve ter pelo menos 6 caracteres"}',inicio)
+            return
+        }
+
         String responseText
         int status
 
@@ -56,6 +62,14 @@ class CompanyHandler implements HttpHandler {
             responseText = cadastrada
                     ? '{"mensagem":"Empresa cadastrada com sucesso"}'
                     : '{"erro":"Erro ao persistir a empresa"}'
+        } catch (SQLException exception) {
+            if (exception.SQLState == "23505") {
+                status = 409
+                responseText = '{"erro":"Já existe um cadastro com esses dados"}'
+            } else {
+                status = 500
+                responseText = '{"erro":"Erro interno do servidor"}'
+            }
         } catch (Exception ignored) {
             status = 500
             responseText = '{"erro":"Erro interno do servidor"}'

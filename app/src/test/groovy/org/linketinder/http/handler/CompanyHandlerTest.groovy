@@ -42,7 +42,7 @@ class CompanyHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/empresas")
-        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","cnpj":"12.345.678/0001-00"}')
+        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","cnpj":"12.345.678/0001-00","senha":"123456"}')
 
         when:
         handler.handle(exchange)
@@ -53,6 +53,21 @@ class CompanyHandlerTest extends Specification {
                     empresa.cnpj == "12.345.678/0001-00"
         }) >> true
         1 * exchange.sendResponseHeaders(201, _)
+    }
+
+    def "deve rejeitar empresa com senha menor que seis caracteres"() {
+        given:
+        exchange.requestMethod >> "POST"
+        exchange.requestURI >> URI.create("/api/empresas")
+        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","senha":"123"}')
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        0 * companyController.cadastrarEmpresa(_)
+        1 * exchange.sendResponseHeaders(400, _)
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "A senha deve ter pelo menos 6 caracteres"]
     }
 
     def "deve responder 400 para JSON inválido"() {
@@ -73,7 +88,7 @@ class CompanyHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/empresas")
-        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho"}')
+        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","senha":"123456"}')
 
         when:
         handler.handle(exchange)
@@ -87,7 +102,7 @@ class CompanyHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/empresas")
-        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho"}')
+        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","senha":"123456"}')
 
         when:
         handler.handle(exchange)
@@ -95,6 +110,21 @@ class CompanyHandlerTest extends Specification {
         then:
         1 * companyController.cadastrarEmpresa(_) >> { throw new RuntimeException("falha interna") }
         1 * exchange.sendResponseHeaders(500, _)
+    }
+
+    def "deve responder 409 quando os dados únicos da empresa já existem"() {
+        given:
+        exchange.requestMethod >> "POST"
+        exchange.requestURI >> URI.create("/api/empresas")
+        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","senha":"123456"}')
+
+        when:
+        handler.handle(exchange)
+
+        then:
+        1 * companyController.cadastrarEmpresa(_) >> { throw new java.sql.SQLException("unique", "23505") }
+        1 * exchange.sendResponseHeaders(409, _)
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Já existe um cadastro com esses dados"]
     }
 
     def "deve responder 404 para caminho diferente do endpoint"() {

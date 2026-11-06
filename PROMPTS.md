@@ -251,3 +251,31 @@ repetição/match, JSON inválido, tipos inválidos, PII extra e data nula.
 `VITE_RUN_API_INTEGRATION=true` permaneceu desabilitado: o teste externo foi
 ignorado, não executado. T5 (telas) e T6 (integração externa/E2E) continuam
 pendentes.
+
+## Registro da T5 — frontend: telas reais protegidas
+
+Autoria Copilot no `Linketinder-FrontEnd`, sem commit, push, PR, merge ou
+alteração de código backend. Foram lidos por arquivo `AGENTS.md`,
+`docs/specs/recrutador/spec.md`, `plano.md`, `levantamento.md` e os contratos
+T4 necessários; não foi usada skill CLI indisponível. `main.ts` deixou de
+instanciar `LinketinderApp`, a navegação passou a usar sessão em memória,
+recrutadores ficaram restritos à empresa, e vagas/curtidas/matches usam a API.
+Cards e formulários preservam allowlists, não expõem PII nem interpretam texto
+de API como HTML. `happy-dom` foi adicionado somente como devDependency para
+testes DOM sintéticos com mocks; isso não é teste Chromium/E2E.
+
+T4 foi confirmada pelo hash real `36759bb`. T5 não cria migrações e não altera
+o backend. T6 (E2E, navegador real, README final e entrega) permanece
+pendente. Validação final: `npm run test:run` — 15 arquivos, 62 testes
+aprovados e 1 teste opt-in ignorado; `npm run build` aprovado.
+
+### Revisão Codex T5
+
+Foram corrigidos, sem tocar T6 ou fazer commit, os fluxos de alvo de curtida,
+aliases técnicos, allowlist pós-match, feed real do recrutador, gestão de
+recrutadores, corrida de 401, logout com limpeza, contadores, guards por papel
+e ações de vaga. A suíte DOM adicionou casos de loading, vazio, erro, 409 por
+status, desativação, limpeza, XSS, formação, feedback idempotente, logout de
+rede e integração `renderAll`/Header/feed com POST sintético. Execução final:
+73 testes aprovados, 1 integração opt-in ignorada e build aprovado. `happy-dom`
+foi usado apenas para DOM sintético; navegador real/E2E continuam na T6.

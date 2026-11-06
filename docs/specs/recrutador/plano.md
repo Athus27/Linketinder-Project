@@ -221,10 +221,31 @@ cadastro via API, cards anonimizados e contato só no match; demos continuam
 isoladas e `main` não inicializa demo com PII no localStorage real.
 **RED/GREEN:** testes DOM de ator errado, loading/erro/vazio, PII e logout;
 `npm run test:run && npm run build`.
-**Checklist (aceites 13–16, 18):** [ ] navegação não seleciona terceiros;
-[ ] privacidade antes/depois e nenhum token/PII; [ ] autorização não depende
-da tela; [ ] fixtures sintéticas, regressão/build e limitações reais;
-[ ] registrar no plano backend/CHANGELOG/PROMPTS; commit frontend.
+**Checklist (aceites 13–16, 18):** [x] navegação não seleciona terceiros;
+[x] privacidade antes/depois e nenhum token/PII; [x] autorização não depende
+da tela; [x] fixtures sintéticas, regressão/build e limitações reais;
+[x] registrar no plano backend/CHANGELOG/PROMPTS; [ ] commit frontend pelo
+Codex após revisão.
+
+**Resultado T5 (frontend, sem commit):** implementados menus derivados da
+sessão para candidato, empresa e recrutador, callback de 401/logout com
+limpeza visual, cadastro público somente de candidato/empresa, gestão de
+recrutadores apenas para empresa, vagas próprias sem ações de edição/exclusão,
+curtidas e matches via services HTTP, cards anonimizados e contato somente
+quando retornado pela API. `main.ts` não instancia a demo nem semeia estado
+local; `LinketinderApp` continua isolada. Foram adicionados testes DOM com
+`happy-dom`, usando apenas services/fetch sintéticos. CPF, nascimento, senha,
+CNPJ e PII de respostas não são renderizados; campos textuais usam APIs DOM
+seguras. T4 foi confirmada no histórico frontend pelo commit `36759bb`.
+T6 (E2E, navegador real, README final e entrega) permanece pendente.
+Revisão T5 corrigiu alvo de curtida por card, pseudônimo técnico, formação e
+contato autorizado, feed de candidatos do recrutador, estados de gestão,
+corrida de 401, logout, contadores, guards de papel e ações sem noop. A
+regressão DOM integrada percorre `renderAll`/Header, menu de recrutador,
+feed, card, seleção do alvo e POST de curtida sintético. Validação final
+observada após a revisão: `npm run test:run` — 15 arquivos, 73 testes
+aprovados e 1 teste de integração opt-in ignorado; `npm run build` aprovado.
+`happy-dom` cobre DOM sintético, não navegador real; T6 permanece pendente.
 
 ### 6. E2E e documentação
 

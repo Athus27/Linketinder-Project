@@ -36,6 +36,13 @@
   vaga foram implementados no repositório frontend sem alterar o backend.
   A revisão registrou allowlists, `dataMatch: null` para legado e gate
   explícito da integração externa.
+- T5 frontend registrada: telas reais protegidas, menus por sessão, gestão de
+  recrutadores, curtidas/matches HTTP e testes DOM com `happy-dom`; T6 segue
+  pendente. Commit T4 frontend confirmado como `36759bb`.
+- Revisão T5 registrada: correções de alvo/pseudônimo/anonimato, feed real do
+  recrutador, estados de gestão, corrida de sessão, logout, contadores e
+  guards; 73 testes passaram, 1 integração opt-in foi ignorada e o build
+  passou. O teste integrado usa mocks DOM/fetch, não navegador real.
 
 ### Corrigido
 

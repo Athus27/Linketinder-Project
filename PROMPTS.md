@@ -221,3 +221,33 @@ schema temporário, sem executar migração no schema público. Concorrência,
 primeira autoria e atomicidade continuam não implementadas e foram deixadas
 para T3, conforme o ajuste solicitado. Nenhuma credencial foi exibida; não
 houve commit, push, merge, PR ou leitura de fontes frontend.
+
+## Registro da T4 — frontend: sessão, services e contratos
+
+Implementação realizada no repositório `Linketinder-FrontEnd`, branch
+`codex/recrutador`, sem commit, push, PR, merge ou alteração no backend.
+Foram adicionados estado/sessão em memória, helper de erros HTTP, autenticação
+Bearer por requisição, logout com limpeza garantida, tratamento de 401 e
+services/DTOs de recrutador, curtida, match e vaga. Os services existentes
+foram ajustados para as allowlists anônimas e `formation`; nenhum token ou PII
+é persistido. `main.ts` e telas não foram modificados, pois pertencem à T5.
+
+Testes adicionados/ajustados cobrem headers, estado antes/depois de login,
+logout e erro de rede, 401, papéis e IDs inválidos, payloads sem ator,
+recrutador CRUD, vaga/match e anonimato. A integração
+`CandidateService.integration.test.ts` exige explicitamente
+`VITE_RUN_API_INTEGRATION=true` e não imprime dados. Verificações observadas:
+`npm run test:run` com 39 testes aprovados e 1 teste opt-in ignorado; `npm run
+build` aprovado. A UI real e a integração externa permanecem para T5/T6.
+
+### Revisão Codex da T4
+
+Execução `7c0e2c96-a813-48c1-a074-2f0d0e8ffda3`: sem commit, push, PR ou
+merge. `LikeService` agora valida e devolve o DTO completo de curtida;
+`LoginService` rejeita tipos, IDs, papéis e vínculos inválidos; services de
+recrutador e match aplicam allowlists explícitas; `MatchService` preserva
+`dataMatch: null` e rejeita datas inválidas. Foram adicionados casos de
+repetição/match, JSON inválido, tipos inválidos, PII extra e data nula.
+`VITE_RUN_API_INTEGRATION=true` permaneceu desabilitado: o teste externo foi
+ignorado, não executado. T5 (telas) e T6 (integração externa/E2E) continuam
+pendentes.

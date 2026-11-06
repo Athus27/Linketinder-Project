@@ -172,11 +172,36 @@ controllers existentes e testes explícitos em `tests/services/` e
 tipos anonimizados e recruiter/like/match/job POST; nenhum ID de identidade em
 localStorage. **RED/GREEN:** Vitest dos status/headers/DTOs e build:
 `npm run test:run && npm run build`.
-**Checklist (aceites 14–18):** [ ] sem token/PII persistido e com allowlist;
-[ ] autenticação/autorização continua no servidor; [ ] atores, segredos e
-fixtures sintéticas protegidos; [ ] Vitest, build, regressão e limitações reais;
-[ ] registrar resultado neste plano backend, CHANGELOG/PROMPTS; commit frontend
-e depois revisão Codex.
+**Resultado T4 (frontend, sem commit; execução
+`7c0e2c96-a813-48c1-a074-2f0d0e8ffda3`):** implementados `SessionService` e
+`SessionState` em memória, Bearer anexado por requisição, logout com limpeza em
+`finally`, limpeza/notificação mínima em 401, login com token e `idEmpresa`
+quando aplicável, além de `RecruiterService`, `LikeService`, `MatchService` e
+POST de vaga sem seletor de empresa. Candidate/Company/Job services usam as
+projeções allowlistadas; candidatos e empresas sem match recebem aliases e
+campos privados vazios, e `formation` foi preservado para análise. O teste de
+integração real foi convertido para gate explícito
+`VITE_RUN_API_INTEGRATION=true`, sem `console.log` nem dependência da API na
+suíte unitária. `main.ts`, demos e telas não foram alterados: isso permanece
+isolado para T5, portanto a UI real ainda não está pronta.
+
+Na revisão pré-commit, `LikeService` passou a devolver
+`{sucesso,jaCurtiu,deuMatch}` validado, sem inferir match; login agora exige
+token/nome textuais não vazios, IDs inteiros positivos e `idEmpresa` válido
+para company/recruiter; recrutadores e matches usam allowlists também na
+criação e preservam `dataMatch: null`, rejeitando datas inválidas. O teste
+externo opt-in ficou ignorado nesta execução, pois
+`VITE_RUN_API_INTEGRATION=true` não foi habilitado.
+
+**Checklist (aceites 14–18):** [x] sem token/PII persistido e com allowlist;
+[x] autenticação/autorização continua no servidor; [x] atores, segredos e
+fixtures sintéticas protegidos; [x] Vitest, build, regressão e limitações reais;
+[x] registrar resultado neste plano backend, CHANGELOG/PROMPTS; [ ] commit
+frontend e depois revisão Codex.
+
+**Evidência T4:** `npm run test:run` — 58 testes aprovados e 1 integração
+opt-in ignorada; `npm run build` — TypeScript e Vite aprovados. Não foram
+executados testes de tela, integração externa ou backend nesta tarefa.
 
 ### 5. Frontend: telas reais protegidas
 

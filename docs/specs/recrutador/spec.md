@@ -144,6 +144,11 @@ inválido retorna `401`; sucesso retorna `200`.
 - `GET /api/matches`: somente titular autenticado, com projeção segura e
   filtrada pelo par/empresa autorizado; retorna `200`.
 
+Quando um legado possuir as duas flags de match verdadeiras, mas
+`data_match` for `NULL`, o contrato retorna `dataMatch: null`: o cliente não
+inventa uma data histórica. Strings de data presentes devem ser ISO válidas;
+o frontend exibirá “Data não registrada” para o valor nulo.
+
 Os nomes podem ser ajustados na implementação somente para manter convenções
 existentes, sem multiplicar endpoints nem relaxar as regras. O frontend deve
 oferecer login de recrutador, menus por papel, gestão empresarial, vagas da

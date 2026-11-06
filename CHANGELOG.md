@@ -32,6 +32,10 @@
   da T2 foram adicionados. A revisão pré-commit removeu o bypass sem sessão,
   endureceu IDs/`idEmpresa`, cobriu erros 500 genéricos e rollback de conflitos;
   nenhum schema público foi alterado.
+- T4 frontend documentada: contratos de sessão, recrutador, curtida, match e
+  vaga foram implementados no repositório frontend sem alterar o backend.
+  A revisão registrou allowlists, `dataMatch: null` para legado e gate
+  explícito da integração externa.
 
 ### Corrigido
 

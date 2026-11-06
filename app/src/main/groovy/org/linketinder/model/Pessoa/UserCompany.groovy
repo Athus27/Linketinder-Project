@@ -10,14 +10,8 @@ class UserCompany extends User {
     @Override
     String toString() {
         return """
-                Nome: ${nome}
-                    Descricao: ${descricao}
+                Perfil de empresa
                     Competencias: ${competencias.join(', ')}
-                    CEP: ${cep}
-                    Estado: ${estado}
-                    País: ${pais}
-                    CNPJ: ${CNPJ}
-                    Email: ${email}
                     Vagas: ${vagas.collect { it.titulo }.join(', ')}
 """.stripIndent()
     }

@@ -1,12 +1,28 @@
 package org.linketinder.dao.competence
 
 import org.linketinder.dao.connection.DatabaseConnectionFactory
+import org.linketinder.dao.connection.ConnectionFactory
 
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
 class CompetenceDAO {
+    private final ConnectionFactory connectionFactory
+
+    CompetenceDAO() {
+        this(null)
+    }
+
+    CompetenceDAO(ConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory
+    }
+
+    private Connection openConnection() {
+        (connectionFactory ?:
+                DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection()).getConnection()
+    }
+
     Map listarCompetencias() {
         Connection connection = null
         PreparedStatement statement = null
@@ -15,7 +31,7 @@ class CompetenceDAO {
         def competencias = []
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             statement = connection.prepareStatement(
                     """
                         SELECT id AS id, competencia
@@ -31,14 +47,14 @@ class CompetenceDAO {
             }
 
         } catch (Exception e) {
-            println("Erro ao listar competências: ${e.message}")
+            println("Erro ao listar competências (${e.class.simpleName})")
         } finally {
             try {
                 if (resultSet != null) resultSet.close()
                 if (statement != null) statement.close()
                 if (connection != null) connection.close()
             } catch (Exception e) {
-                println("Erro ao fechar recursos: ${e.message}")
+                println("Erro ao fechar recursos (${e.class.simpleName})")
             }
         }
         return [competencias: competencias]
@@ -55,7 +71,7 @@ class CompetenceDAO {
         }
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             statement = connection.prepareStatement(
                     """
                         INSERT INTO "Competencias" (competencia)
@@ -67,13 +83,13 @@ class CompetenceDAO {
             sucesso = rowsAffected > 0
 
         } catch (Exception e) {
-            println("Erro ao adicionar competência: ${e.message}")
+            println("Erro ao adicionar competência (${e.class.simpleName})")
         } finally {
             try {
                 if (statement != null) statement.close()
                 if (connection != null) connection.close()
             } catch (Exception e) {
-                println("Erro ao fechar recursos: ${e.message}")
+                println("Erro ao fechar recursos (${e.class.simpleName})")
             }
         }
         return sucesso
@@ -87,7 +103,7 @@ class CompetenceDAO {
         boolean existe = false
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             statement = connection.prepareStatement(
                     """
                         SELECT 1
@@ -101,14 +117,14 @@ class CompetenceDAO {
             existe = resultSet.next()
 
         } catch (Exception e) {
-            println("Erro ao verificar competência existente: ${e.message}")
+            println("Erro ao verificar competência existente (${e.class.simpleName})")
         } finally {
             try {
                 if (resultSet != null) resultSet.close()
                 if (statement != null) statement.close()
                 if (connection != null) connection.close()
             } catch (Exception e) {
-                println("Erro ao fechar recursos: ${e.message}")
+                println("Erro ao fechar recursos (${e.class.simpleName})")
             }
         }
         return existe
@@ -122,7 +138,7 @@ class CompetenceDAO {
         Map competencia = null
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             statement = connection.prepareStatement(
                     """
                         SELECT id, competencia
@@ -139,14 +155,14 @@ class CompetenceDAO {
             }
 
         } catch (Exception e) {
-            println("Erro ao buscar competência por nome: ${e.message}")
+            println("Erro ao buscar competência por nome (${e.class.simpleName})")
         } finally {
             try {
                 if (resultSet != null) resultSet.close()
                 if (statement != null) statement.close()
                 if (connection != null) connection.close()
             } catch (Exception e) {
-                println("Erro ao fechar recursos: ${e.message}")
+                println("Erro ao fechar recursos (${e.class.simpleName})")
             }
         }
         return competencia
@@ -211,7 +227,7 @@ class CompetenceDAO {
         boolean sucesso = false
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             connection.setAutoCommit(false)
 
             List<String> comandos = [
@@ -237,7 +253,7 @@ class CompetenceDAO {
             sucesso = true
             println("Competência removida com sucesso!")
         } catch (Exception e) {
-            println("Erro ao remover competência: ${e.message}")
+            println("Erro ao remover competência (${e.class.simpleName})")
             if (connection != null) connection.rollback()
         } finally {
             if (connection != null) connection.close()
@@ -254,7 +270,7 @@ class CompetenceDAO {
         boolean sucesso = false
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             connection.setAutoCommit(false)
 
             selectStatement = connection.prepareStatement(
@@ -295,7 +311,7 @@ class CompetenceDAO {
             sucesso = true
             println("Competência atualizada com sucesso!")
         } catch (Exception e) {
-            println("Erro ao atualizar competência: ${e.message}")
+            println("Erro ao atualizar competência (${e.class.simpleName})")
             if (connection != null) connection.rollback()
         } finally {
             if (resultSet != null) resultSet.close()

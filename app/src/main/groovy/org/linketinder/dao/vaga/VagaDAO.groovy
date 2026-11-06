@@ -5,6 +5,7 @@ import org.linketinder.dao.competence.CompetenceDAO
 import org.linketinder.dao.competence.VagaCompetenceDAO
 import org.linketinder.dao.connection.DatabaseConnectionFactory
 import org.linketinder.dao.connection.PostgresConnectionFactory
+import org.linketinder.dao.connection.ConnectionFactory
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -12,6 +13,54 @@ import java.sql.ResultSet
 import java.sql.SQLException
 
 class VagaDAO {
+    private final ConnectionFactory connectionFactory
+
+    VagaDAO() {
+        this(null)
+    }
+
+    VagaDAO(ConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory
+    }
+
+    private Connection openConnection() {
+        (connectionFactory ?:
+                DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection()).getConnection()
+    }
+
+    List<Map> listarPublicas(Integer idEmpresa = null) {
+        Connection connection = openConnection()
+        try {
+            String sql = '''
+                SELECT id, id_empresa, titulo, descricao, local_vaga
+                FROM "Vaga"
+            ''' + (idEmpresa == null ? '' : ' WHERE id_empresa = ?') + ' ORDER BY id'
+            PreparedStatement statement = connection.prepareStatement(sql)
+            if (idEmpresa != null) statement.setInt(1, idEmpresa)
+            ResultSet rs = statement.executeQuery()
+            try {
+                VagaCompetenceDAO competenceDAO = new VagaCompetenceDAO(connectionFactory)
+                List<Map> result = []
+                while (rs.next()) {
+                    result << [id: rs.getInt("id"), idEmpresa: rs.getInt("id_empresa"),
+                               titulo: rs.getString("titulo"), descricao: rs.getString("descricao"),
+                               competencias: competenceDAO.listarCompetenciasDaVaga(rs.getInt("id"))]
+                }
+                return result
+            } finally {
+                rs.close()
+                statement.close()
+            }
+        } finally {
+            connection.close()
+        }
+    }
+
+    boolean adicionarVaga(Map vaga, int idEmpresa) {
+        Map data = new LinkedHashMap(vaga)
+        data.idEmpresa = idEmpresa
+        adicionarVaga(data)
+    }
 
     Map listarVagas() {
         Connection connection = null
@@ -20,7 +69,7 @@ class VagaDAO {
         List<Map> vagas = []
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             statement = connection.prepareStatement(
                     """
                         SELECT
@@ -40,8 +89,8 @@ class VagaDAO {
             )
 
             resultSet = statement.executeQuery()
-            VagaCompetenceDAO vagaCompetenceDAO =
-                    new VagaCompetenceDAO()
+            VagaCompetenceDAO vagaCompetenceDAO = connectionFactory ?
+                    new VagaCompetenceDAO(connectionFactory) : new VagaCompetenceDAO()
 
             while (resultSet.next()) {
                 int idVaga = resultSet.getInt("id")
@@ -58,7 +107,7 @@ class VagaDAO {
                 ]
             }
         } catch (Exception e) {
-            println("Erro ao listar vagas: ${e.message}")
+            println("Erro ao listar vagas (${e.class.simpleName})")
         } finally {
             if (resultSet != null) resultSet.close()
             if (statement != null) statement.close()
@@ -75,7 +124,7 @@ class VagaDAO {
         boolean sucesso = false
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             connection.setAutoCommit(false)
 
             statement = connection.prepareStatement(
@@ -105,9 +154,10 @@ class VagaDAO {
             statement.close()
             statement = null
 
-            CompetenceDAO competenceDAO = new CompetenceDAO()
-            VagaCompetenceDAO vagaCompetenciaDAO =
-                    new VagaCompetenceDAO()
+            CompetenceDAO competenceDAO = connectionFactory ?
+                    new CompetenceDAO(connectionFactory) : new CompetenceDAO()
+            VagaCompetenceDAO vagaCompetenciaDAO = connectionFactory ?
+                    new VagaCompetenceDAO(connectionFactory) : new VagaCompetenceDAO()
 
             List<String> competencias = vaga.competencias ?: []
 
@@ -136,7 +186,7 @@ class VagaDAO {
             println("Vaga adicionada com sucesso!")
 
         } catch (Exception e) {
-            println("Erro ao adicionar vaga: ${e.message}")
+            println("Erro ao adicionar vaga (${e.class.simpleName})")
 
             if (connection != null) {
                 connection.rollback()
@@ -156,7 +206,7 @@ class VagaDAO {
         boolean sucesso = false
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             connection.setAutoCommit(false)
 
             statement = connection.prepareStatement(
@@ -176,8 +226,10 @@ class VagaDAO {
                 throw new SQLException("Vaga não encontrada")
             }
 
-            VagaCompetenceDAO vagaCompetenceDAO = new VagaCompetenceDAO()
-            CompetenceDAO competenceDAO = new CompetenceDAO()
+            VagaCompetenceDAO vagaCompetenceDAO = connectionFactory ?
+                    new VagaCompetenceDAO(connectionFactory) : new VagaCompetenceDAO()
+            CompetenceDAO competenceDAO = connectionFactory ?
+                    new CompetenceDAO(connectionFactory) : new CompetenceDAO()
 
             vagaCompetenceDAO.removerCompetenciasDaVaga(
                     connection,
@@ -206,7 +258,7 @@ class VagaDAO {
             sucesso = true
             println("Vaga atualizada com sucesso!")
         } catch (Exception e) {
-            println("Erro ao atualizar vaga: ${e.message}")
+            println("Erro ao atualizar vaga (${e.class.simpleName})")
             if (connection != null) connection.rollback()
         } finally {
             if (statement != null) statement.close()
@@ -221,7 +273,7 @@ class VagaDAO {
         boolean sucesso = false
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             connection.setAutoCommit(false)
 
             List<String> comandos = [
@@ -247,7 +299,7 @@ class VagaDAO {
             sucesso = true
             println("Vaga removida com sucesso!")
         } catch (Exception e) {
-            println("Erro ao remover vaga: ${e.message}")
+            println("Erro ao remover vaga (${e.class.simpleName})")
             if (connection != null) connection.rollback()
         } finally {
             if (connection != null) connection.close()

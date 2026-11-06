@@ -4,6 +4,10 @@ import com.sun.net.httpserver.Headers
 import groovy.json.JsonSlurper
 import com.sun.net.httpserver.HttpExchange
 import org.linketinder.controller.CandidatoController
+import org.linketinder.controller.AuthController
+import org.linketinder.auth.AuthPrincipal
+import org.linketinder.auth.SessionStore
+import java.util.Optional
 import spock.lang.Specification
 
 class CandidateHandlerTest extends Specification {
@@ -12,16 +16,21 @@ class CandidateHandlerTest extends Specification {
     private Headers responseHeaders
     private ByteArrayOutputStream responseBody
     private CandidateHandler handler
+    private AuthController authController
+    private SessionStore sessions
 
     def setup() {
         candidatoController = Mock()
         exchange = Mock()
         responseHeaders = new Headers()
         responseBody = new ByteArrayOutputStream()
-        handler = new CandidateHandler(candidatoController)
+        authController = Mock()
+        sessions = Mock()
+        handler = new CandidateHandler(candidatoController, authController, sessions)
 
         exchange.responseHeaders >> responseHeaders
         exchange.responseBody >> responseBody
+        exchange.requestHeaders >> new Headers()
     }
 
     def "deve responder 405 quando o método não for GET, POST ou DELETE"() {
@@ -52,7 +61,7 @@ class CandidateHandlerTest extends Specification {
         responseHeaders.getFirst("Allow") == "GET, DELETE"
     }
 
-    def "deve excluir candidato por ID sem corpo na resposta"() {
+    def "deve exigir sessão para excluir candidato"() {
         given:
         exchange.requestMethod >> "DELETE"
         exchange.requestURI >> URI.create("/api/candidatos/23")
@@ -61,11 +70,8 @@ class CandidateHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        1 * candidatoController.buscarCandidatoPorId(23) >> [id: 23]
-        1 * candidatoController.removerCandidato(23) >> true
-        1 * exchange.sendResponseHeaders(204, -1)
-        1 * exchange.close()
-        responseBody.size() == 0
+        0 * candidatoController._
+        1 * exchange.sendResponseHeaders(401, _)
     }
 
     def "deve responder 404 sem excluir quando o candidato não existir"() {
@@ -77,13 +83,12 @@ class CandidateHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        1 * candidatoController.buscarCandidatoPorId(999) >> null
-        0 * candidatoController.removerCandidato(_)
-        1 * exchange.sendResponseHeaders(404, _)
-        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Candidato não encontrado"]
+        0 * candidatoController._
+        1 * exchange.sendResponseHeaders(401, _)
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")).codigo == "UNAUTHENTICATED"
     }
 
-    def "deve responder 500 quando a persistência da exclusão falhar"() {
+    def "deve exigir sessão antes de tentar excluir"() {
         given:
         exchange.requestMethod >> "DELETE"
         exchange.requestURI >> URI.create("/api/candidatos/23")
@@ -92,10 +97,8 @@ class CandidateHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        1 * candidatoController.buscarCandidatoPorId(23) >> [id: 23]
-        1 * candidatoController.removerCandidato(23) >> false
-        1 * exchange.sendResponseHeaders(500, _)
-        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Erro ao excluir candidato"]
+        0 * candidatoController._
+        1 * exchange.sendResponseHeaders(401, _)
     }
 
     def "deve responder 405 para DELETE sem ID"() {
@@ -112,27 +115,24 @@ class CandidateHandlerTest extends Specification {
         responseHeaders.getFirst("Allow") == "GET, POST"
     }
 
-    def "deve listar candidatos como JSON com data de nascimento no formato ISO"() {
+    def "deve listar candidatos somente com projeção anônima"() {
         given:
         exchange.requestMethod >> "GET"
         exchange.requestURI >> URI.create("/api/candidatos")
         def candidatos = [
-                [id: 1, nome: "João", dataNascimento: java.sql.Date.valueOf("1990-01-15"), competencias: ["Groovy"]],
-                [id: 2, nome: "Ana", dataNascimento: java.sql.Date.valueOf("2000-12-31"), competencias: []]
+                [id: 1, formacao: "Engenharia", competencias: ["Groovy"]],
+                [id: 2, formacao: "Administração", competencias: []]
         ]
 
         when:
         handler.handle(exchange)
 
         then:
-        1 * candidatoController.listarCandidatos() >> candidatos
+        1 * candidatoController.listarCandidatosPublicos(null) >> candidatos
         0 * candidatoController.cadastrarCandidato(_)
         1 * exchange.sendResponseHeaders(200, _)
         responseHeaders.getFirst("Content-Type") == "application/json; charset=UTF-8"
-        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [
-                [id: 1, nome: "João", dataNascimento: "1990-01-15", competencias: ["Groovy"]],
-                [id: 2, nome: "Ana", dataNascimento: "2000-12-31", competencias: []]
-        ]
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == candidatos
     }
 
     def "deve responder 200 com lista vazia quando não houver candidatos"() {
@@ -144,7 +144,7 @@ class CandidateHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        1 * candidatoController.listarCandidatos() >> []
+        1 * candidatoController.listarCandidatosPublicos(null) >> []
         0 * candidatoController.cadastrarCandidato(_)
         1 * exchange.sendResponseHeaders(200, _)
         new JsonSlurper().parseText(responseBody.toString("UTF-8")) == []
@@ -159,17 +159,17 @@ class CandidateHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        1 * candidatoController.listarCandidatos() >> { throw new RuntimeException("falha interna") }
+        1 * candidatoController.listarCandidatosPublicos(null) >> { throw new RuntimeException("falha interna") }
         0 * candidatoController.cadastrarCandidato(_)
         1 * exchange.sendResponseHeaders(500, _)
-        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Erro ao listar candidatos"]
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Erro interno do servidor", codigo: "INTERNAL_ERROR"]
     }
 
     def "deve cadastrar candidato recebido como JSON"() {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/candidatos")
-        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","email":"sandubinha@email.com","senha":"123456"}')
+        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","email":"sandubinha@email.com","senha":"123456","pais":"Brasil","cep":"01000-000"}')
 
         when:
         handler.handle(exchange)
@@ -194,7 +194,7 @@ class CandidateHandlerTest extends Specification {
         then:
         0 * candidatoController.cadastrarCandidato(_)
         1 * exchange.sendResponseHeaders(400, _)
-        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "A senha deve ter pelo menos 6 caracteres"]
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "A senha deve ter pelo menos 6 caracteres", codigo: "INVALID_INPUT"]
     }
 
     def "deve responder 400 para JSON inválido"() {
@@ -215,7 +215,7 @@ class CandidateHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/candidatos")
-        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","senha":"123456"}')
+        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","senha":"123456","pais":"Brasil","cep":"01000-000"}')
 
         when:
         handler.handle(exchange)
@@ -229,7 +229,7 @@ class CandidateHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/candidatos")
-        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","senha":"123456"}')
+        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","senha":"123456","pais":"Brasil","cep":"01000-000"}')
 
         when:
         handler.handle(exchange)
@@ -243,7 +243,7 @@ class CandidateHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/candidatos")
-        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","senha":"123456"}')
+        exchange.requestBody >> jsonBody('{"nome":"Sandubinha","senha":"123456","pais":"Brasil","cep":"01000-000"}')
 
         when:
         handler.handle(exchange)
@@ -251,7 +251,7 @@ class CandidateHandlerTest extends Specification {
         then:
         1 * candidatoController.cadastrarCandidato(_) >> { throw new java.sql.SQLException("unique", "23505") }
         1 * exchange.sendResponseHeaders(409, _)
-        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Já existe um cadastro com esses dados"]
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Cadastro já existente", codigo: "CONFLICT"]
     }
 
     def "deve responder 400 para ID inválido"() {
@@ -276,10 +276,9 @@ class CandidateHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        1 * candidatoController.buscarCandidatoPorId(1) >> [id: 1, nome: "Fulano", dataNascimento: java.sql.Date.valueOf("2002-01-15")]
-        0 * candidatoController.listarCandidatos()
+        1 * candidatoController.buscarCandidatoPublico(1, null) >> [id: 1, competencias: ["Groovy"], formacao: "Engenharia"]
         1 * exchange.sendResponseHeaders(200, _)
-        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [id: 1, nome: "Fulano", dataNascimento: "2002-01-15"]
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [id: 1, competencias: ["Groovy"], formacao: "Engenharia"]
     }
 
     def "deve responder 404 para candidato inexistente"() {
@@ -291,9 +290,9 @@ class CandidateHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        1 * candidatoController.buscarCandidatoPorId(999) >> null
+        1 * candidatoController.buscarCandidatoPublico(999, null) >> null
         1 * exchange.sendResponseHeaders(404, _)
-        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Candidato não encontrado"]
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Candidato não encontrado", codigo: "NOT_FOUND"]
     }
 
     def "deve rejeitar POST com ID sem cadastrar"() {

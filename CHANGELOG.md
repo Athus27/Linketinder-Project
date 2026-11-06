@@ -4,6 +4,12 @@
 
 ### Adicionado
 
+- T3: projeções públicas anonimizadas, autorização obrigatória em operações
+  protegidas, rotas de curtida/match e vagas próprias, com teste HTTP real,
+  teste PostgreSQL de concorrência e preservação do autor da primeira curtida.
+- Revisão final da T3: concorrência agora usa `Callable<Map>` e comprova dois
+  sucessos, ordem de primeiro autor, timestamp imutável, os dois sentidos do
+  match e replays; logs dos DAOs não serializam mensagens SQL brutas.
 - Sessões opacas thread-safe com TTL de quatro horas, logout idempotente,
   autenticação de recrutador/empresa e gestão de recrutadores por empresa,
   com validações, DTOs allowlistados e integração em schema temporário.
@@ -18,6 +24,9 @@
 
 ### Modificado
 
+- T3: todos os DAOs usados pela API recebem a fábrica de conexão injetada;
+  handlers não possuem modo legado sem autenticação e erros HTTP são
+  estruturados e genéricos.
 - Router, CORS e pipeline da API passaram a suportar Bearer/Authorization,
   logout e rotas protegidas de recrutadores. Testes unitários e de integração
   da T2 foram adicionados. A revisão pré-commit removeu o bypass sem sessão,
@@ -26,6 +35,8 @@
 
 ### Corrigido
 
+- Corrigida a criação de `data_match` quando a curtida empresarial ocorre
+  antes da curtida do candidato, incluindo repetição e concorrência.
 - Revisada a spec do recrutador com contratos de status/erro, DTOs mínimos,
   regra de revelação agregada, curtida empresarial e distinção entre
   recrutador desativado e empresa/colegas ativos.

@@ -7,24 +7,15 @@ class UserCandidate extends User {
     @Override
     String toString() {
         return """
-                Nome: ${nome}
-                    Idade: ${idade} anos
-                    Descricao: ${descricao}
+                Perfil de candidato
                     Competencias: ${competencias.join(', ')}
-                    CEP: ${cep}
-                    Estado: ${estado}
-                    CPF: ${cpf}
-                    Email: ${email}
 """.stripIndent()
     }
 
     @Override
     String exibirInformacoesFeed() {
         return """
-                    Descricao: ${descricao}
                     Competencias: ${competencias.join(', ')}
-                    CEP: ${cep}
-                    Estado: ${estado}
 """.stripIndent()
     }
 }

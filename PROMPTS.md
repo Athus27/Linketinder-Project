@@ -173,6 +173,39 @@ continuam fora do escopo.
 Resultado final após a revisão: `./gradlew check --rerun-tasks --console=plain`
 passou com 130 testes unitários e 11 testes de integração.
 
+## Registro da T3 — anonimato, curtidas, matches e autorizações
+
+Execução interrompida anteriormente pelo Codex durante revisão porque havia
+tentativa de preservar bypasses de segurança para testes legados. O Copilot
+corrigiu a implementação sem commit, push, PR ou merge: removidos todos os
+caminhos de compatibilidade sem sessão nos handlers de candidato, empresa e
+vaga; testes legados foram ajustados para allowlist/autenticação; nenhum
+frontend ou schema público foi alterado.
+
+Foram corrigidas a injeção da fábrica em `CandidateDAO.buscarPorId` e
+competências, a consulta nullable de empresas, a projeção pré-match e o bug
+de `deuMatch` quando a empresa curte primeiro. Router e handlers agora
+expõem curtidas/matches e vagas próprias com autorização derivada da sessão.
+
+Verificações finais: `./gradlew check --rerun-tasks --console=plain`, com 121
+testes unitários e 14 de integração aprovados. A integração inclui
+`ApiHttpProjectionTest` com `HttpServer`/porta 0 e
+`CurtidaConcurrencyTest` com duas conexões, `CountDownLatch`,
+`ExecutorService`, repetição, match nos dois sentidos e primeiro autor
+estável. Tarefas 4–6 continuam incompletas; frontend e aceite E2E completo
+não fazem parte desta execução.
+
+Revisão final da T3: o teste concorrente usa `Callable<Map>`, exige sucesso
+nas duas respostas, exatamente um primeiro voto e um replay, e compara
+autor/timestamp antes e depois do replay. Também cobre CPFs sintéticos válidos
+e os sentidos empresa-primeiro/candidato-segundo e candidato-primeiro/empresa-
+segundo. Logs de Candidate/Company/Vaga e competências não incluem mensagens
+SQL; teste unitário captura stdout numa falha com e-mail, CPF e hash
+fictícios. O teste HTTP parseia JSON e exige keysets exatos e uma linha por
+projeção no schema isolado. A regressão HTTP T3 cobre apenas GETs públicos e
+Authorization malformado; autenticação completa, curtidas privadas e contatos
+ficam para T6.
+
 ## Registro da T1 — persistência V2 e modelo
 
 Sessão Copilot: `167e783c-7030-4cbe-b90b-3f2631e1a8d3`. Branch:

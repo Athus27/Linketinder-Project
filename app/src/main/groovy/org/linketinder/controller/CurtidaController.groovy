@@ -6,7 +6,11 @@ class CurtidaController {
     private final CurtidaDAO curtidaDAO
 
     CurtidaController() {
-        this.curtidaDAO = new CurtidaDAO()
+        this(new CurtidaDAO())
+    }
+
+    CurtidaController(CurtidaDAO curtidaDAO) {
+        this.curtidaDAO = curtidaDAO
     }
 
     Map candidatoCurtirVaga(int idCandidato, int idVaga) {
@@ -15,5 +19,13 @@ class CurtidaController {
 
     Map empresaCurtirCandidato(int idEmpresa, int idVaga, int idCandidato) {
         return curtidaDAO.empresaCurtirCandidato(idEmpresa, idVaga, idCandidato)
+    }
+
+    Map empresaCurtirCandidato(int idEmpresa, int idVaga, int idCandidato, Integer recruiterId) {
+        curtidaDAO.empresaCurtirCandidato(idEmpresa, idVaga, idCandidato, recruiterId)
+    }
+
+    List<Map> listarMatches(int id, Integer idEmpresa, String tipo) {
+        curtidaDAO.listarMatches(id, idEmpresa, tipo)
     }
 }

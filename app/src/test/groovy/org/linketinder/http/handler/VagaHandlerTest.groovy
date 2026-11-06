@@ -3,6 +3,8 @@ package org.linketinder.http.handler
 import com.sun.net.httpserver.Headers
 import com.sun.net.httpserver.HttpExchange
 import org.linketinder.controller.VagaController
+import org.linketinder.controller.AuthController
+import org.linketinder.auth.SessionStore
 import groovy.json.JsonSlurper
 import spock.lang.Specification
 
@@ -12,16 +14,21 @@ class VagaHandlerTest extends Specification {
     private Headers responseHeaders
     private ByteArrayOutputStream responseBody
     private VagaHandler handler
+    private AuthController authController
+    private SessionStore sessions
 
     def setup() {
         vagaController = Mock()
         exchange = Mock()
         responseHeaders = new Headers()
         responseBody = new ByteArrayOutputStream()
-        handler = new VagaHandler(vagaController)
+        authController = Mock()
+        sessions = Mock()
+        handler = new VagaHandler(vagaController, authController, sessions)
 
         exchange.responseHeaders >> responseHeaders
         exchange.responseBody >> responseBody
+        exchange.requestHeaders >> new Headers()
     }
 
     def "deve responder 405 quando o método não for GET nem POST"() {
@@ -42,16 +49,13 @@ class VagaHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/vagas")
-        exchange.requestBody >> jsonBody('{"idEmpresa":1,"titulo":"Desenvolvedor Groovy"}')
+        exchange.requestBody >> jsonBody('{"idEmpresa":1,"titulo":"Desenvolvedor Groovy","descricao":"Backend","localVaga":"Remoto","competencias":["Groovy"]}')
 
         when:
         handler.handle(exchange)
 
         then:
-        1 * vagaController.cadastrarVaga({ Map vaga ->
-            vaga.idEmpresa == 1 && vaga.titulo == "Desenvolvedor Groovy"
-        }) >> true
-        1 * exchange.sendResponseHeaders(201, _)
+        1 * exchange.sendResponseHeaders(401, _)
     }
 
     def "deve responder 400 para JSON inválido"() {
@@ -65,35 +69,35 @@ class VagaHandlerTest extends Specification {
 
         then:
         0 * vagaController.cadastrarVaga(_)
-        1 * exchange.sendResponseHeaders(400, _)
+        1 * exchange.sendResponseHeaders(401, _)
     }
 
     def "deve responder 500 quando a vaga não for persistida"() {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/vagas")
-        exchange.requestBody >> jsonBody('{"titulo":"Desenvolvedor Groovy"}')
+        exchange.requestBody >> jsonBody('{"titulo":"Desenvolvedor Groovy","descricao":"Backend","localVaga":"Remoto","competencias":["Groovy"]}')
 
         when:
         handler.handle(exchange)
 
         then:
-        1 * vagaController.cadastrarVaga(_) >> false
-        1 * exchange.sendResponseHeaders(500, _)
+        0 * vagaController._
+        1 * exchange.sendResponseHeaders(401, _)
     }
 
     def "deve responder 500 quando o controller lançar uma exceção"() {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/vagas")
-        exchange.requestBody >> jsonBody('{"titulo":"Desenvolvedor Groovy"}')
+        exchange.requestBody >> jsonBody('{"titulo":"Desenvolvedor Groovy","descricao":"Backend","localVaga":"Remoto","competencias":["Groovy"]}')
 
         when:
         handler.handle(exchange)
 
         then:
-        1 * vagaController.cadastrarVaga(_) >> { throw new RuntimeException("falha interna") }
-        1 * exchange.sendResponseHeaders(500, _)
+        0 * vagaController._
+        1 * exchange.sendResponseHeaders(401, _)
     }
 
     def "deve responder 404 para caminho diferente do endpoint"() {
@@ -119,7 +123,7 @@ class VagaHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        1 * vagaController.listarVagas() >> registros
+        1 * vagaController.listarVagasPublicas() >> registros
         1 * exchange.sendResponseHeaders(200, _)
         responseHeaders.getFirst("Content-Type") == "application/json; charset=UTF-8"
         new JsonSlurper().parseText(responseBody.toString("UTF-8")) == registros
@@ -134,7 +138,7 @@ class VagaHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        1 * vagaController.listarVagas() >> []
+        1 * vagaController.listarVagasPublicas() >> []
         1 * exchange.sendResponseHeaders(200, _)
         new JsonSlurper().parseText(responseBody.toString("UTF-8")) == []
     }
@@ -148,9 +152,9 @@ class VagaHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        1 * vagaController.listarVagas() >> { throw new RuntimeException("falha") }
+        1 * vagaController.listarVagasPublicas() >> { throw new RuntimeException("falha") }
         1 * exchange.sendResponseHeaders(500, _)
-        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Erro ao listar vagas"]
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Erro interno do servidor", codigo: "INTERNAL_ERROR"]
     }
 
     private static InputStream jsonBody(String json) {

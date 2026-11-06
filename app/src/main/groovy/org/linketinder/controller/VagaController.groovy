@@ -13,6 +13,14 @@ class VagaController {
         return vagaDAO.listarVagas().vagas
     }
 
+    List<Map> listarVagasPublicas(Integer idEmpresa = null) {
+        vagaDAO.listarPublicas(idEmpresa)
+    }
+
+    boolean cadastrarVaga(Map vaga, int idEmpresa) {
+        vagaDAO.adicionarVaga(vaga, idEmpresa)
+    }
+
     boolean cadastrarVaga(Map vaga) {
         return vagaDAO.adicionarVaga(vaga)
     }

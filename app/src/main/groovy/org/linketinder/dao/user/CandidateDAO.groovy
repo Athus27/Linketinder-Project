@@ -5,6 +5,8 @@ import org.linketinder.dao.competence.CandidateCompetenceDAO
 import org.linketinder.dao.competence.CompetenceDAO
 import org.linketinder.dao.connection.DatabaseConnectionFactory
 import org.linketinder.dao.connection.PostgresConnectionFactory
+import org.linketinder.dao.connection.ConnectionFactory
+import org.linketinder.auth.AuthPrincipal
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -15,6 +17,69 @@ import java.time.format.DateTimeFormatter
 
 
 class CandidateDAO {
+    private final ConnectionFactory connectionFactory
+
+    CandidateDAO() {
+        this(null)
+    }
+
+    CandidateDAO(ConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory
+    }
+
+    private Connection openConnection() {
+        (connectionFactory ?:
+                DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection()).getConnection()
+    }
+
+    List<Map> listarPublicos(Integer idEmpresa = null) {
+        Connection connection = openConnection()
+        try {
+            String match = idEmpresa == null ? "FALSE" : '''
+                EXISTS (
+                  SELECT 1 FROM "Curtida" l
+                  JOIN "Vaga" v ON v.id = l.id_vaga
+                  WHERE l.id_candidato = c.id_candidato
+                    AND l.curtida_candidato AND l.curtida_empresa
+                    AND v.id_empresa = ?
+                )
+            '''
+            PreparedStatement statement = connection.prepareStatement("""
+                SELECT c.id_candidato AS id, c.formacao, c.descricao, u.nome,
+                       c.sobrenome, u.email, ${match} AS matched
+                FROM "Candidate" c JOIN "User" u ON u.id = c.id_candidato
+                ORDER BY c.id_candidato
+            """)
+            if (idEmpresa != null) statement.setInt(1, idEmpresa)
+            ResultSet rs = statement.executeQuery()
+            try {
+                CandidateCompetenceDAO competenceDAO = new CandidateCompetenceDAO(connectionFactory)
+                List<Map> result = []
+                while (rs.next()) {
+                    boolean matched = rs.getBoolean("matched")
+                    Map item = [id: rs.getInt("id"),
+                                competencias: competenceDAO.listarCompetenciasDoCandidato(rs.getInt("id")),
+                                formacao: rs.getString("formacao")]
+                    if (matched) {
+                        item.putAll(nome: rs.getString("nome"), sobrenome: rs.getString("sobrenome"),
+                                email: rs.getString("email"), descricao: rs.getString("descricao"))
+                    }
+                    result << item
+                }
+                return result
+            } finally {
+                rs.close()
+                statement.close()
+            }
+        } finally {
+            connection.close()
+        }
+    }
+
+    Map buscarPublico(int idCandidato, Integer idEmpresa = null) {
+        listarPublicos(idEmpresa).find { it.id == idCandidato }
+    }
+
     Map listarCandidatos() {
         Connection connection = null
         PreparedStatement statement = null
@@ -23,7 +88,7 @@ class CandidateDAO {
         def candidatos = []
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             statement = connection.prepareStatement(
                     """
                         SELECT
@@ -44,7 +109,8 @@ class CandidateDAO {
             )
             resultSet = statement.executeQuery()
 
-            def competenceDAO = new CandidateCompetenceDAO()
+            def competenceDAO = connectionFactory ?
+                    new CandidateCompetenceDAO(connectionFactory) : new CandidateCompetenceDAO()
 
             while (resultSet.next()) {
                 int idCandidato = resultSet.getInt("id")
@@ -67,29 +133,21 @@ class CandidateDAO {
             }
 
         } catch (Exception e) {
-            println("Erro ao listar candidatos: ${e.message}")
+            println("Erro ao listar candidatos (${e.class.simpleName})")
         } finally {
             try {
                 if (resultSet != null) resultSet.close()
                 if (statement != null) statement.close()
                 if (connection != null) connection.close()
             } catch (Exception e) {
-                println("Erro ao fechar recursos: ${e.message}")
+                println("Erro ao fechar recursos (${e.class.simpleName})")
             }
         }
         return [candidatos: candidatos]
     }
 
     List<Map> feedCandidatos() {
-        List<Map> candidatos = listarCandidatos().candidatos
-
-        return candidatos.collect { candidato ->
-            [
-                    descricao   : candidato.descricao,
-                    formacao    : candidato.formacao,
-                    competencias: candidato.competencias
-            ]
-        }
+        listarPublicos()
     }
 
     Map buscarPorId(int idCandidato) {
@@ -100,7 +158,7 @@ class CandidateDAO {
         Map candidato = null
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             statement = connection.prepareStatement(
                     """
                         SELECT
@@ -124,7 +182,8 @@ class CandidateDAO {
             resultSet = statement.executeQuery()
 
             if (resultSet.next()) {
-                CandidateCompetenceDAO competenceDAO = new CandidateCompetenceDAO()
+                CandidateCompetenceDAO competenceDAO = connectionFactory ?
+                        new CandidateCompetenceDAO(connectionFactory) : new CandidateCompetenceDAO()
                 List<String> competencias = competenceDAO.listarCompetenciasDoCandidato(idCandidato)
 
                 candidato = [
@@ -143,14 +202,14 @@ class CandidateDAO {
             }
 
         } catch (Exception e) {
-            println("Erro ao buscar candidato por ID: ${e.message}")
+            println("Erro ao buscar candidato por ID (${e.class.simpleName})")
         } finally {
             try {
                 if (resultSet != null) resultSet.close()
                 if (statement != null) statement.close()
                 if (connection != null) connection.close()
             } catch (Exception e) {
-                println("Erro ao fechar recursos: ${e.message}")
+                println("Erro ao fechar recursos (${e.class.simpleName})")
             }
         }
         return candidato
@@ -161,7 +220,7 @@ class CandidateDAO {
         boolean sucesso = false
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             connection.setAutoCommit(false)
 
             // Inserindo dados na tabela User
@@ -211,9 +270,10 @@ class CandidateDAO {
             sucesso = rowsAffected > 0
 
             if (sucesso) {
-                CompetenceDAO competenceDAO = new CompetenceDAO()
-                CandidateCompetenceDAO candidateCompetenceDAO =
-                        new CandidateCompetenceDAO()
+                CompetenceDAO competenceDAO = connectionFactory ?
+                        new CompetenceDAO(connectionFactory) : new CompetenceDAO()
+                CandidateCompetenceDAO candidateCompetenceDAO = connectionFactory ?
+                        new CandidateCompetenceDAO(connectionFactory) : new CandidateCompetenceDAO()
 
                 List<String> nomesCompetencias = candidato.competencias ?: []
 
@@ -241,7 +301,7 @@ class CandidateDAO {
             if (cadastroDuplicado) {
                 println("Cadastro do candidato rejeitado por conflito de dado único.")
             } else {
-                println("Erro ao adicionar candidato: ${e.message}")
+                println("Erro ao adicionar candidato (${e.class.simpleName})")
             }
             try {
                 if (connection != null) {
@@ -249,7 +309,7 @@ class CandidateDAO {
                     println("Rolando de volta devido a erro.")
                 }
             } catch (Exception rollbackEx) {
-                println("Erro ao tentar rolar de volta: ${rollbackEx.message}")
+                println("Erro ao tentar rolar de volta (${rollbackEx.class.simpleName})")
             }
             if (cadastroDuplicado) {
                 throw new SQLException("Cadastro já existente", "23505")
@@ -259,7 +319,7 @@ class CandidateDAO {
                 if (statement != null) statement.close()
                 if (connection != null) connection.close()
             } catch (Exception e) {
-                println("Erro ao fechar recursos: ${e.message}")
+                println("Erro ao fechar recursos (${e.class.simpleName})")
             }
         }
         return sucesso
@@ -271,7 +331,7 @@ class CandidateDAO {
         boolean sucesso = false
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             connection.setAutoCommit(false)
 
             statement = connection.prepareStatement(
@@ -319,9 +379,10 @@ class CandidateDAO {
                 throw new SQLException("Dados do candidato não encontrados")
             }
 
-            CandidateCompetenceDAO candidateCompetenceDAO =
-                    new CandidateCompetenceDAO()
-            CompetenceDAO competenceDAO = new CompetenceDAO()
+            CandidateCompetenceDAO candidateCompetenceDAO = connectionFactory ?
+                    new CandidateCompetenceDAO(connectionFactory) : new CandidateCompetenceDAO()
+            CompetenceDAO competenceDAO = connectionFactory ?
+                    new CompetenceDAO(connectionFactory) : new CompetenceDAO()
 
             candidateCompetenceDAO.removerCompetenciasDoCandidato(
                     connection,
@@ -350,7 +411,7 @@ class CandidateDAO {
             sucesso = true
             println("Candidato atualizado com sucesso!")
         } catch (Exception e) {
-            println("Erro ao atualizar candidato: ${e.message}")
+            println("Erro ao atualizar candidato (${e.class.simpleName})")
             if (connection != null) connection.rollback()
         } finally {
             if (statement != null) statement.close()
@@ -365,7 +426,7 @@ class CandidateDAO {
         boolean sucesso = false
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             connection.setAutoCommit(false)
 
             List<String> comandos = [
@@ -392,7 +453,7 @@ class CandidateDAO {
             sucesso = true
             println("Candidato removido com sucesso!")
         } catch (Exception e) {
-            println("Erro ao remover candidato: ${e.message}")
+            println("Erro ao remover candidato (${e.class.simpleName})")
             if (connection != null) connection.rollback()
         } finally {
             if (connection != null) connection.close()

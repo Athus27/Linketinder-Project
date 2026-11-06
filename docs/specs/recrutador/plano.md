@@ -115,11 +115,45 @@ idempotência transacional e 404 para recurso alheio.
 **RED/GREEN:** ajustar testes que afirmavam identidade insegura sem remover
 cobertura; provar duas conexões/recrutadores, empresa terceira, concorrência,
 contato somente pós-match, logout e soft-delete com `./gradlew check`.
-**Checklist (aceites 8–14, 16–18):** [ ] PII ausente em JSON/erros/logs;
-[ ] autenticação, autorização por papel e vínculo; [ ] proteção de atores,
-primeira autoria/timestamp atômicos e fixtures sintéticas; [ ] unitário,
-HTTP/Postgres, regressão e limitações reais; [ ] atualizar
-plano/CHANGELOG/PROMPTS; commit.
+**Resultado da execução:** T3 implementada sem commit, push, PR, merge ou
+alteração do schema público. Os três handlers removem todos os caminhos
+`auth == null`/`auth != null`, GETs usam apenas projeções públicas, DELETE de
+candidato exige o próprio token e POST de vaga exige empresa autenticada.
+Curtidas e matches foram expostos no Router, com IDs inteiros positivos,
+atores derivados da sessão, vínculo empresa-vaga-candidato e tokens inválidos
+respondendo 401. A consulta pública usa `setNull(Types.INTEGER)`/SQL
+condicional, e `CandidateDAO.buscarPorId` e DAOs de competências preservam a
+fábrica injetada. `CurtidaDAO` mantém `INSERT ... ON CONFLICT DO NOTHING`,
+`SELECT FOR UPDATE`, primeiro autor e timestamp, inclusive empresa primeiro.
+Projeções e feeds não retornam descrição livre, estado ou dados identificáveis
+antes do match; modelos genéricos também não exibem esses campos.
+
+Evidência executada: `./gradlew check --rerun-tasks --console=plain` com
+121 testes unitários e 14 testes de integração, todos aprovados. Os testes
+incluem HTTP real com `HttpServer`/porta dinâmica para GETs públicos e
+Authorization malformado, além de duas conexões PostgreSQL com
+`CountDownLatch`/`ExecutorService` para concorrência, repetição, ambos os
+sentidos do match e autoria estável. A cobertura não inclui frontend, que
+permanece fora desta tarefa, nem o cenário completo de aceitação de telas
+previsto na tarefa 6.
+
+**Revisão final:** `CurtidaConcurrencyTest` usa `Callable<Map>` e verifica
+dois resultados bem-sucedidos, exatamente um primeiro voto e um replay,
+autor/timestamp antes e depois do replay, além de match nos dois sentidos.
+`ApiHttpProjectionTest` parseia as respostas e exige exatamente os conjuntos
+de chaves `{id,competencias,formacao}`, `{id}` e
+`{id,idEmpresa,titulo,descricao,competencias}`, com uma linha em cada fixture
+do schema temporário. Logs dos DAOs e competências não incluem mensagens SQL;
+`CandidateDAOTest` cobre stdout com falha SQL contendo e-mail, CPF e hash
+fictícios. A regressão HTTP desta tarefa é limitada a projeções públicas e
+Authorization malformado; o fluxo completo de autenticação, curtidas privadas
+e contatos permanece para T6.
+
+**Checklist (aceites 8–14, 16–18):** [x] PII ausente em JSON/erros/logs;
+[x] autenticação, autorização por papel e vínculo; [x] proteção de atores,
+primeira autoria/timestamp atômicos e fixtures sintéticas; [x] unitário,
+HTTP/Postgres, regressão e concorrência; [x] documentação atualizada; [ ] commit
+backend pelo Codex.
 
 ### 4. Frontend: sessão, services e contratos
 

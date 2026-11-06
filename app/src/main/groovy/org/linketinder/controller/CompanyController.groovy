@@ -17,6 +17,10 @@ class CompanyController {
         return companyDAO.listarEmpresas().empresas
     }
 
+    List<Map> listarEmpresasPublicas(Integer idCandidato = null) {
+        companyDAO.listarPublicos(idCandidato)
+    }
+
     List<Map> feedEmpresas() {
         return companyDAO.listarEmpresas().empresas
     }

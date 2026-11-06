@@ -2,19 +2,75 @@ package org.linketinder.dao.user
 
 import org.linketinder.dao.connection.DatabaseConnectionFactory
 import org.linketinder.dao.connection.PostgresConnectionFactory
+import org.linketinder.dao.connection.ConnectionFactory
 
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.Types
 
 class CompanyDAO {
+    private final ConnectionFactory connectionFactory
+
+    CompanyDAO() {
+        this(null)
+    }
+
+    CompanyDAO(ConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory
+    }
+
+    private Connection openConnection() {
+        (connectionFactory ?:
+                DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection()).getConnection()
+    }
+
+    List<Map> listarPublicos(Integer idCandidato = null) {
+        Connection connection = openConnection()
+        try {
+            PreparedStatement statement = connection.prepareStatement('''
+                SELECT e.id_empresa AS id, u.nome, u.email,
+                       EXISTS (
+                         SELECT 1 FROM "Curtida" l
+                         JOIN "Vaga" v ON v.id = l.id_vaga
+                         WHERE v.id_empresa = e.id_empresa
+                           AND l.id_candidato = ?
+                           AND l.curtida_candidato AND l.curtida_empresa
+                       ) AS matched
+                FROM "Company" e JOIN "User" u ON u.id = e.id_empresa
+                ORDER BY e.id_empresa
+            ''')
+            if (idCandidato == null) {
+                statement.setNull(1, Types.INTEGER)
+            } else {
+                statement.setInt(1, idCandidato)
+            }
+            ResultSet rs = statement.executeQuery()
+            try {
+                List<Map> result = []
+                while (rs.next()) {
+                    Map item = [id: rs.getInt("id")]
+                    if (rs.getBoolean("matched")) {
+                        item.putAll(nome: rs.getString("nome"), email: rs.getString("email"))
+                    }
+                    result << item
+                }
+                return result
+            } finally {
+                rs.close()
+                statement.close()
+            }
+        } finally {
+            connection.close()
+        }
+    }
     boolean adicionarEmpresa(Map empresa) {
         Connection connection = null
         PreparedStatement statement = null
         boolean sucesso = false
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             connection.setAutoCommit(false)
 
             // Inserindo dados na tabela User
@@ -67,7 +123,7 @@ class CompanyDAO {
             if (cadastroDuplicado) {
                 println("Cadastro da empresa rejeitado por conflito de dado único.")
             } else {
-                println("Erro ao adicionar empresa: ${e.message}")
+                println("Erro ao adicionar empresa (${e.class.simpleName})")
             }
 
             if (connection != null) {
@@ -92,7 +148,7 @@ class CompanyDAO {
 
         def empresas = []
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             statement = connection.prepareStatement(
                     """
                         SELECT
@@ -123,14 +179,14 @@ class CompanyDAO {
             }
 
         } catch (Exception e) {
-            println("Erro ao listar empresas: ${e.message}")
+            println("Erro ao listar empresas (${e.class.simpleName})")
         } finally {
             try {
                 if (resultSet != null) resultSet.close()
                 if (statement != null) statement.close()
                 if (connection != null) connection.close()
             } catch (Exception e) {
-                println("Erro ao fechar recursos: ${e.message}")
+                println("Erro ao fechar recursos (${e.class.simpleName})")
             }
         }
         return [empresas: empresas]
@@ -142,7 +198,7 @@ class CompanyDAO {
         boolean sucesso = false
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             connection.setAutoCommit(false)
 
             statement = connection.prepareStatement(
@@ -184,7 +240,7 @@ class CompanyDAO {
             sucesso = true
             println("Empresa atualizada com sucesso!")
         } catch (Exception e) {
-            println("Erro ao atualizar empresa: ${e.message}")
+            println("Erro ao atualizar empresa (${e.class.simpleName})")
             if (connection != null) connection.rollback()
         } finally {
             if (statement != null) statement.close()
@@ -199,7 +255,7 @@ class CompanyDAO {
         boolean sucesso = false
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = openConnection()
             connection.setAutoCommit(false)
 
             List<String> comandos = [
@@ -227,7 +283,7 @@ class CompanyDAO {
             sucesso = true
             println("Empresa removida com sucesso!")
         } catch (Exception e) {
-            println("Erro ao remover empresa: ${e.message}")
+            println("Erro ao remover empresa (${e.class.simpleName})")
             if (connection != null) connection.rollback()
         } finally {
             if (connection != null) connection.close()

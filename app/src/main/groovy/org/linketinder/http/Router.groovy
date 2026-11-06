@@ -6,6 +6,7 @@ import org.linketinder.http.handler.CompanyHandler
 import org.linketinder.http.handler.VagaHandler
 import org.linketinder.http.handler.AuthHandler
 import org.linketinder.http.handler.RecruiterHandler
+import org.linketinder.http.handler.CurtidaHandler
 
 class Router {
     private final HttpServer server
@@ -14,6 +15,7 @@ class Router {
     private final VagaHandler vagaHandler
     private final AuthHandler authHandler
     private final RecruiterHandler recruiterHandler
+    private final CurtidaHandler curtidaHandler
 
     Router(
             HttpServer server,
@@ -22,7 +24,7 @@ class Router {
             VagaHandler vagaHandler,
             AuthHandler authHandler
     ) {
-        this(server, candidateHandler, companyHandler, vagaHandler, authHandler, null)
+        this(server, candidateHandler, companyHandler, vagaHandler, authHandler, null, null)
     }
 
     Router(
@@ -33,12 +35,25 @@ class Router {
             AuthHandler authHandler,
             RecruiterHandler recruiterHandler
     ) {
+        this(server, candidateHandler, companyHandler, vagaHandler, authHandler, recruiterHandler, null)
+    }
+
+    Router(
+            HttpServer server,
+            CandidateHandler candidateHandler,
+            CompanyHandler companyHandler,
+            VagaHandler vagaHandler,
+            AuthHandler authHandler,
+            RecruiterHandler recruiterHandler,
+            CurtidaHandler curtidaHandler
+    ) {
         this.server = server
         this.candidateHandler = candidateHandler
         this.companyHandler = companyHandler
         this.vagaHandler = vagaHandler
         this.authHandler = authHandler
         this.recruiterHandler = recruiterHandler
+        this.curtidaHandler = curtidaHandler
     }
 
     void registrarRotas() {
@@ -69,6 +84,12 @@ class Router {
                     "/api/recrutadores",
                     recruiterHandler
             ).filters.add(new CorsFilter(frontendOrigin, ["GET", "POST", "DELETE"]))
+        }
+        if (curtidaHandler != null) {
+            server.createContext("/api/curtidas", curtidaHandler)
+                    .filters.add(new CorsFilter(frontendOrigin, ["POST"]))
+            server.createContext("/api/matches", curtidaHandler)
+                    .filters.add(new CorsFilter(frontendOrigin, ["GET"]))
         }
     }
 }

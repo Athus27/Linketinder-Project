@@ -1,5 +1,6 @@
 package org.linketinder.http
 
+import com.sun.net.httpserver.HttpContext
 import com.sun.net.httpserver.HttpServer
 import org.linketinder.http.handler.CandidateHandler
 import org.linketinder.http.handler.CompanyHandler
@@ -15,6 +16,13 @@ class RouterTest extends Specification {
         CompanyHandler companyHandler = Mock()
         VagaHandler vagaHandler = Mock()
 
+        def candidateFilters = []
+        def companyFilters = []
+        def vagaFilters = []
+        HttpContext candidateContext = Stub() { getFilters() >> candidateFilters }
+        HttpContext companyContext = Stub() { getFilters() >> companyFilters }
+        HttpContext vagaContext = Stub() { getFilters() >> vagaFilters }
+
         Router router = new Router(
                 server,
                 candidateHandler,
@@ -26,8 +34,11 @@ class RouterTest extends Specification {
         router.registrarRotas()
 
         then:
-        1 * server.createContext("/api/candidatos", candidateHandler)
-        1 * server.createContext("/api/empresas", companyHandler)
-        1 * server.createContext("/api/vagas", vagaHandler)
+        1 * server.createContext("/api/candidatos", candidateHandler) >> candidateContext
+        1 * server.createContext("/api/empresas", companyHandler) >> companyContext
+        1 * server.createContext("/api/vagas", vagaHandler) >> vagaContext
+        candidateFilters.size() == 1 && candidateFilters[0] instanceof CorsFilter
+        companyFilters.size() == 1 && companyFilters[0] instanceof CorsFilter
+        vagaFilters.size() == 1 && vagaFilters[0] instanceof CorsFilter
     }
 }

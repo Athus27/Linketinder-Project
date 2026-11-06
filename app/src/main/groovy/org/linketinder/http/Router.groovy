@@ -24,17 +24,19 @@ class Router {
     }
 
     void registrarRotas() {
+        String frontendOrigin = System.getenv("FRONTEND_ORIGIN") ?: "http://localhost:5173"
+
         server.createContext(
                 "/api/candidatos",
                 candidateHandler
-        )
+        ).filters.add(new CorsFilter(frontendOrigin, ["GET", "POST"]))
         server.createContext(
                 "/api/empresas",
                 companyHandler
-        )
+        ).filters.add(new CorsFilter(frontendOrigin, ["POST"]))
         server.createContext(
                 "/api/vagas",
                 vagaHandler
-        )
+        ).filters.add(new CorsFilter(frontendOrigin, ["POST"]))
     }
 }

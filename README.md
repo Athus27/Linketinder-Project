@@ -10,11 +10,12 @@ A API possui os três endpoints obrigatórios do desafio:
 
 | Método | Endpoint | Descrição | Sucesso |
 |---|---|---|---|
+| `GET` | `/api/candidatos` | Lista os candidatos | `200 OK` |
 | `POST` | `/api/candidatos` | Cadastra um candidato | `201 Created` |
 | `POST` | `/api/empresas` | Cadastra uma empresa | `201 Created` |
 | `POST` | `/api/vagas` | Cadastra uma vaga | `201 Created` |
 
-Os endpoints recebem dados em JSON e utilizam os DAOs que já existiam no Linketinder para persistir as informações no PostgreSQL.
+Os cadastros recebem dados em JSON e utilizam os DAOs existentes para persistir no PostgreSQL. A listagem consulta os candidatos no banco e devolve um array JSON.
 
 ## Como a API foi organizada
 
@@ -98,3 +99,48 @@ Os handlers foram desenvolvidos com TDD. Primeiro foi escrito um teste que falha
 ```
 
 Os testes dos handlers verificam o recebimento do JSON, a chamada do controller, o status `201` e a resposta `405` para métodos que não são permitidos.
+
+## Integração com o frontend
+
+O [frontend TypeScript/Vite](https://github.com/Athus27/Linketinder-FrontEnd) permanece em um repositório separado. A comunicação utiliza HTTP e JSON; o frontend não acessa diretamente o PostgreSQL.
+
+### Consulta de candidatos
+
+```bash
+curl -i http://localhost:8080/api/candidatos
+# Consulta a API e mostra o status, os cabeçalhos e o JSON, sem inserir registros.
+```
+
+O GET retorna `200` com um array de candidatos, ou `[]` quando não há registros. Cada candidato contém `id`, `nome`, `sobrenome`, `dataNascimento`, `cpf`, `descricao`, `email`, `formacao`, `pais`, `cep` e `competencias`. A senha não é retornada. A data da listagem usa `YYYY-MM-DD`; o cadastro atual espera `dd/MM/yyyy`, conforme `requests.http`.
+
+O handler retorna `500` quando a chamada de listagem ao controller lança uma exceção. Limitação atual: o DAO captura falhas de consulta e pode devolver uma lista vazia, sem distingui-las de ausência de registros.
+
+### Estado da integração e CORS
+
+O frontend já possui service e controller para consultar a lista e converter a resposta para seus modelos. A visualização e a listagem do gerenciamento de candidatos estão conectadas a esse fluxo. Edição e exclusão remotas ainda não foram integradas; os formulários de cadastro continuam usando armazenamento local.
+
+CORS (Cross-Origin Resource Sharing) é aplicado por um `CorsFilter` nos três endpoints, antes dos handlers. Por padrão, a origem autorizada é `http://localhost:5173`. A API devolve `Access-Control-Allow-Origin` para essa origem e `Vary: Origin`, inclusive nas respostas de erro dos handlers. Origens diferentes recebem `403`; chamadas sem `Origin`, como curl e clientes de servidor, continuam permitidas.
+
+O preflight `OPTIONS` retorna `204`, sem executar o handler, para métodos e cabeçalhos autorizados: `GET` e `POST` em candidatos, `POST` em empresas e vagas, e `Content-Type`. Preflights incompatíveis recebem `403`. CORS não implementa autenticação nem sessão.
+
+Para usar outro endereço de frontend:
+
+```bash
+FRONTEND_ORIGIN=http://localhost:5174 ./gradlew run
+# Inicia a API autorizando exatamente a origem informada, sem barra final ou caminho.
+```
+
+Reinicie o backend após alterar essa configuração ou atualizar o código. `localhost` e `127.0.0.1`, assim como portas diferentes, são origens diferentes.
+
+```bash
+curl -i -X OPTIONS http://localhost:8080/api/candidatos -H 'Origin: http://localhost:5173' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: Content-Type'
+# Verifica o preflight de POST JSON sem inserir dados no banco.
+```
+
+Cadastro pelo formulário e login ainda não estão integrados. Não há autenticação ou sessão implementada nesta API.
+
+### Testes da listagem
+
+Os testes unitários de `CandidateHandlerTest` simulam o controller e verificam lista preenchida, lista vazia, data em formato ISO, falha do controller e métodos não permitidos. Eles não consultam o banco nem validam CORS no navegador.
+
+Os testes de `CorsFilterTest` verificam origem permitida, origem rejeitada, chamadas sem Origin, cabeçalhos em respostas de erro e preflights válidos e inválidos.

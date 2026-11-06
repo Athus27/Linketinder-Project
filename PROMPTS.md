@@ -137,3 +137,19 @@ testes reais.
 - Após estes ajustes, a spec está revisada tecnicamente pelo Codex sob
   delegação explícita; não está aprovada pelo Tutor. A validação de negócio
   com Athus/Tutor permanece pendente antes da entrega.
+
+## Registro da T1 — persistência V2 e modelo
+
+Sessão Copilot: `167e783c-7030-4cbe-b90b-3f2631e1a8d3`. Branch:
+`codex/recrutador`. O RED foi executado antes da implementação com schema
+temporário contendo apenas base+V1; `RecruiterMigrationTest` falhou porque a
+tabela `Recruiter` não existia. O GREEN foi executado após a V2, modelo
+`Recruiter` e fixtures: 6 testes passaram, cobrindo relação User 1:1 e
+Company 1:N, FK, CPF normalizado/único, `ativo`, desativação, nulabilidade
+nova, legado preservado, hash sintético e autoria nullable/validada.
+
+Também foi verificado que duas conexões independentes apontam para o mesmo
+schema temporário, sem executar migração no schema público. Concorrência,
+primeira autoria e atomicidade continuam não implementadas e foram deixadas
+para T3, conforme o ajuste solicitado. Nenhuma credencial foi exibida; não
+houve commit, push, merge, PR ou leitura de fontes frontend.

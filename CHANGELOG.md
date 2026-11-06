@@ -4,6 +4,8 @@
 
 ### Adicionado
 
+- Migração V2 aditiva de recrutadores, autoria opcional de curtida e fixture
+  PostgreSQL isolado por schema temporário, com teste RED/GREEN focado.
 - Contexto local do backend em `AGENTS.md`, com stack, comandos, domínio e lacunas de anonimato/autorização.
 - Skill `skills/feature-com-spec/SKILL.md` para condução de especificação, plano e implementação incremental entre os dois repositórios.
 - Registro de autoria e verificações desta preparação em `PROMPTS.md`.

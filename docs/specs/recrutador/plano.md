@@ -1,7 +1,7 @@
 # Plano executável — recrutador (Issue #3)
 
 **Estado:** plano pós-spec revisada pelo Codex sob delegação; validação do Tutor
-pendente. Nenhuma tarefa iniciada. Um agente executa somente uma tarefa por
+pendente. Tarefa 1 concluída tecnicamente nesta sessão, sem commit. Um agente executa somente uma tarefa por
 vez; Codex revisa e faz um commit próprio por tarefa e por repositório afetado.
 Não haverá reset público, credencial local exposta, PR, merge ou entrega.
 
@@ -35,16 +35,20 @@ com seus dados legados.
 V2 aditiva torna país/CEP de `User` anuláveis, cria 1:1 User–Company recruiter,
 CPF único/normalizado, `ativo`, FK e `Curtida.id_recrutador_autor` preenchido
 somente na primeira autoria; unicidade do par e `data_match` único permanecem.
-**RED/GREEN:** primeiro falhar com schema base+V1; depois aplicar V2 e provar
-constraints, legados preservados, primeira autoria/repetição e concorrência
-prevista (duas transações, um autor/timestamp). Comandos:
-`./gradlew integrationTest --tests '*RecruiterMigrationTest'` e
-`./gradlew test --tests '*User*Test'`.
-**Critérios/checklist (aceites 2, 11, 18):** [ ] anonimato não regredido;
-[ ] autenticação/autorização não é deslocada para o banco; [ ] proteção de
-segredos e dados sintéticos; [ ] V2 não destrutiva e schema temporário limpo;
-[ ] RED/GREEN, regressão e limitações reais; [ ] atualizar plano/CHANGELOG;
-commit backend antes da T2.
+**RED/GREEN:** o teste inicial com schema base+V1 falhou por ausência de
+`Recruiter`; após aplicar V2, o teste focado passou provando constraints,
+legados preservados, normalização/unicidade de CPF, default/desativação,
+nulabilidade nova, hash sintético e FK de autoria. O fixture também abre duas
+conexões no mesmo schema para T3, mas não testa comportamento concorrente nem
+primeira autoria atômica nesta tarefa; a migration não promete proteger autoria
+de SQL arbitrário. Comandos executados:
+`./gradlew integrationTest --tests '*RecruiterMigrationTest'`.
+**Critérios/checklist (aceites 2, 11, 18):** [x] anonimato não regredido
+(nenhuma projeção HTTP/tela alterada); [x] autenticação/autorização não é
+deslocada para o banco; [x] proteção de segredos e dados sintéticos; [x] V2
+aditiva e schema temporário limpo; [x] RED/GREEN e limitações registradas;
+[x] plano/CHANGELOG/PROMPTS atualizados. A concorrência e a primeira autoria
+ficam explicitamente para T3. Commit backend permanece para o Codex.
 
 ### 2. Sessão e gestão do recrutador
 

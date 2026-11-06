@@ -19,3 +19,13 @@ app/src/main/groovy/org/example/Teste.groovy
 
 # Ignore local configuration files
 db.properties
+
+# Configuração e artefatos locais
+.env
+.env.*
+!.env.example
+.superpowers/
+*.log
+
+# Respostas geradas pelo HTTP Client do IntelliJ
+**/httpRequests/

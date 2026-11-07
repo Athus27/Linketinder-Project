@@ -115,4 +115,20 @@ class CorsFilterTest extends Specification {
         "DELETE" | "content-type"
         "POST"   | "x-nao-autorizado"
     }
+
+    def "permite Authorization no preflight da sessão"() {
+        given:
+        requestHeaders.set("Origin", "http://localhost:5173")
+        requestHeaders.set("Access-Control-Request-Method", "GET")
+        requestHeaders.set("Access-Control-Request-Headers", "content-type, authorization")
+        exchange.requestMethod >> "OPTIONS"
+        def sessionFilter = new CorsFilter("http://localhost:5173", ["GET"])
+
+        when:
+        sessionFilter.doFilter(exchange, chain)
+
+        then:
+        1 * exchange.sendResponseHeaders(204, -1)
+        responseHeaders.getFirst("Access-Control-Allow-Headers") == "Content-Type, Authorization"
+    }
 }

@@ -9,6 +9,14 @@ class CandidatoController {
         this.candidateDAO = candidateDAO
     }
 
+    List<Map> listarCandidatosPublicos(Integer idEmpresa = null) {
+        candidateDAO.listarPublicos(idEmpresa)
+    }
+
+    Map buscarCandidatoPublico(int id, Integer idEmpresa = null) {
+        candidateDAO.buscarPublico(id, idEmpresa)
+    }
+
     List<Map> listarCandidatos() {
         return this.candidateDAO.listarCandidatos().candidatos
     }

@@ -3,6 +3,8 @@ package org.linketinder.http.handler
 import com.sun.net.httpserver.Headers
 import com.sun.net.httpserver.HttpExchange
 import org.linketinder.controller.CompanyController
+import org.linketinder.controller.AuthController
+import org.linketinder.auth.SessionStore
 import groovy.json.JsonSlurper
 import spock.lang.Specification
 
@@ -12,16 +14,21 @@ class CompanyHandlerTest extends Specification {
     private Headers responseHeaders
     private ByteArrayOutputStream responseBody
     private CompanyHandler handler
+    private AuthController authController
+    private SessionStore sessions
 
     def setup() {
         companyController = Mock()
         exchange = Mock()
         responseHeaders = new Headers()
         responseBody = new ByteArrayOutputStream()
-        handler = new CompanyHandler(companyController)
+        authController = Mock()
+        sessions = Mock()
+        handler = new CompanyHandler(companyController, authController, sessions)
 
         exchange.responseHeaders >> responseHeaders
         exchange.responseBody >> responseBody
+        exchange.requestHeaders >> new Headers()
     }
 
     def "deve responder 405 quando o método não for GET nem POST"() {
@@ -42,7 +49,7 @@ class CompanyHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/empresas")
-        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","cnpj":"12.345.678/0001-00","senha":"123456"}')
+        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","cnpj":"12.345.678/0001-00","senha":"123456","pais":"Brasil","cep":"01000-000"}')
 
         when:
         handler.handle(exchange)
@@ -67,7 +74,7 @@ class CompanyHandlerTest extends Specification {
         then:
         0 * companyController.cadastrarEmpresa(_)
         1 * exchange.sendResponseHeaders(400, _)
-        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "A senha deve ter pelo menos 6 caracteres"]
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "A senha deve ter pelo menos 6 caracteres", codigo: "INVALID_INPUT"]
     }
 
     def "deve responder 400 para JSON inválido"() {
@@ -88,7 +95,7 @@ class CompanyHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/empresas")
-        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","senha":"123456"}')
+        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","senha":"123456","pais":"Brasil","cep":"01000-000"}')
 
         when:
         handler.handle(exchange)
@@ -102,7 +109,7 @@ class CompanyHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/empresas")
-        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","senha":"123456"}')
+        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","senha":"123456","pais":"Brasil","cep":"01000-000"}')
 
         when:
         handler.handle(exchange)
@@ -116,7 +123,7 @@ class CompanyHandlerTest extends Specification {
         given:
         exchange.requestMethod >> "POST"
         exchange.requestURI >> URI.create("/api/empresas")
-        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","senha":"123456"}')
+        exchange.requestBody >> jsonBody('{"nome":"Tapetes Bolinho","senha":"123456","pais":"Brasil","cep":"01000-000"}')
 
         when:
         handler.handle(exchange)
@@ -124,7 +131,7 @@ class CompanyHandlerTest extends Specification {
         then:
         1 * companyController.cadastrarEmpresa(_) >> { throw new java.sql.SQLException("unique", "23505") }
         1 * exchange.sendResponseHeaders(409, _)
-        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Já existe um cadastro com esses dados"]
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Cadastro já existente", codigo: "CONFLICT"]
     }
 
     def "deve responder 404 para caminho diferente do endpoint"() {
@@ -150,7 +157,7 @@ class CompanyHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        1 * companyController.listarEmpresas() >> registros
+        1 * companyController.listarEmpresasPublicas(null) >> registros
         1 * exchange.sendResponseHeaders(200, _)
         responseHeaders.getFirst("Content-Type") == "application/json; charset=UTF-8"
         new JsonSlurper().parseText(responseBody.toString("UTF-8")) == registros
@@ -165,7 +172,7 @@ class CompanyHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        1 * companyController.listarEmpresas() >> []
+        1 * companyController.listarEmpresasPublicas(null) >> []
         1 * exchange.sendResponseHeaders(200, _)
         new JsonSlurper().parseText(responseBody.toString("UTF-8")) == []
     }
@@ -179,9 +186,9 @@ class CompanyHandlerTest extends Specification {
         handler.handle(exchange)
 
         then:
-        1 * companyController.listarEmpresas() >> { throw new RuntimeException("falha") }
+        1 * companyController.listarEmpresasPublicas(null) >> { throw new RuntimeException("falha") }
         1 * exchange.sendResponseHeaders(500, _)
-        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Erro ao listar empresas"]
+        new JsonSlurper().parseText(responseBody.toString("UTF-8")) == [erro: "Erro interno do servidor", codigo: "INTERNAL_ERROR"]
     }
 
     private static InputStream jsonBody(String json) {

@@ -4,104 +4,109 @@ import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import org.linketinder.auth.AuthPrincipal
+import org.linketinder.auth.AuthSupport
+import org.linketinder.auth.SessionStore
+import org.linketinder.controller.AuthController
 import org.linketinder.controller.CompanyController
 import org.linketinder.http.HttpLogger
-import java.sql.SQLException
+import java.util.Objects
 
 class CompanyHandler implements HttpHandler {
     private static final String ENDPOINT = "/api/empresas"
-    private final CompanyController companyController
+    private final CompanyController controller
+    private final AuthController auth
+    private final SessionStore sessions
 
-    CompanyHandler(CompanyController companyController) {
-        this.companyController = companyController
+    CompanyHandler(CompanyController controller, AuthController auth, SessionStore sessions) {
+        Objects.requireNonNull(controller)
+        Objects.requireNonNull(auth)
+        Objects.requireNonNull(sessions)
+        this.controller = controller; this.auth = auth; this.sessions = sessions
     }
 
-    @Override
     void handle(HttpExchange exchange) throws IOException {
-        long inicio = HttpLogger.iniciar()
+        long start = HttpLogger.iniciar()
         if (exchange.requestURI.path != ENDPOINT) {
-            responder(exchange, 404, '{"erro":"Rota não encontrada"}',inicio)
-            return
+            respond(exchange, 404, error("Rota não encontrada", "ROUTE_NOT_FOUND"), start); return
         }
-
         if (exchange.requestMethod == "GET") {
             try {
-                List<Map> registros = companyController.listarEmpresas()
-                responder(exchange, 200, JsonOutput.toJson(registros),inicio)
+                AuthPrincipal principal = optionalPrincipal(exchange)
+                Integer candidate = principal?.tipo == "candidate" ? principal.id : null
+                respond(exchange, 200, controller.listarEmpresasPublicas(candidate), start)
+            } catch (AuthFailure failure) {
+                respond(exchange, failure.status, error(failure.message, failure.code), start)
             } catch (Exception ignored) {
-                responder(exchange, 500, '{"erro":"Erro ao listar empresas"}',inicio)
+                respond(exchange, 500, error("Erro interno do servidor", "INTERNAL_ERROR"), start)
             }
             return
         }
-
         if (exchange.requestMethod != "POST") {
             exchange.responseHeaders.set("Allow", "GET, POST")
-            responder(exchange, 405, '{"erro":"Método não permitido"}',inicio)
-            return
+            respond(exchange, 405, error("Método não permitido", "METHOD_NOT_ALLOWED"), start); return
         }
-
-        Map empresa
+        Map data
         try {
-            empresa = new JsonSlurper().parse(exchange.requestBody) as Map
+            Object parsed = new JsonSlurper().parse(exchange.requestBody)
+            if (!(parsed instanceof Map)) throw new IllegalArgumentException()
+            data = parsed as Map
         } catch (Exception ignored) {
-            responder(exchange, 400, '{"erro":"JSON inválido"}',inicio)
-            return
+            respond(exchange, 400, error("JSON inválido", "INVALID_JSON"), start); return
         }
-
-        if (!(empresa.senha instanceof String) || empresa.senha.length() < 6) {
-            responder(exchange, 400, '{"erro":"A senha deve ter pelo menos 6 caracteres"}',inicio)
-            return
+        if (!(data.senha instanceof String) || data.senha.length() < 6) {
+            respond(exchange, 400, error("A senha deve ter pelo menos 6 caracteres", "INVALID_INPUT"), start); return
         }
-
-        String responseText
-        int status
-
+        if (!(data.pais instanceof String) || !data.pais.trim() ||
+                !(data.cep instanceof String) || !data.cep.trim()) {
+            respond(exchange, 400, error("País e CEP são obrigatórios", "INVALID_INPUT"), start); return
+        }
         try {
-            boolean cadastrada = companyController.cadastrarEmpresa(empresa)
-            status = cadastrada ? 201 : 500
-            responseText = cadastrada
-                    ? '{"mensagem":"Empresa cadastrada com sucesso"}'
-                    : '{"erro":"Erro ao persistir a empresa"}'
-        } catch (SQLException exception) {
-            if (exception.SQLState == "23505") {
-                status = 409
-                responseText = '{"erro":"Já existe um cadastro com esses dados"}'
-            } else {
-                status = 500
-                responseText = '{"erro":"Erro interno do servidor"}'
+            if (!controller.cadastrarEmpresa(data)) {
+                respond(exchange, 500, error("Erro interno do servidor", "INTERNAL_ERROR"), start); return
             }
+            respond(exchange, 201, [mensagem: "Empresa cadastrada com sucesso"], start)
+        } catch (java.sql.SQLException exception) {
+            respond(exchange, exception.SQLState == "23505" ? 409 : 500,
+                    error(exception.SQLState == "23505" ? "Cadastro já existente" : "Erro interno do servidor",
+                            exception.SQLState == "23505" ? "CONFLICT" : "INTERNAL_ERROR"), start)
         } catch (Exception ignored) {
-            status = 500
-            responseText = '{"erro":"Erro interno do servidor"}'
+            respond(exchange, 500, error("Erro interno do servidor", "INTERNAL_ERROR"), start)
         }
-
-        responder(exchange, status, responseText,inicio)
     }
 
-    private static void responder(
-            HttpExchange exchange,
-            int status,
-            String responseText,
-            long inicio
-    ) {
-        byte[] responseBytes = responseText.getBytes("UTF-8")
-
-        exchange.responseHeaders.set(
-                "Content-Type",
-                "application/json; charset=UTF-8"
-        )
-
-        exchange.sendResponseHeaders(status, responseBytes.length)
-
-        exchange.responseBody.withStream { out ->
-            out.write(responseBytes)
+    private AuthPrincipal optionalPrincipal(HttpExchange exchange) {
+        String token = AuthSupport.bearerToken(exchange)
+        if (!token) {
+            if (exchange.requestHeaders.getFirst("Authorization") != null) {
+                throw new AuthFailure(401, "Sessão inválida", "UNAUTHENTICATED")
+            }
+            return null
         }
-
-        HttpLogger.registrar(
-                exchange.requestMethod,
-                exchange.requestURI.path,
-                status,
-                inicio
-        )
+        requiredPrincipal(exchange)
+    }
+    private AuthPrincipal requiredPrincipal(HttpExchange exchange) {
+        String token = AuthSupport.bearerToken(exchange)
+        if (!token) throw new AuthFailure(401, "Autenticação necessária", "UNAUTHENTICATED")
+        def session = sessions.resolve(token)
+        if (!session.present) throw new AuthFailure(401, "Sessão inválida", "UNAUTHENTICATED")
+        AuthPrincipal principal = auth.validar(session.get())
+        if (!principal) {
+            sessions.revoke(token)
+            throw new AuthFailure(401, "Sessão inválida", "UNAUTHENTICATED")
+        }
+        principal
+    }
+    private static Map error(String message, String code) { [erro: message, codigo: code] }
+    private void respond(HttpExchange exchange, int status, Object body, long start) {
+        byte[] bytes = JsonOutput.toJson(body).getBytes("UTF-8")
+        exchange.responseHeaders.set("Content-Type", "application/json; charset=UTF-8")
+        exchange.sendResponseHeaders(status, bytes.length)
+        exchange.responseBody.withStream { it.write(bytes) }
+        HttpLogger.registrar(exchange.requestMethod, exchange.requestURI.path, status, start)
+    }
+    private static class AuthFailure extends RuntimeException {
+        final int status; final String code
+        AuthFailure(int status, String message, String code) { super(message); this.status = status; this.code = code }
     }
 }

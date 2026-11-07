@@ -31,26 +31,19 @@ class UserCompanyTest extends Specification {
 
     }
 
-    def "ToString mostra todos os dados"() {
+    def "ToString não expõe identificadores"() {
         given: "Uma pessoa juridica com dados"
         UserCompany pessoaJuridica = criaPessoaJuridicaPadrao()
 
         when: "chama o método toString"
         String texto = pessoaJuridica.toString()
 
-        then: "O texto contém todos os dados da pessoa juridica"
-        texto.containsIgnoreCase(dados)
-
-        where: "verifica os dados da pessoa juridica"
-        dados << ["Empresa X",
-                  "Empresa de tecnologia",
-                  "empresax@mail.com",
-                  "SP",
-                  "12345-678",
-                  "Java, Groovy, GitHub",
-                  "12.345.678/0001-90",
-                  "Brasil"
-        ]
+        then:
+        !texto.containsIgnoreCase("Empresa de tecnologia")
+        !texto.containsIgnoreCase("Empresa X")
+        !texto.containsIgnoreCase("empresax@mail.com")
+        !texto.containsIgnoreCase("12345-678")
+        !texto.containsIgnoreCase("12.345.678/0001-90")
     }
 
     def "Feed mostra dados gerais "() {

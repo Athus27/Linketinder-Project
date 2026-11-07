@@ -98,22 +98,39 @@ class CandidateDAOTest extends Specification {
         1 * connection.close()
     }
 
+    def "não registra mensagem bruta de falha SQL"() {
+        given:
+        String secret = "db-failure-email@example.test CPF52998224725 hash-falso"
+        connection.prepareStatement(_) >> {
+            throw new java.sql.SQLException(secret, "23514")
+        }
+        ByteArrayOutputStream output = new ByteArrayOutputStream()
+        PrintStream original = System.out
+        System.setOut(new PrintStream(output))
+
+        when:
+        Map resultado = new CandidateDAO().listarCandidatos()
+
+        then:
+        resultado == [candidatos: []]
+        !output.toString("UTF-8").contains(secret)
+        !output.toString("UTF-8").contains("db-failure-email@example.test")
+        !output.toString("UTF-8").contains("52998224725")
+
+        cleanup:
+        System.setOut(original)
+    }
+
     def "deve gerar feed anônimo de candidatos"() {
         given:
         CandidateDAO candidateDAO = new CandidateDAO()
 
-        candidateDAO.metaClass.listarCandidatos = {
-            [
-                    candidatos: [[
-                                         id          : 1,
-                                         nome        : "Fulano",
-                                         cpf         : "111.111.111-11",
-                                         email       : "fulano@email.com",
-                                         descricao   : "Desenvolvedor backend",
-                                         formacao    : "Ciência da Computação",
-                                         competencias: ["Groovy", "SQL"]
-                                 ]]
-            ]
+        candidateDAO.metaClass.listarPublicos = {
+            [[
+                id: 1,
+                formacao: "Ciência da Computação",
+                competencias: ["Groovy", "SQL"]
+            ]]
         }
 
         when:
@@ -121,7 +138,7 @@ class CandidateDAOTest extends Specification {
 
         then:
         resultado == [[
-                              descricao   : "Desenvolvedor backend",
+                              id          : 1,
                               formacao    : "Ciência da Computação",
                               competencias: ["Groovy", "SQL"]
                       ]]

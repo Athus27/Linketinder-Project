@@ -35,7 +35,9 @@ class CorsFilter extends Filter {
             String requestedMethod = exchange.requestHeaders.getFirst("Access-Control-Request-Method")
             String requestedHeaders = exchange.requestHeaders.getFirst("Access-Control-Request-Headers")
             boolean headersAllowed = !requestedHeaders || requestedHeaders.split(",").every {
-                it.trim().equalsIgnoreCase("Content-Type")
+                ["Content-Type", "Authorization"].any { allowed ->
+                    it.trim().equalsIgnoreCase(allowed)
+                }
             }
 
             if (origin != allowedOrigin || !allowedMethods.contains(requestedMethod) || !headersAllowed) {
@@ -44,7 +46,14 @@ class CorsFilter extends Filter {
             }
 
             exchange.responseHeaders.set("Access-Control-Allow-Methods", allowedMethods.join(", "))
-            exchange.responseHeaders.set("Access-Control-Allow-Headers", "Content-Type")
+            List<String> requested = requestedHeaders?.split(",")?.collect { it.trim() }
+                    ?.findAll { it }
+                    ?.unique() ?: ["Content-Type"]
+            String allowHeaders = requested.collect {
+                it.equalsIgnoreCase("content-type") ? "Content-Type" :
+                        it.equalsIgnoreCase("authorization") ? "Authorization" : it
+            }.join(", ")
+            exchange.responseHeaders.set("Access-Control-Allow-Headers", allowHeaders)
             terminar(exchange, 204)
             return
         }

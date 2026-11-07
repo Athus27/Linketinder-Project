@@ -2,12 +2,23 @@ package org.linketinder.dao.competence
 
 import org.linketinder.dao.connection.DatabaseConnectionFactory
 import org.linketinder.dao.connection.PostgresConnectionFactory
+import org.linketinder.dao.connection.ConnectionFactory
 
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
 class CandidateCompetenceDAO {
+    private final ConnectionFactory connectionFactory
+
+    CandidateCompetenceDAO() {
+        this(null)
+    }
+
+    CandidateCompetenceDAO(ConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory
+    }
+
     List<String> listarCompetenciasDoCandidato(int idCandidato) {
         Connection connection = null
         PreparedStatement statement = null
@@ -16,7 +27,8 @@ class CandidateCompetenceDAO {
         List<String> competencias = []
 
         try {
-            connection = DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection().getConnection()
+            connection = (connectionFactory ?:
+                    DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection()).getConnection()
 
             statement = connection.prepareStatement(
                     """

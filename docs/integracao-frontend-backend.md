@@ -1,115 +1,182 @@
 # Integração do Linketinder: frontend e backend
 
-Este documento descreve como o frontend TypeScript e o backend Groovy do Linketinder se comunicam, quais operações já usam a API e onde estão os limites atuais. O frontend fica no repositório [Linketinder-FrontEnd](https://github.com/Athus27/Linketinder-FrontEnd); o backend fica neste repositório.
+O [frontend TypeScript](https://github.com/Athus27/Linketinder-FrontEnd) usa
+DOM nativo e fetch, sem framework de interface. O backend deste repositório
+usa Groovy, HttpServer do JDK, JDBC e PostgreSQL, sem framework web.
 
-## Aplicações
+## Responsabilidades
 
-### Frontend
+O frontend roda pelo Vite, normalmente em http://localhost:5173.
+Main chama renderAll, que monta o cabeçalho, coordena a navegação e fornece
+às páginas funções de consulta. Formulários usam controllers/services; os
+services convertem os campos da interface para os contratos HTTP.
 
-O frontend é uma aplicação TypeScript executada pelo Vite, normalmente em http://localhost:5173. A interface é construída com a API do DOM e organizada em páginas, componentes, controllers e services. Os formulários e páginas chamam services, que fazem requisições HTTP com fetch; o navegador nunca acessa o PostgreSQL diretamente.
+O backend roda normalmente em http://localhost:8080. Router registra os
+contextos, CorsFilter trata a origem/preflight, handlers interpretam método,
+JSON e sessão, controllers coordenam as regras e DAOs acessam o banco com JDBC.
 
-Pontos principais:
-
-- src/view: formulários, cabeçalho e páginas.
-- src/controllers: coordena ações da interface.
-- src/services: envia requisições HTTP e adapta os contratos da API aos modelos do frontend.
-- src/renderAll.ts: cria controllers, monta o cabeçalho e troca as páginas.
-
-### Backend
-
-O backend é uma aplicação Groovy/JVM sem framework web, executada normalmente em http://localhost:8080. O HttpServer do JDK recebe HTTP; Router associa caminhos a handlers; handlers interpretam método, JSON e status; controllers chamam DAOs; os DAOs acessam PostgreSQL com JDBC.
-
-~~~text
-View no navegador
-  → Service (fetch/JSON)
-  → HttpServer + Router
-  → Handler
-  → Controller
-  → DAO (JDBC)
-  → PostgreSQL
-~~~
+O caminho de uma operação é: formulário/página → service HTTP (diretamente ou
+via controller do frontend) → HttpServer/Router e filtro → handler →
+controller do backend → DAO → PostgreSQL. Status e JSON retornam pelo caminho
+inverso. O navegador nunca acessa o banco diretamente.
 
 ## Operações integradas
 
-| Ação na interface | Requisição | Resultado |
+| Ação | Requisição | Resultado |
 |---|---|---|
-| Cadastrar candidato | POST /api/candidatos | Salva identidade, perfil e competências. |
-| Cadastrar empresa | POST /api/empresas | Salva identidade e perfil da empresa. |
-| Entrar | POST /api/auth/login | Confere senha e devolve ID, nome e tipo do perfil. |
-| Visualizar candidatos | GET /api/candidatos | Busca a lista no PostgreSQL. |
-| Gerenciar candidatos | GET /api/candidatos e DELETE /api/candidatos/{id} | Lista e exclui candidatos no PostgreSQL. |
-| Visualizar empresas | GET /api/empresas | Busca a lista no PostgreSQL. |
-| Visualizar vagas | GET /api/vagas | Busca a lista no PostgreSQL. |
-| Visualizar contadores | GET /api/empresas, /api/candidatos e /api/vagas | Mostra o total de registros retornados pelo backend. |
-| Gráfico de competências | GET /api/vagas e /api/candidatos | Conta candidatos por competência exigida na vaga selecionada. |
+| Cadastro de candidato | POST /api/candidatos | Identidade, perfil e competências no banco |
+| Cadastro de empresa | POST /api/empresas | Identidade e perfil no banco |
+| Login | POST /api/auth/login | Perfil e token de sessão |
+| Logout | POST /api/auth/logout | Token revogado e estado local limpo |
+| Candidatos | GET /api/candidatos | Projeção anônima ou contato autorizado após match |
+| Excluir próprio candidato | DELETE /api/candidatos/{id} | Exclusão autorizada pelo token do titular |
+| Empresas | GET /api/empresas | Projeção conforme ator/match |
+| Vagas | GET /api/vagas | Oportunidades sem identidade da empresa |
+| Vagas próprias | GET /api/vagas?minhas=true | Vagas da empresa autenticada ou vinculada ao recrutador |
+| Cadastro de vaga | POST /api/vagas | Empresa derivada da sessão |
+| Gestão de recrutadores | GET/POST /api/recrutadores e DELETE por ID | Empresa lista, cria e desativa seus colaboradores |
+| Curtida | POST /api/curtidas | Interesse no par candidato-vaga |
+| Matches | GET /api/matches | Contatos liberados para o ator autorizado |
+| Contadores/gráfico | GETs de empresas, candidatos e vagas | Quantidades e contagem de competências |
 
-O cadastro de vagas pela interface, edição de candidatos, edição/exclusão de empresas e vagas, curtidas e matches ainda não estão completamente integrados; parte desses dados continua em localStorage.
+Vagas, curtidas e matches usam a API como fonte de verdade. A demo
+LinketinderApp com localStorage permanece isolada: não é instanciada pelo
+main nem autoriza operações do fluxo real.
+
+## Cadastro e adaptação de dados
+
+Os formulários públicos coletam dados de candidato/empresa. Os controllers
+chamam os services, que convertem name, password e cepCode para nome, senha
+e cep. O candidato usa data no input yyyy-MM-dd, convertida para dd/MM/yyyy
+no POST. O recrutador usa yyyy-MM-dd diretamente.
+
+O backend grava os dados compartilhados em User e o perfil na tabela
+correspondente. O cadastro usa transação; as senhas são armazenadas como hash
+pgcrypto, não texto puro, e não voltam nas consultas. Sucesso responde 201;
+duplicidades de unicidade, 409 com erro genérico. A validação do recrutador
+exige adulto, CPF válido e senha de 8–72 bytes UTF-8 com letra e número;
+candidato e empresa mantêm o mínimo de seis caracteres.
+
+Os exemplos completos e as diferenças entre os contratos estão em
+[api.md](api.md); não use credenciais reais nos arquivos de requisição.
+
+## Login, sessão e menus
+
+1. LoginPage envia e-mail/senha por LoginController e LoginService.
+2. AuthDAO compara o hash e identifica candidate, company ou recruiter ativo.
+3. O servidor cria um token opaco com validade de quatro horas.
+4. LoginService guarda token e perfil somente em memória com SessionService.
+5. RenderAll recria Header com o usuário; cada perfil vê seu próprio menu.
+6. Chamadas protegidas recebem Authorization: Bearer com o token atual.
+7. O servidor resolve a sessão e revalida o usuário e seu vínculo no banco.
+
+Apenas esconder botões não protege a API. O servidor impede, por exemplo,
+um recrutador de criar vaga ou administrar outros recrutadores.
+
+Logout revoga o token e limpa o estado da interface. Em falha de rede, o
+frontend limpa o estado local e avisa que a revogação não foi confirmada.
+Recarregar a página perde o token local, mas não revoga por si só o token no
+servidor, que permanece sujeito ao TTL. Reiniciar a API invalida suas sessões.
+
+Ao receber 401 de uma chamada da sessão atual, SessionService limpa o estado
+e retorna à tela de login. Uma resposta antiga não deve apagar uma nova sessão.
+Recrutador desativado perde acesso inclusive com token emitido anteriormente.
+
+## Fluxo do recrutador e anonimato
+
+1. A empresa faz login e abre Gestão de recrutadores.
+2. Cadastra o colaborador; o vínculo vem da sessão, sem seletor de empresa.
+3. O recrutador faz login e consulta todas as vagas da própria empresa.
+   A área de recrutamento é descritiva, não filtra as vagas nesta versão.
+4. Analisa candidatos com ID técnico, competências e formação, sem nome,
+   e-mail, CPF, nascimento, endereço ou descrição livre antes do match.
+5. Escolhe uma vaga própria e curte o candidato; o voto representa a empresa.
+6. Outro recrutador da mesma empresa repetir não cria novo voto nem match.
+7. Quando o candidato também curte a mesma vaga, ocorre o match.
+
+Após o match, a empresa e seus recrutadores podem ver nome, sobrenome, e-mail
+e descrição profissional do candidato. Essa liberação vale para a empresa
+que tem match com o candidato em pelo menos uma de suas vagas, não para todos.
+O candidato consulta nome/e-mail da empresa em Matches; não recebe dados
+pessoais do recrutador. CPF, CNPJ, nascimento, senha e hash nunca aparecem
+nas projeções de consulta.
+
+CandidateService usa aliases Candidato #ID antes do match e só preenche
+contato quando autorizado pela API. CompanyService mantém aliases na
+listagem; MatchService fornece os contatos à página de matches.
+Campos profissionais livres não possuem moderação automática: use dados
+fictícios e não inclua informações identificáveis em textos públicos.
 
 ## Contadores e gráfico de competências
 
-A InfoSection consulta as três listas da API e mostra a quantidade de empresas, candidatos e vagas retornadas. Não usa os registros de demonstração do localStorage. Enquanto consulta, mostra carregamento; se uma consulta falhar, o contador correspondente fica indisponível, sem apresentar um zero enganoso.
+InfoSection consulta empresas, candidatos e vagas da API. Durante a consulta,
+mostra carregamento; falhas aparecem como indisponibilidade, não como zero.
+Não conta registros da demo local.
 
-Na página do gráfico, GraphSkillsPage recebe as funções de consulta dos controllers e carrega vagas e candidatos em paralelo. O seletor usa as vagas do banco; ao escolher uma vaga, CompetenceGraph usa Chart.js para mostrar quantos candidatos possuem cada competência exigida. Os services convertem competencias do JSON em skills nos modelos TypeScript.
+GraphSkillsPage recebe funções de busca e carrega vagas/candidatos em paralelo.
+Visitante e candidato consultam oportunidades públicas; empresa/recrutador
+usam vagas próprias. Chart.js mostra quantos candidatos possuem cada
+competência exigida pela vaga selecionada. A comparação é por texto exato,
+diferenciando maiúsculas e minúsculas; cada candidato conta uma vez por
+competência, mesmo com repetição na sua lista.
 
-Por exemplo: se a vaga exige Groovy, Java e SQL, e dois candidatos possuem Java, um possui Groovy e nenhum possui SQL, as barras mostram Groovy: 1, Java: 2 e SQL: 0. Cada candidato é contado uma única vez por competência. A comparação atual usa o texto exato da competência, diferenciando maiúsculas e minúsculas.
+Exemplo: uma vaga exige Groovy, Java e SQL. Se um candidato tem Groovy, dois
+têm Java e nenhum tem SQL, as barras são 1, 2 e 0. Sem candidatos, a contagem
+é zero; sem vagas, a página orienta cadastrar uma. Erros de consulta aparecem
+como erro, sem inserir dados fictícios para disfarçar a falha.
 
-Sem vagas, a página informa que é necessário cadastrar uma; sem candidatos, as barras ficam em zero. Falhas de consulta mostram uma mensagem de erro, sem substituir os dados por registros locais. As listas são carregadas ao abrir a página; não há atualização automática em tempo real. A contagem acontece no frontend sobre as listas completas recebidas, não em um endpoint agregado de estatísticas.
-
-## Fluxo de cadastro de empresa
-
-1. A pessoa preenche nome, e-mail, CNPJ, país, CEP, descrição e senha no formulário.
-2. CompanyController chama CompanyService.cadastrarEmpresa.
-3. O service transforma os nomes do formulário (name, password, cepCode) para o contrato do backend (nome, senha, cep) e envia JSON.
-4. CompanyHandler valida JSON e senha, CompanyController delega ao CompanyDAO e o DAO grava em User e Company dentro de uma transação.
-5. O backend responde 201 Created. Repetição de e-mail, CPF ou CNPJ retorna 409 Conflict com mensagem genérica.
-
-Exemplo de corpo enviado:
-
-~~~json
-{
-  "nome": "Tapetes Bolinho",
-  "email": "contato@example.com",
-  "cnpj": "67.890.123/0001-45",
-  "pais": "Brasil",
-  "cep": "01020-000",
-  "descricao": "Fabricante de tapetes personalizados",
-  "senha": "senha-com-6-ou-mais"
-}
-~~~
-
-As senhas têm no mínimo seis caracteres. O PostgreSQL armazena hash gerado por pgcrypto; senha em texto não é gravada nem devolvida.
-
-## Fluxo de login
-
-O formulário envia POST /api/auth/login com e-mail e senha. O DAO procura o e-mail sem diferenciar caixa nem espaços externos e compara a senha com o hash por crypt. Perfil de candidato ou empresa é identificado pela existência em User e Candidate ou Company.
-
-~~~json
-{
-  "email": "CONTATO@example.com",
-  "senha": "senha-com-6-ou-mais"
-}
-~~~
-
-Uma resposta válida contém somente os dados públicos usados pela interface:
-
-~~~json
-{
-  "id": 12,
-  "nome": "Tapetes Bolinho",
-  "tipo": "company"
-}
-~~~
-
-Credenciais inválidas recebem 401 e uma mensagem genérica. Campos ausentes ou JSON inválido recebem 400. A senha e o hash nunca são incluídos na resposta.
-
-O frontend mantém esse perfil apenas em memória: mostra o nome e o tipo no cabeçalho, abre o menu correspondente e limpa o estado ao sair ou atualizar a página. **Isto não é uma sessão autenticada:** o backend não emite token/cookie e os endpoints não exigem autenticação. A seleção de menu é somente comportamento de interface.
+Os dados são carregados ao abrir a página. Não há atualização em tempo real,
+paginação ou endpoint agregado de estatísticas; a contagem acontece no frontend
+sobre as listas recebidas.
 
 ## Configuração e execução local
 
-1. Inicie o PostgreSQL e configure app/src/main/resources/db.properties no backend, sem adicionar esse arquivo ao Git.
-2. Para um banco novo, execute sql/Linketinder.sql e habilite pgcrypto. Para banco existente, confira duplicidades com lower(trim(email)) e aplique sql/migrations/V1__unique_user_email_normalized.sql somente se a consulta retornar zero.
-3. Inicie o backend com ./gradlew run na raiz do projeto. O padrão é a porta 8080.
-4. No frontend, configure VITE_API_URL=http://localhost:8080 em .env e rode npm run dev.
-5. O backend permite por padrão a origem http://localhost:5173; se a porta/origem do Vite for diferente, configure FRONTEND_ORIGIN no backend.
+Use Java 21 compatível com o Gradle, Node.js/npm e PostgreSQL com pgcrypto.
 
-O CorsFilter permite que o navegador leia as respostas da origem configurada. CORS não substitui login nem autorização. Os contratos e exemplos individuais estão em [api.md](api.md), e os detalhes de CORS em [cors.md](cors.md).
+1. Inicie o PostgreSQL e configure app/src/main/resources/db.properties no
+   backend. Não versione esse arquivo nem exponha seu conteúdo.
+2. Para banco vazio, aplique sql/Linketinder.sql: o script completo inclui
+   pgcrypto e o estado de V1/V2. Não aplique as migrações depois dele.
+3. Para banco legado, confira o alvo e as duplicidades de e-mail, faça backup
+   protegido e aplique somente as migrações que faltam, em transação, conforme
+   o README. V2 não deve ser reaplicada; se o banco já está atualizado, não há
+   SQL a executar. Os schemas temporários dos testes não atualizam o banco local.
+4. Inicie o backend e o frontend em terminais separados.
+
+No backend:
+
+~~~bash
+./gradlew run
+# Inicia a API, normalmente em http://localhost:8080.
+~~~
+
+No frontend, configure .env na raiz:
+
+~~~dotenv
+VITE_API_URL=http://localhost:8080
+~~~
+
+~~~bash
+npm install
+# Instala as dependências do frontend.
+npm run dev
+# Inicia o Vite, normalmente em http://localhost:5173.
+~~~
+
+Se o frontend usar outra origem, ajuste FRONTEND_ORIGIN no backend e reinicie
+a API. VITE_API_URL indica o destino das requisições; FRONTEND_ORIGIN indica
+a origem autorizada a ler as respostas. Veja [cors.md](cors.md).
+
+## Validação e limites
+
+Backend: ./gradlew check executa testes unitários e de integração PostgreSQL.
+Frontend: npm run test:run executa testes unitários/DOM; a consulta real é
+opt-in com VITE_RUN_API_INTEGRATION=true. Esses testes não substituem testar
+os fluxos no navegador. Evidências e limites observados estão em
+[validacao.md](specs/recrutador/validacao.md).
+
+Editar candidatos e editar/excluir vagas não estão integrados. A API não
+expõe edição/exclusão de empresas nem PUT. Os formulários legados de edição
+e a demo isolada não significam que essas operações estejam disponíveis.
+O token em memória é perdido no reload; não há sessão persistente no browser.
+O projeto é local de estudo, sem alegação de prontidão para produção.

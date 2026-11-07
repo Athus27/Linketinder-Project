@@ -25,19 +25,19 @@ class UserCandidateTest extends Specification {
     }
 
 
-    def "ToString mostra todos os dados "() {
+    def "ToString não expõe identificadores"() {
         given:
         UserCandidate pessoaFisica = criarPessoafisicaPadrao()
         when:
         String texto = pessoaFisica.toString()
 
         then:
-        texto.containsIgnoreCase("Athus")
-        texto.containsIgnoreCase("athus@email.com")
-        texto.containsIgnoreCase("123.456.789-01")
-        texto.containsIgnoreCase("22")
+        !texto.containsIgnoreCase("Athus")
+        !texto.containsIgnoreCase("athus@email.com")
+        !texto.containsIgnoreCase("123.456.789-01")
+        !texto.containsIgnoreCase("39660-000")
         texto.containsIgnoreCase("Java, Groovy")
-        texto.containsIgnoreCase("MG")
+        !texto.containsIgnoreCase("MG")
 
 
     }
@@ -59,14 +59,10 @@ class UserCandidateTest extends Specification {
         String feedInfo = pessoaFisica.exibirInformacoesFeed()
 
         then:
-        !feedInfo.containsIgnoreCase(valorSensivel)
-
-        where: "Implementa o conceito de testes orientados a dados DDT, permite testar o mesmo comportamento com múltiplas entradas"
-            valorSensivel << [    //o operador << alimenta a variável com elementos da lista definida
-                    "Athus",
-                    "athus@email.com",
-                    "123.456.789-01"
-            ]
+        ["Athus", "athus@email.com", "123.456.789-01", "39660-000"].every {
+            !feedInfo.containsIgnoreCase(it)
+        }
+        !feedInfo.containsIgnoreCase("Desenvolvedor")
 
     }
 

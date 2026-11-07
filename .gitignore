@@ -26,6 +26,8 @@ db.properties
 !.env.example
 .superpowers/
 *.log
+*.dump
+*.backup
 
 # Respostas geradas pelo HTTP Client do IntelliJ
 **/httpRequests/

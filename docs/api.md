@@ -1,245 +1,360 @@
-# API
+# Contrato da API
 
-Base URL:
+Base local: http://localhost:8080. Requisições com corpo usam JSON e
+Content-Type: application/json. Os exemplos abaixo são ilustrativos, não
+credenciais ou cadastros existentes. Substitua os placeholders antes de testar.
 
-```text
-http://localhost:8080
-```
+## Endpoints e permissões
 
-## Visão geral
+| Método | Endpoint | Acesso |
+|---|---|---|
+| GET | /api/candidatos | Público, com projeção conforme sessão/match |
+| GET | /api/candidatos/{id} | Público, com projeção conforme sessão/match |
+| POST | /api/candidatos | Cadastro público |
+| DELETE | /api/candidatos/{id} | Somente o próprio candidato autenticado |
+| GET | /api/empresas | Público, com projeção conforme sessão/match |
+| POST | /api/empresas | Cadastro público |
+| GET | /api/vagas | Listagem pública |
+| GET | /api/vagas?minhas=true | Empresa ou recrutador; somente vagas da empresa vinculada |
+| POST | /api/vagas | Somente empresa autenticada |
+| POST | /api/auth/login | Público |
+| POST | /api/auth/logout | Revogação idempotente do token enviado |
+| GET, POST | /api/recrutadores | Somente empresa; gestão dos próprios recrutadores |
+| DELETE | /api/recrutadores/{id} | Somente empresa vinculada; desativação lógica |
+| POST | /api/curtidas | Candidato, empresa ou recrutador autenticado |
+| GET | /api/matches | Candidato, empresa ou recrutador; apenas seus matches |
 
-A API utiliza JSON nas requisições e respostas.
+Listagens retornam arrays; ausência de registros retorna []. Os GETs públicos
+não exigem token, mas um Authorization inválido não é tratado como visitante.
+Menus do frontend não substituem as verificações no servidor.
 
-| Método | Endpoint          | Descrição          |
-|--------|-------------------|--------------------|
-| `GET`  | `/api/candidatos` | Lista candidatos   |
-| `GET`  | `/api/candidatos/{id}` | Busca candidato |
-| `DELETE` | `/api/candidatos/{id}` | Exclui candidato |
-| `POST` | `/api/candidatos` | Cadastra candidato |
-| `GET`  | `/api/empresas`   | Lista empresas     |
-| `POST` | `/api/empresas`   | Cadastra empresa   |
-| `GET`  | `/api/vagas`      | Lista vagas        |
-| `POST` | `/api/vagas`      | Cadastra vaga      |
-| `POST` | `/api/auth/login` | Valida login       |
+## Login e sessão
 
-As listagens retornam `200 OK` com um array JSON. Quando não há registros, o retorno é `[]`.
+~~~http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "recrutador@example.test",
+  "senha": "<SENHA_DO_CADASTRO>"
+}
+~~~
+
+Exemplo de resposta 200 de recrutador:
+
+~~~json
+{
+  "token": "<TOKEN_RETORNADO_PELO_LOGIN>",
+  "id": 3,
+  "nome": "Recrutador Exemplo",
+  "tipo": "recruiter",
+  "idEmpresa": 6
+}
+~~~
+
+Os tipos são candidate, company e recruiter. Empresa também recebe idEmpresa;
+candidato não recebe esse campo. Senha, hash e documentos não são retornados.
+
+O token é opaco, gerado pelo servidor e armazenado em memória com validade
+de quatro horas. Envie-o nas operações protegidas:
+
+~~~http
+GET /api/recrutadores
+Authorization: Bearer <TOKEN_DA_EMPRESA>
+~~~
+
+O servidor resolve a sessão e revalida o usuário no banco. Ator e empresa são
+derivados dessa identidade, não de seletores ou IDs livres enviados pelo cliente.
+Expiração, revogação e desativação do recrutador impedem o acesso; reiniciar
+a API invalida as sessões existentes.
+
+~~~http
+POST /api/auth/logout
+Authorization: Bearer <TOKEN>
+~~~
+
+Logout retorna 204 sem corpo e pode ser repetido, inclusive sem token válido.
+Credenciais incorretas no login retornam 401; corpo inválido ou campos ausentes,
+400. Erros usam mensagem genérica sem revelar dados do cadastro.
 
 ## Candidatos
 
-### Listar candidatos
+### Consulta e anonimato
 
-```http
-GET /api/candidatos
-```
+GET /api/candidatos retorna, antes do match:
 
-Resposta:
-
-```json
+~~~json
 [
-{
-"id": 1,
-"nome": "Fulano",
-"sobrenome": "Silva",
-"dataNascimento": "2002-01-15",
-"cpf": "111.111.111-11",
-"descricao": "Desenvolvedor backend",
-"email": "fulano@email.com",
-"formacao": "Engenharia da Computação",
-"pais": "Brasil",
-"cep": "01010-000",
-"competencias": ["Java", "Groovy"]
-}
+  {
+    "id": 1,
+    "competencias": ["Groovy", "Java"],
+    "formacao": "Tecnologia"
+  }
 ]
-```
+~~~
 
-A senha nunca é incluída na resposta.
+GET /api/candidatos/1 retorna um objeto com a mesma projeção. Nome, sobrenome,
+e-mail, descrição livre, documentos, nascimento e endereço não são liberados
+nessa consulta anônima. Formacao pode ser null.
 
-### Buscar por ID
+Para uma empresa que possui match com esse candidato em pelo menos uma de
+suas vagas, ou um recrutador ativo dessa empresa, a projeção também contém:
 
-`GET /api/candidatos/1` retorna um objeto com os campos da listagem, sem senha. A data de resposta usa `yyyy-MM-dd`. ID não numérico retorna `400`; candidato inexistente retorna `404`. POST na rota com ID retorna `405`.
+~~~json
+{
+  "id": 1,
+  "competencias": ["Groovy", "Java"],
+  "formacao": "Tecnologia",
+  "nome": "Pessoa Exemplo",
+  "sobrenome": "Teste",
+  "email": "candidato@example.test",
+  "descricao": "Descrição profissional fictícia"
+}
+~~~
 
-### Excluir por ID
+A liberação é específica da empresa com match, não pública. CPF, nascimento,
+endereço, senha e hash continuam ausentes. ID inválido retorna 400; candidato
+não encontrado, 404.
 
-`DELETE /api/candidatos/1` exclui o candidato e seus vínculos tratados pelo DAO. Sucesso retorna `204 No Content`; ID inexistente retorna `404`; ID inválido retorna `400`. Não envie a requisição sem confirmar que o ID pode ser removido.
+### Cadastro
 
-O endpoint ainda não exige autenticação. Como o DAO converte falhas de busca por ID em `null`, uma indisponibilidade do banco durante a verificação pode ser apresentada como `404`; isso é uma limitação da camada de persistência atual.
-
-### Cadastrar candidato
-
-A data enviada no cadastro usa `dd/MM/yyyy`, diferente do formato das consultas.
-
-```http
+~~~http
 POST /api/candidatos
 Content-Type: application/json
-```
 
-Corpo:
-
-```json
 {
-"nome": "Fulano",
-"sobrenome": "Silva",
-"dataNascimento": "15/01/2002",
-"email": "fulano@email.com",
-"cpf": "111.111.111-11",
-"pais": "Brasil",
-"cep": "01010-000",
-"descricao": "Desenvolvedor backend",
-"formacao": "Engenharia da Computação",
-"senha": "123456",
-"competencias": ["Java", "Groovy"]
+  "nome": "Pessoa Exemplo",
+  "sobrenome": "Teste",
+  "dataNascimento": "15/01/2002",
+  "email": "candidato@example.test",
+  "cpf": "<CPF_FICTICIO_UNICO>",
+  "pais": "Brasil",
+  "cep": "01010-000",
+  "descricao": "Descrição profissional fictícia",
+  "formacao": "Tecnologia",
+  "senha": "<SENHA_COM_6_OU_MAIS_CARACTERES>",
+  "competencias": ["Groovy", "Java"]
 }
-```
+~~~
 
-Resposta de sucesso:
+A data de cadastro usa dd/MM/yyyy. País e CEP são obrigatórios; a senha
+mantém o mínimo de seis caracteres. O DAO grava User, Candidate e vínculos
+de competências em transação. Sucesso retorna 201:
 
-```json
-{
-"mensagem": "Candidato cadastrado com sucesso"
-}
-```
+~~~json
+{"mensagem":"Candidato cadastrado com sucesso"}
+~~~
 
-Senha precisa ter pelo menos 6 caracteres. Se e-mail, CPF ou CNPJ já estiver cadastrado, o endpoint retorna `409 Conflict` com mensagem genérica, sem revelar qual dado coincidiu.
+Conflito de unicidade retorna 409 com mensagem genérica.
+
+### Exclusão
+
+~~~http
+DELETE /api/candidatos/1
+Authorization: Bearer <TOKEN_DO_PROPRIO_CANDIDATO>
+~~~
+
+Exclusão é destrutiva e retorna 204 sem corpo quando concluída. Sem sessão
+válida, retorna 401; candidato tentando excluir outro ID ou outro perfil,
+403. Confira o ID antes de testar. A remoção abrange os vínculos tratados
+pelo DAO.
 
 ## Empresas
 
-### Listar empresas
+GET /api/empresas retorna [{ "id": 6 }] antes do match. Para o candidato com
+match com uma vaga dessa empresa, também pode retornar nome e email.
+CNPJ, endereço e senha/hash não são expostos.
 
-```http
-GET /api/empresas
-```
-
-Resposta:
-
-```json
-[
-{
-"id": 6,
-"nome": "Tech Solutions",
-"cnpj": "12.345.678/0001-90",
-"descricao": "Empresa de tecnologia",
-"email": "contato@techsolutions.com",
-"pais": "Brasil",
-"cep": "01001-000"
-}
-]
-```
-
-A senha nunca é incluída na resposta.
-
-### Cadastrar empresa
-
-```http
+~~~http
 POST /api/empresas
 Content-Type: application/json
-```
 
-Corpo:
-
-```json
 {
-"nome": "Tech Solutions",
-"email": "contato@techsolutions.com",
-"cnpj": "12.345.678/0001-90",
-"pais": "Brasil",
-"cep": "01001-000",
-"descricao": "Empresa de tecnologia",
-"senha": "123456"
+  "nome": "Empresa Exemplo",
+  "email": "empresa@example.test",
+  "cnpj": "<CNPJ_FICTICIO_UNICO>",
+  "pais": "Brasil",
+  "cep": "01010-000",
+  "descricao": "Empresa fictícia de tecnologia",
+  "senha": "<SENHA_COM_6_OU_MAIS_CARACTERES>"
 }
-```
+~~~
 
-Resposta de sucesso:
+País e CEP são obrigatórios; senha mínima de seis caracteres. Sucesso retorna
+201 com mensagem de cadastro. E-mail é único considerando lower(trim(email));
+conflitos de unicidade retornam 409.
 
-```json
-{
-"mensagem": "Empresa cadastrada com sucesso"
-}
-```
+## Recrutadores
 
-Senha precisa ter pelo menos 6 caracteres. E-mail é único sem diferenciar caixa ou espaços externos; duplicidade retorna `409 Conflict`.
+A empresa autenticada cadastra o recrutador vinculado a ela. Não existe
+cadastro público nem escolha livre de empresa no frontend.
 
-## Login
-
-```http
-POST /api/auth/login
+~~~http
+POST /api/recrutadores
+Authorization: Bearer <TOKEN_DA_EMPRESA>
 Content-Type: application/json
-```
 
-Corpo:
-
-```json
 {
-  "email": "contato@techsolutions.com",
-  "senha": "123456"
+  "nome": "Recrutador Exemplo",
+  "area": "TI",
+  "descricao": "Perfil fictício para demonstração",
+  "email": "recrutador@example.test",
+  "cpf": "<CPF_FICTICIO_VALIDO_E_UNICO>",
+  "dataNascimento": "1990-01-01",
+  "senha": "<SENHA_RECRUTADOR>"
 }
-```
+~~~
 
-Em sucesso, retorna `200 OK` com `{ "id": 6, "nome": "Tech Solutions", "tipo": "company" }`. Para candidato, `tipo` é `candidate`. Credenciais inválidas retornam `401` com mensagem genérica; campos ausentes ou JSON inválido retornam `400`. A resposta não inclui e-mail nem senha/hash. Esse endpoint não cria sessão/token nem autoriza chamadas subsequentes; o tipo retornado serve ao frontend para escolher o menu.
+Substitua o CPF por um valor sintético válido e a senha por um valor com
+8–72 bytes UTF-8, ao menos uma letra e um número. Nome tem 2–120 caracteres,
+área 2–100 e descrição 1–2000, após remoção de espaços externos. O e-mail
+é normalizado e único; CPF rejeita sequências repetidas e dígitos verificadores
+incorretos. Nascimento usa yyyy-MM-dd, com data real e idade mínima de 18 anos.
+A senha é armazenada com hash pgcrypto, nunca em texto puro.
+
+POST retorna 201 com a projeção de gestão; GET retorna uma lista:
+
+~~~json
+[
+  {
+    "id": 3,
+    "nome": "Recrutador Exemplo",
+    "email": "recrutador@example.test",
+    "area": "TI",
+    "descricao": "Perfil fictício para demonstração",
+    "idEmpresa": 6,
+    "ativo": true
+  }
+]
+~~~
+
+CPF, nascimento, senha e hash não aparecem. DELETE /api/recrutadores/3
+desativa logicamente e retorna 204; o cadastro permanece e o recrutador
+não pode autenticar nem continuar usando tokens anteriores. ID inexistente
+ou de outra empresa retorna 404. Candidato e recrutador recebem 403 na gestão.
+Campos inválidos retornam 400; conflitos, 409.
 
 ## Vagas
 
-### Listar vagas
+GET /api/vagas retorna:
 
-```http
-GET /api/vagas
-```
-
-Resposta:
-
-```json
+~~~json
 [
-{
-"id": 1,
-"idEmpresa": 6,
-"empresa": "Tech Solutions",
-"titulo": "Desenvolvedor Groovy",
-"descricao": "Desenvolvimento de APIs",
-"localVaga": "São Paulo - SP",
-"competencias": ["Groovy", "Java"]
-}
+  {
+    "id": 1,
+    "idEmpresa": 6,
+    "titulo": "Desenvolvedor Groovy",
+    "descricao": "Desenvolvimento de APIs",
+    "competencias": ["Groovy", "Java"]
+  }
 ]
-```
+~~~
 
-### Cadastrar vaga
+Não inclui nome/e-mail da empresa, CNPJ ou localVaga. Empresa e recrutador
+consultam suas vagas com GET /api/vagas?minhas=true e Bearer; nesse endpoint,
+visitante e candidato recebem 401 na implementação atual.
 
-```http
+~~~http
 POST /api/vagas
+Authorization: Bearer <TOKEN_DA_EMPRESA>
 Content-Type: application/json
-```
 
-Corpo:
-
-```json
 {
-"idEmpresa": 6,
-"titulo": "Desenvolvedor Groovy",
-"descricao": "Desenvolvimento de APIs",
-"localVaga": "São Paulo - SP",
-"competencias": ["Groovy", "Java"]
+  "titulo": "Desenvolvedor Groovy",
+  "descricao": "Desenvolvimento de APIs",
+  "localVaga": "Remoto",
+  "competencias": ["Groovy", "Java"]
 }
-```
+~~~
 
-Resposta de sucesso:
+A empresa vem da sessão. Título, descrição e local são obrigatórios;
+competencias deve ser uma coleção de textos não vazios (a coleção pode estar
+vazia). Sucesso retorna 201 com mensagem de cadastro. Recrutador não pode
+cadastrar vaga e recebe 403. Enviar idEmpresa diferente da sessão também
+retorna 403.
 
-```json
-{
-  "mensagem": "Vaga cadastrada com sucesso"
-}
-```
+## Curtidas e matches
 
-## Status HTTP
+O candidato informa somente a vaga:
 
-| Status                      | Descrição                      |
-|-----------------------------|--------------------------------|
-| `200 OK`                    | Consulta realizada com sucesso |
-| `201 Created`               | Registro criado                |
-| `400 Bad Request`           | JSON, senha ou ID inválido      |
-| `401 Unauthorized`          | E-mail/senha inválidos          |
-| `409 Conflict`              | Dado único já cadastrado        |
-| `404 Not Found`             | Rota ou candidato não encontrado |
-| `403 Forbidden`             | Origem ou preflight CORS recusado |
-| `204 No Content`            | Preflight CORS aceito          |
-| `405 Method Not Allowed`    | Método HTTP não permitido      |
-| `500 Internal Server Error` | Erro interno do servidor       |
+~~~http
+POST /api/curtidas
+Authorization: Bearer <TOKEN_DO_CANDIDATO>
+Content-Type: application/json
 
-Cadastros concluídos retornam `201`. Ainda não há PUT. JSON válido não garante validação completa de todos os campos; falhas de persistência podem retornar `500`. Alguns DAOs capturam erros de consulta e devolvem lista vazia ou `null`, podendo ocultar uma falha do banco como ausência de dados.
+{"idVaga":1}
+~~~
+
+Empresa ou recrutador informa a vaga própria e o candidato:
+
+~~~http
+POST /api/curtidas
+Authorization: Bearer <TOKEN_DA_EMPRESA_OU_RECRUTADOR>
+Content-Type: application/json
+
+{"idVaga":1,"idCandidato":1}
+~~~
+
+Resposta 200:
+
+~~~json
+{"sucesso":true,"jaCurtiu":false,"deuMatch":false}
+~~~
+
+A curtida do recrutador representa sua empresa. Repetir, inclusive com outro
+recrutador da mesma empresa, não duplica o voto; a primeira autoria é preservada.
+O match ocorre quando candidato e empresa curtem o mesmo par candidato-vaga.
+IDs de ator forjados são recusados; recurso inexistente ou vaga alheia recebe 404.
+
+GET /api/matches exige Bearer. Para o candidato, retorna os contatos da empresa:
+
+~~~json
+[
+  {
+    "idCandidato": 1,
+    "idVaga": 1,
+    "dataMatch": "2026-11-07T12:00:00Z",
+    "empresa": {
+      "id": 6,
+      "nome": "Empresa Exemplo",
+      "email": "empresa@example.test"
+    }
+  }
+]
+~~~
+
+Para empresa/recrutador, cada item possui candidato, com id, nome, sobrenome,
+email e descricao, em vez de empresa. Só são retornados os matches do ator
+ou empresa autorizada. Data legada ausente permanece null; a interface exibe
+“Data não registrada”. Dados pessoais do recrutador não são liberados ao
+candidato; documentos, nascimento, senha e hash nunca são retornados.
+
+## Status e limites
+
+| Status | Significado |
+|---|---|
+| 200 | Consulta, login ou curtida concluída |
+| 201 | Cadastro concluído |
+| 204 | Logout, exclusão, desativação ou preflight aceito; sem corpo |
+| 400 | JSON, campos ou IDs inválidos |
+| 401 | Credenciais ou sessão inválidas/ausentes |
+| 403 | Papel/ator não permitido ou CORS recusado |
+| 404 | Rota/recurso não encontrado ou vínculo alheio ocultado |
+| 405 | Método não permitido, conforme o handler |
+| 409 | Conflito de unicidade |
+| 500 | Falha interna |
+
+Exemplo de erro de autorização:
+
+~~~json
+{"erro":"Papel não permitido","codigo":"FORBIDDEN"}
+~~~
+
+O filtro CORS pode retornar erro sem JSON. Ainda não há PUT nem exclusão de
+empresas/vagas expostos na API. A validação de candidato/empresa não é tão
+completa quanto a do recrutador; falhas de persistência podem retornar 500.
+É uma aplicação de estudo, sem paginação ou moderação automática do texto
+profissional informado por usuários. Use dados fictícios, inclusive em descrições.
+
+Veja também [CORS](cors.md), [integração](integracao-frontend-backend.md) e
+[spec do recrutador](specs/recrutador/spec.md).

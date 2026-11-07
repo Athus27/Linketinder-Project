@@ -1,29 +1,90 @@
 # PROMPTS — K2-T5 IA essentials / Recrutador
 
+## Revisão e acompanhamento
+
+O objetivo foi experimentar o desenvolvimento de uma funcionalidade real
+com SDD (Specification-Driven Development) e múltiplos agentes de IA,
+aplicando o fluxo de especificação, planejamento, implementação incremental
+e revisão ao Linketinder.
+
+O trabalho foi organizado entre produção pelo agente implementador e
+orquestração/revisão pelo agente revisor. Na etapa final, o agente revisor
+também realizou correções. Os registros detalham essa divisão e as verificações.
+
+O acompanhamento do usuário incluiu testes exploratórios com os perfis de
+candidato e recrutador, análise da navegação por papel e estudo dos trechos
+responsáveis pela autenticação, atualização da interface e autorização no
+backend. Foram utilizados dados fictícios para facilitar a demonstração
+dos fluxos, sem expor credenciais neste relatório.
+
+As evidências automatizadas e manuais, os resultados observados e as
+limitações estão registrados em `docs/specs/recrutador/validacao.md`.
+
 ## Correções e validação final local — 07/11/2026
 
-Após a cota do Copilot se esgotar, Athus pediu: “resolva essas pendencias e
-valide”. O Codex executou a correção de visibilidade CSS e seu teste de
-regressão, aplicou a V2 existente com backup e transação e validou os fluxos
-HTTP/navegador. A implementação das tarefas T1–T5 continua sendo do Copilot,
-com revisão Codex; estas correções finais são de autoria Codex. Não atribuir
-todo o trabalho ao Copilot. Detalhes e limites em
+### Prompts de modelagem, geração SQL e documentação
+
+Os itens abaixo são sínteses dos pedidos utilizados nesta etapa, não
+transcrições literais da conversa:
+
+1. **Modelar o estado atual:** analisar o schema e as migrações e produzir
+   DBML para o dbdiagram, incluindo recrutadores, competências e autoria
+   da curtida, sem criar relacionamentos inexistentes no banco.
+2. **Revisar o export:** comparar o SQL gerado pelo dbdiagram com o script
+   versionado e as migrações, identificando regras ausentes, como a trigger
+   de normalização de CPF, antes de atualizar a criação do banco.
+3. **Validar os caminhos:** consolidar o schema para banco vazio, preservar
+   as migrações para bases existentes e testar a equivalência em schemas
+   temporários, sem recriar nem alterar os dados do banco de desenvolvimento.
+4. **Atualizar a documentação:** incorporar o SVG exportado ao README,
+   distinguir criação do zero e upgrade, atualizar contratos HTTP, CORS e
+   integração, e registrar a revisão pelos papéis dos agentes.
+
+Resultado: script completo atualizado, teste de equivalência aprovado,
+SVG em `docs/derLinketinder.svg` e documentação alinhada aos dois caminhos.
+O arquivo DBML vazio foi removido; o diagrama não substitui triggers ou
+constraints executáveis do SQL. As evidências de teste permanecem registradas.
+
+### Atualização da criação do banco
+
+O usuário forneceu a exportação SQL/diagrama do dbdiagram e solicitou a
+atualização do script documentado. O agente revisor consolidou V1/V2 em
+`sql/Linketinder.sql` para bancos vazios, preservando a trigger de CPF não
+incluída no export e as constraints das migrações. O caminho de upgrade
+permaneceu nas migrações originais, sem alteração do banco local existente.
+Foi mantida uma fixture histórica apenas nos recursos de integração.
+
+O teste de equivalência falhou com o script antigo e passou após a atualização.
+Ele compara colunas, defaults, índices, constraints e trigger entre criação
+do zero e upgrade legado. A suíte final passou com 122 testes unitários e
+15 de integração. README e documento de integração agora distinguem os dois
+caminhos; não se deve reaplicar V2 sobre o schema completo.
+
+Na etapa final, foi solicitada a resolução das pendências e sua validação.
+O agente revisor corrigiu a visibilidade CSS com teste de regressão, aplicou
+a V2 com backup e transação e validou os fluxos HTTP/navegador. A implementação
+principal de T1–T5 foi realizada pelo agente implementador, com revisão;
+as correções finais também tiveram implementação pelo agente revisor.
+Detalhes e limites em
 `docs/specs/recrutador/validacao.md`. Sem entrega, PR ou merge.
 
 ## Autoria e papéis
 
-- **Copilot CLI:** autoria dos artefatos desta etapa e, futuramente, do código
-  solicitado; deve trabalhar sobre a implementação real e não inventar
-  garantias.
-- **Codex:** orquestrador e revisor.
-- **Usuário:** delegou ao Copilot as decisões rotineiras de levantamento,
+- **Agente implementador:** produção dos artefatos iniciais e da implementação
+  principal da funcionalidade.
+- **Agente revisor:** orquestração, revisão técnica, verificações e implementação
+  das correções finais indicadas nos registros.
+- **Usuário:** delegou ao agente implementador as decisões rotineiras de levantamento,
   redação e validação dos artefatos.
-- **Tutor:** ainda não aprovou as decisões de negócio que deverão constar da
-  spec. Nenhuma spec ou plano de feature foi escrito nesta etapa.
+- **Tutor:** não há aprovação registrada das decisões de negócio da spec.
+
+Os registros seguintes descrevem o estado de cada sessão. Pendências e
+ausência de commits citadas neles referem-se àquela etapa histórica, não
+necessariamente ao estado atual.
 
 ## Registro da sessão — etapa 1
 
-ID da sessão Copilot: `16beded6-8dbc-4461-a02f-534d3027c8df`.
+ID da sessão agente implementador: `16beded6-8dbc-4461-a02f-534d3027c8df`.
 
 Resumo fiel do pedido: preparar contexto, skill, changelogs, prompts e
 levantamento factual do desafio de recrutador em backend e frontend; explorar
@@ -38,8 +99,7 @@ Arquivos criados nesta sessão:
 - `PROMPTS.md`;
 - `docs/specs/recrutador/levantamento.md`.
 
-Verificações realmente executadas: inspeção do status limpo e da branch
-`codex/preparacao-recrutador` nos dois repositórios; leitura seletiva de
+Verificações realmente executadas: inspeção do status limpo nos dois repositórios; leitura seletiva de
 README, manifests, fontes de modelos/DAOs/controllers/handlers, telas,
 services, app local, testes e documentação; não foram executados Gradle,
 Vitest, build, servidor ou banco nesta etapa. Não foram lidos `.env`,
@@ -51,16 +111,16 @@ resultados não observados.
 ## Registro da revisão da etapa 1
 
 Nesta revisão foram corrigidas apenas as referências de `plano.md`, a redação
-sobre revisão técnica pelo Codex sob delegação de Athus e decisões de negócio
+sobre revisão técnica pelo agente revisor sob delegação de Athus e decisões de negócio
 pendentes de validação humana/Tutor, as orientações de schema/migrações/banco
 de testes no `AGENTS.md` do backend e o registro desta sessão. Não foram
 alterados código, spec, plano ou banco, nem feitos commits.
 
 ## Respostas propostas às perguntas obrigatórias — etapa 2
 
-Estas respostas são decisões propostas pelo Codex sob delegação de Athus para
+Estas respostas são decisões propostas pelo agente revisor sob delegação de Athus para
 redação da spec. O Tutor ainda não as aprovou; não atribuir essa aprovação ao
-Tutor nem ao usuário. A revisão técnica do Codex e o commit da spec devem
+Tutor nem ao usuário. A revisão técnica do agente revisor e o commit da spec devem
 ocorrer antes de qualquer código.
 
 1. **Atores e ciclo de vida:** a empresa autenticada cria, lista e desativa
@@ -119,7 +179,7 @@ ocorrer antes de qualquer código.
 ## Registro da sessão — plano da feature
 
 Sessão atual: leitura manual de `skills/feature-com-spec/SKILL.md`, da spec
-revisada e dos dois repositórios na branch `codex/recrutador`. Baseline recebido:
+revisada e dos dois repositórios. Baseline recebido:
 backend 94, frontend 31 + build; Postgres ligado. Foram apenas inspecionados
 arquivos e escritos `docs/specs/recrutador/plano.md`, este registro e o
 `CHANGELOG.md`; não foram executados testes, não foram lidos segredos e não
@@ -144,13 +204,13 @@ testes reais.
 - Issue: https://github.com/Athus27/Linketinder-Project/issues/3
 - Sessão da issue: `8d5762a3-ba6d-4a38-81bf-e043305f0332`.
 - Preparação já commitada: backend `d1ab06e` e frontend `3fbb374`.
-- Após estes ajustes, a spec está revisada tecnicamente pelo Codex sob
+- Após estes ajustes, a spec está revisada tecnicamente pelo agente revisor sob
   delegação explícita; não está aprovada pelo Tutor. A validação de negócio
   com Athus/Tutor permanece pendente antes da entrega.
 
 ## Registro da T2 — sessão e gestão do recrutador
 
-Implementação realizada pelo Copilot sem commit, push, PR, merge ou alteração
+Implementação realizada pelo agente implementador sem commit, push, PR, merge ou alteração
 do schema público. A T1 existente foi confirmada no histórico como commit
 `82ea1a2` (`feat: adicionar persistência e modelo de recrutadores`).
 
@@ -169,7 +229,7 @@ existirem. GREEN observado: 107 testes unitários passaram inicialmente, e o flu
 final `./gradlew check --rerun-tasks --console=plain` passou. Não foram
 executados frontend, T3, migrações no schema público ou operações GitHub.
 
-Revisão Codex pré-commit: o modo inseguro sem `SessionStore` foi removido e o
+Revisão agente revisor pré-commit: o modo inseguro sem `SessionStore` foi removido e o
 construtor rejeita `null`; login sempre emite token e allowlist. O boundary do
 `RecruiterHandler` agora converte indisponibilidade de auth/listagem em
 `{erro,codigo:INTERNAL_ERROR}` genérico. IDs não positivos, overflow e
@@ -185,8 +245,8 @@ passou com 130 testes unitários e 11 testes de integração.
 
 ## Registro da T3 — anonimato, curtidas, matches e autorizações
 
-Execução interrompida anteriormente pelo Codex durante revisão porque havia
-tentativa de preservar bypasses de segurança para testes legados. O Copilot
+Execução interrompida anteriormente pelo agente revisor durante revisão porque havia
+tentativa de preservar bypasses de segurança para testes legados. O agente implementador
 corrigiu a implementação sem commit, push, PR ou merge: removidos todos os
 caminhos de compatibilidade sem sessão nos handlers de candidato, empresa e
 vaga; testes legados foram ajustados para allowlist/autenticação; nenhum
@@ -218,8 +278,7 @@ ficam para T6.
 
 ## Registro da T1 — persistência V2 e modelo
 
-Sessão Copilot: `167e783c-7030-4cbe-b90b-3f2631e1a8d3`. Branch:
-`codex/recrutador`. O RED foi executado antes da implementação com schema
+Sessão agente implementador: `167e783c-7030-4cbe-b90b-3f2631e1a8d3`. O RED foi executado antes da implementação com schema
 temporário contendo apenas base+V1; `RecruiterMigrationTest` falhou porque a
 tabela `Recruiter` não existia. O GREEN foi executado após a V2, modelo
 `Recruiter` e fixtures: 6 testes passaram, cobrindo relação User 1:1 e
@@ -234,8 +293,7 @@ houve commit, push, merge, PR ou leitura de fontes frontend.
 
 ## Registro da T4 — frontend: sessão, services e contratos
 
-Implementação realizada no repositório `Linketinder-FrontEnd`, branch
-`codex/recrutador`, sem commit, push, PR, merge ou alteração no backend.
+Implementação realizada no repositório `Linketinder-FrontEnd`, sem commit, push, PR, merge ou alteração no backend.
 Foram adicionados estado/sessão em memória, helper de erros HTTP, autenticação
 Bearer por requisição, logout com limpeza garantida, tratamento de 401 e
 services/DTOs de recrutador, curtida, match e vaga. Os services existentes
@@ -250,7 +308,7 @@ recrutador CRUD, vaga/match e anonimato. A integração
 `npm run test:run` com 39 testes aprovados e 1 teste opt-in ignorado; `npm run
 build` aprovado. A UI real e a integração externa permanecem para T5/T6.
 
-### Revisão Codex da T4
+### Revisão agente revisor da T4
 
 Execução `7c0e2c96-a813-48c1-a074-2f0d0e8ffda3`: sem commit, push, PR ou
 merge. `LikeService` agora valida e devolve o DTO completo de curtida;
@@ -264,7 +322,7 @@ pendentes.
 
 ## Registro da T5 — frontend: telas reais protegidas
 
-Autoria Copilot no `Linketinder-FrontEnd`, sem commit, push, PR, merge ou
+Autoria agente implementador no `Linketinder-FrontEnd`, sem commit, push, PR, merge ou
 alteração de código backend. Foram lidos por arquivo `AGENTS.md`,
 `docs/specs/recrutador/spec.md`, `plano.md`, `levantamento.md` e os contratos
 T4 necessários; não foi usada skill CLI indisponível. `main.ts` deixou de
@@ -279,7 +337,7 @@ o backend. T6 (E2E, navegador real, README final e entrega) permanece
 pendente. Validação final: `npm run test:run` — 15 arquivos, 62 testes
 aprovados e 1 teste opt-in ignorado; `npm run build` aprovado.
 
-### Revisão Codex T5
+### Revisão agente revisor T5
 
 Foram corrigidos, sem tocar T6 ou fazer commit, os fluxos de alvo de curtida,
 aliases técnicos, allowlist pós-match, feed real do recrutador, gestão de

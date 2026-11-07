@@ -11,7 +11,7 @@ class RecruiterMigrationTest extends Specification {
 
     def setup() {
         fixture = new SyntheticDatabaseFixture(
-                DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection()
+                DatabaseConnectionFactory.getInstance().getFactoryDatabaseConnection(), true
         )
         connection = fixture.connectionFactory.getConnection()
     }

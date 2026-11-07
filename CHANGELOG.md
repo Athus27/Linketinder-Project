@@ -4,6 +4,8 @@
 
 ### Adicionado
 
+- SVG do modelo atual do banco no README e registro dos prompts de modelagem,
+  revisão do export SQL e validação de criação/upgrade por papéis dos agentes.
 - T3: projeções públicas anonimizadas, autorização obrigatória em operações
   protegidas, rotas de curtida/match e vagas próprias, com teste HTTP real,
   teste PostgreSQL de concorrência e preservação do autor da primeira curtida.
@@ -24,6 +26,10 @@
 
 ### Modificado
 
+- Script completo `sql/Linketinder.sql` atualizado com recrutadores e regras
+  de V1/V2, preservando a trigger de CPF ausente do SQL exportado pelo dbdiagram.
+  Criação do zero e upgrade legado agora têm caminhos separados na documentação
+  e são comparados por teste de integração, sem recriar o banco existente.
 - T3: todos os DAOs usados pela API recebem a fábrica de conexão injetada;
   handlers não possuem modo legado sem autenticação e erros HTTP são
   estruturados e genéricos.
@@ -48,7 +54,7 @@
 
 - Validação local: V2 aplicada após backup, preservando as contagens dos dados
   legados e restaurando o login; evidências HTTP/navegador registradas em
-  `docs/specs/recrutador/validacao.md`, com autoria final Codex em `PROMPTS.md`.
+  `docs/specs/recrutador/validacao.md`, com autoria final agente revisor em `PROMPTS.md`.
 - Corrigida a criação de `data_match` quando a curtida empresarial ocorre
   antes da curtida do candidato, incluindo repetição e concorrência.
 - Revisada a spec do recrutador com contratos de status/erro, DTOs mínimos,

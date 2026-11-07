@@ -11,11 +11,11 @@ class SyntheticDatabaseFixture implements AutoCloseable {
     private final String schema
     private final TemporarySchemaConnectionFactory factory
 
-    SyntheticDatabaseFixture(ConnectionFactory base) {
+    SyntheticDatabaseFixture(ConnectionFactory base, boolean upgradeLegacy = false) {
         this.base = base
         this.schema = "lt_test_${UUID.randomUUID().toString().replace('-', '')}"
         this.factory = new TemporarySchemaConnectionFactory(base, schema)
-        createAndMigrate()
+        createAndMigrate(upgradeLegacy)
     }
 
     ConnectionFactory getConnectionFactory() {
@@ -37,16 +37,24 @@ class SyntheticDatabaseFixture implements AutoCloseable {
         }
     }
 
-    private void createAndMigrate() {
+    private void createAndMigrate(boolean upgradeLegacy) {
         Connection connection
         try {
             connection = base.getConnection()
             connection.createStatement().execute("CREATE SCHEMA \"${schema}\"")
             connection.close()
             connection = factory.getConnection()
-            executeSql(connection, sqlFile("Linketinder.sql"))
-            executeSql(connection, sqlFile("migrations/V1__unique_user_email_normalized.sql"))
-            executeSql(connection, sqlFile("migrations/V2__recruiter_and_like_author.sql"))
+            if (upgradeLegacy) {
+                def resource = getClass().getResourceAsStream('/schema/Linketinder_pre_V2.sql')
+                if (resource == null) throw new FileNotFoundException('Historical test schema missing')
+                resource.withCloseable { stream ->
+                    connection.createStatement().withCloseable { it.execute(stream.getText('UTF-8')) }
+                }
+                executeSql(connection, sqlFile("migrations/V1__unique_user_email_normalized.sql"))
+                executeSql(connection, sqlFile("migrations/V2__recruiter_and_like_author.sql"))
+            } else {
+                executeSql(connection, sqlFile("Linketinder.sql"))
+            }
         } catch (Exception failure) {
             try {
                 connection?.close()

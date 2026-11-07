@@ -1,8 +1,8 @@
 # Plano executável — recrutador (Issue #3)
 
-**Estado:** plano pós-spec revisada pelo Codex sob delegação; validação do Tutor
+**Estado:** plano pós-spec revisada pelo agente revisor sob delegação; validação do Tutor
 pendente. Tarefa 1 foi commitada em `82ea1a2` (`feat: adicionar persistência e
-modelo de recrutadores`). Um agente executa somente uma tarefa por vez; Codex
+modelo de recrutadores`). Um agente executa somente uma tarefa por vez; agente revisor
 revisa e faz um commit próprio por tarefa e por repositório afetado.
 Não haverá reset público, credencial local exposta, PR, merge ou entrega.
 
@@ -12,9 +12,12 @@ Os testes PostgreSQL usam `ConnectionFactory` já existente por injeção, sem
 `DB_SCHEMA` global: `TemporarySchemaConnectionFactory(ConnectionFactory base,
 String schema)` valida `schema` com `^[a-z][a-z0-9_]{0,62}$`, abre a conexão
 delegada, executa `SET search_path TO "<schema>", public` e implementa
-`getConnection()`. O fixture cria schema aleatório, aplica
-`sql/Linketinder.sql`, V1 e V2 na mesma conexão (extensão `pgcrypto` fica em
-`public`), insere apenas `@example.test`, executa o caso e remove somente esse
+`getConnection()`. O fixture cria schema aleatório e, por padrão, aplica o
+script completo `sql/Linketinder.sql`, que já inclui V1/V2. O caminho de
+migração usa a fixture histórica de teste `schema/Linketinder_pre_V2.sql`
+seguida de V1/V2; um teste compara as duas estruturas resultantes. A extensão
+`pgcrypto` fica em `public`. A fixture insere apenas dados `@example.test`,
+executa o caso e remove somente esse
 schema em `finally`; nunca toca no schema público. A aplicação real continua
 usando `db.properties` ignorado, sem imprimir configuração. A concorrência usa
 duas conexões do mesmo schema temporário e `CountDownLatch`.
@@ -49,7 +52,7 @@ de SQL arbitrário. Comandos executados:
 deslocada para o banco; [x] proteção de segredos e dados sintéticos; [x] V2
 aditiva e schema temporário limpo; [x] RED/GREEN e limitações registradas;
 [x] plano/CHANGELOG/PROMPTS atualizados. A concorrência e a primeira autoria
-ficam explicitamente para T3. Commit backend permanece para o Codex.
+ficam explicitamente para T3. Commit backend permanece para o agente revisor.
 
 ### 2. Sessão e gestão do recrutador
 
@@ -78,7 +81,7 @@ CPF/data/senha, allowlist sem PII, criação atômica, isolamento por empresa,
 desativação e invalidação de login/sessão existente. A verificação final foi
 `./gradlew check --rerun-tasks --console=plain` (130 unitários e 11 de
 integração); nenhum banco público foi
-alterado. Na revisão Codex, o RED adicional cobriu o bypass de sessão nula,
+alterado. Na revisão agente revisor, o RED adicional cobriu o bypass de sessão nula,
 falhas de autenticação/listagem fora do boundary, IDs zero/overflow e
 `idEmpresa` não inteiro; o GREEN passou após remover o modo sem sessão,
 centralizar o erro 500 genérico e endurecer a validação. Também passaram
@@ -87,7 +90,7 @@ completo em CPF duplicado e conflito de e-mail normalizado.
 **Checklist (aceites 1–7, 15, 17):** [x] autorização por requisição e sem
 HttpContext compartilhado; [x] anonimato, allowlist e segredos; [x] proteção de
 atores e dados sintéticos; [x] RED/GREEN e regressão/limitações reais;
-[x] atualizar plano/CHANGELOG/PROMPTS; [ ] commit backend pelo Codex.
+[x] atualizar plano/CHANGELOG/PROMPTS; [ ] commit backend pelo agente revisor.
 
 Limitação para T3: `ApiApp.buildRouter` injeta a fábrica apenas em
 `AuthDAO`/`RecruiterDAO`; os DAOs legados ainda precisam receber a fábrica para
@@ -153,7 +156,7 @@ e contatos permanece para T6.
 [x] autenticação, autorização por papel e vínculo; [x] proteção de atores,
 primeira autoria/timestamp atômicos e fixtures sintéticas; [x] unitário,
 HTTP/Postgres, regressão e concorrência; [x] documentação atualizada; [ ] commit
-backend pelo Codex.
+backend pelo agente revisor.
 
 ### 4. Frontend: sessão, services e contratos
 
@@ -197,7 +200,7 @@ externo opt-in ficou ignorado nesta execução, pois
 [x] autenticação/autorização continua no servidor; [x] atores, segredos e
 fixtures sintéticas protegidos; [x] Vitest, build, regressão e limitações reais;
 [x] registrar resultado neste plano backend, CHANGELOG/PROMPTS; [ ] commit
-frontend e depois revisão Codex.
+frontend e depois revisão agente revisor.
 
 **Evidência T4:** `npm run test:run` — 58 testes aprovados e 1 integração
 opt-in ignorada; `npm run build` — TypeScript e Vite aprovados. Não foram
@@ -225,7 +228,7 @@ isoladas e `main` não inicializa demo com PII no localStorage real.
 [x] privacidade antes/depois e nenhum token/PII; [x] autorização não depende
 da tela; [x] fixtures sintéticas, regressão/build e limitações reais;
 [x] registrar no plano backend/CHANGELOG/PROMPTS; [ ] commit frontend pelo
-Codex após revisão.
+agente revisor após revisão.
 
 **Resultado T5 (frontend, sem commit):** implementados menus derivados da
 sessão para candidato, empresa e recrutador, callback de 401/logout com
@@ -255,6 +258,13 @@ em schema temporário. Correção CSS de menus e regressão no frontend.
 Desativação/token anterior/logout conferidos via HTTP real; o diálogo do
 navegador ficou limitado pelo controle da ferramenta. Evidências e pendências
 em `validacao.md`. T6 não foi marcada como integralmente concluída.
+
+**Atualização de modelagem e documentação:** DBML produzido a partir dos
+scripts, SQL exportado revisado e schema completo atualizado com trigger de
+CPF preservada. SVG incluído no README e prompts resumidos em `PROMPTS.md`.
+Criação do zero e upgrade legado comparados em teste de integração; a execução
+final passou com 122 unitários e 15 de integração. Essa verificação adicional
+não substitui o checklist de aceite restante.
 
 **Camada:** integração HTTP/DB/DOM, documentação e aceite.
 **Dependência:** T1–T5. **Arquivos backend:** `README.md`, novo

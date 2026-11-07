@@ -1,6 +1,6 @@
 # Spec — recrutador
 
-**Status:** revisada tecnicamente pelo Codex sob delegação explícita de Athus,
+**Status:** revisada tecnicamente pelo agente revisor sob delegação explícita de Athus,
 não aprovada pelo Tutor. A validação de negócio com Athus/Tutor permanece
 pendente antes da entrega. Nenhum código, migração ou teste faz parte deste
 artefato.
@@ -279,7 +279,7 @@ merge, entrega Talent ou aprovação do Tutor.
 
 ## Decisões pendentes e limitações
 
-As decisões acima foram revisadas tecnicamente pelo Codex sob delegação
+As decisões acima foram revisadas tecnicamente pelo agente revisor sob delegação
 explícita de Athus para execução delegada; a validação de negócio com
 Athus/Tutor permanece pendente antes da entrega. A spec não afirma que o código
 atual já garante anonimato, sessão ou concorrência. Ainda precisam ser

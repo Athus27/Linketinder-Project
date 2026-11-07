@@ -24,6 +24,7 @@ import org.linketinder.http.handler.CompanyHandler
 import org.linketinder.http.handler.VagaHandler
 import org.linketinder.http.handler.AuthHandler
 import org.linketinder.http.handler.RecruiterHandler
+import java.time.Clock
 
 class ApiApp {
 
@@ -43,6 +44,15 @@ class ApiApp {
             HttpServer server,
             ConnectionFactory connectionFactory,
             SessionStore sessionStore
+    ) {
+        buildRouter(server, connectionFactory, sessionStore, Clock.systemUTC())
+    }
+
+    static Router buildRouter(
+            HttpServer server,
+            ConnectionFactory connectionFactory,
+            SessionStore sessionStore,
+            Clock clock
     ) {
         CandidateDAO candidateDAO = new CandidateDAO(connectionFactory)
 
@@ -70,7 +80,7 @@ class ApiApp {
                 new CurtidaController(new CurtidaDAO(connectionFactory)),
                 authController, sessionStore)
         RecruiterDAO recruiterDAO = new RecruiterDAO(connectionFactory)
-        RecruiterController recruiterController = new RecruiterController(recruiterDAO)
+        RecruiterController recruiterController = new RecruiterController(recruiterDAO, clock)
         RecruiterHandler recruiterHandler =
                 new RecruiterHandler(recruiterController, authController, sessionStore)
 
@@ -84,4 +94,5 @@ class ApiApp {
         curtidaHandler
         )
     }
+
 }

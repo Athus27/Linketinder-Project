@@ -46,6 +46,9 @@
 
 ### Corrigido
 
+- Validação local: V2 aplicada após backup, preservando as contagens dos dados
+  legados e restaurando o login; evidências HTTP/navegador registradas em
+  `docs/specs/recrutador/validacao.md`, com autoria final Codex em `PROMPTS.md`.
 - Corrigida a criação de `data_match` quando a curtida empresarial ocorre
   antes da curtida do candidato, incluindo repetição e concorrência.
 - Revisada a spec do recrutador com contratos de status/erro, DTOs mínimos,

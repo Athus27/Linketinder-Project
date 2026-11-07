@@ -56,8 +56,8 @@ class Router {
         this.curtidaHandler = curtidaHandler
     }
 
-    void registrarRotas() {
-        String frontendOrigin = System.getenv("FRONTEND_ORIGIN") ?: "http://localhost:5173"
+    void registrarRotas(String frontendOrigin = null) {
+        frontendOrigin = frontendOrigin ?: System.getenv("FRONTEND_ORIGIN") ?: "http://localhost:5173"
 
         server.createContext(
                 "/api/candidatos",

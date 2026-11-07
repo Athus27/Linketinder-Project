@@ -249,6 +249,13 @@ aprovados e 1 teste de integração opt-in ignorado; `npm run build` aprovado.
 
 ### 6. E2E e documentação
 
+**Validação parcial registrada:** login local corrigido pela aplicação segura
+da V2; fluxo real empresa → recrutador → curtida → candidato → match conferido
+em schema temporário. Correção CSS de menus e regressão no frontend.
+Desativação/token anterior/logout conferidos via HTTP real; o diálogo do
+navegador ficou limitado pelo controle da ferramenta. Evidências e pendências
+em `validacao.md`. T6 não foi marcada como integralmente concluída.
+
 **Camada:** integração HTTP/DB/DOM, documentação e aceite.
 **Dependência:** T1–T5. **Arquivos backend:** `README.md`, novo
 `docs/specs/recrutador/PR.md`, `requests.http`, novos

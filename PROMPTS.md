@@ -1,5 +1,15 @@
 # PROMPTS — K2-T5 IA essentials / Recrutador
 
+## Correções e validação final local — 07/11/2026
+
+Após a cota do Copilot se esgotar, Athus pediu: “resolva essas pendencias e
+valide”. O Codex executou a correção de visibilidade CSS e seu teste de
+regressão, aplicou a V2 existente com backup e transação e validou os fluxos
+HTTP/navegador. A implementação das tarefas T1–T5 continua sendo do Copilot,
+com revisão Codex; estas correções finais são de autoria Codex. Não atribuir
+todo o trabalho ao Copilot. Detalhes e limites em
+`docs/specs/recrutador/validacao.md`. Sem entrega, PR ou merge.
+
 ## Autoria e papéis
 
 - **Copilot CLI:** autoria dos artefatos desta etapa e, futuramente, do código

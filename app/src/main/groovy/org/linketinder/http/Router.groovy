@@ -1,12 +1,7 @@
 package org.linketinder.http
 
 import com.sun.net.httpserver.HttpServer
-import org.linketinder.http.handler.CandidateHandler
-import org.linketinder.http.handler.CompanyHandler
-import org.linketinder.http.handler.VagaHandler
-import org.linketinder.http.handler.AuthHandler
-import org.linketinder.http.handler.RecruiterHandler
-import org.linketinder.http.handler.CurtidaHandler
+import org.linketinder.http.handler.*
 
 class Router {
     private final HttpServer server
